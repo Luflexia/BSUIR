@@ -1,0 +1,37 @@
+version: '3.8' # Указывает версию Docker Compose
+
+services: # Определяет набор сервисов (контейнеров)
+  db-container: # Определяет сервис базы данных
+    image: postgres:latest # Использует образ PostgreSQL последней версии
+    container_name: db-container # Устанавливает имя контейнера
+    restart: always # Указывает, что контейнер всегда должен перезапускаться при сбоях
+    networks: # Подключает контейнер к сети
+      - my-network # Имя сети
+    environment: # Определяет переменные окружения для контейнера
+      POSTGRES_USER: postgres # Имя пользователя PostgreSQL
+      POSTGRES_PASSWORD: qhIsHHJqbDXsnXydbORiworFXQXrRIEv # Пароль пользователя PostgreSQL
+      POSTGRES_DB: railway # Имя базы данных
+    volumes: # Определяет тома для хранения данных
+      - ./postgres-data:/var/lib/postgresql/data # Локальная директория связана с директорией внутри контейнера
+    ports: # Определяет порты для проброса
+      - "5432:5432" # Пробрасывает порт 5432 на хосте к порту 5432 в контейнере
+
+  backend-service: # Определяет сервис backend
+    build: ./ # Указывает на необходимость сборки Dockerfile в текущей директории
+    image: backend-service:latest # Использует образ backend-service последней версии
+    container_name: backend-service # Устанавливает имя контейнера
+    restart: always # Указывает, что контейнер всегда должен перезапускаться при сбоях
+    networks: # Подключает контейнер к сети
+      - my-network # Имя сети
+    depends_on: # Указывает на зависимость от других сервисов
+      - db-container # Контейнер db-container должен быть запущен раньше
+    environment: # Определяет переменные окружения для контейнера
+      DATABASE_URL: db-container:5432 # URL для подключения к базе данных
+    volumes: # Определяет тома для хранения данных
+      - ./app-logs:/app/logs # Локальная директория связана с директорией внутри контейнера
+    ports: # Определяет порты для проброса
+      - "8080:8080" # Пробрасывает порт 8080 на хосте к порту 8080 в контейнере
+
+networks: # Определяет сети для контейнеров
+  my-network: # Имя сети
+    driver: bridge # Тип драйвера сети (мост)

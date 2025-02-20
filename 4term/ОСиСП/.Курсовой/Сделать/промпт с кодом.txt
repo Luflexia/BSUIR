@@ -1,0 +1,723 @@
+сделай файлы для разной логики, модулей. раздели на модуль (файл) получения информации о процессах, модуль получения информации о потоках, модуль получения информации о sysinfo, модуль отображения информации, модуль управления, модуль интерактивных функций, модуль отображения информации, файл сортировки для процессов и потоков, модуль ввода. Соедини некоторые файлы, которые можно, разделяя логику, можно убрать файлы с обновлением, и просто раз в секунду получать новые данные и отображать всю информацию. И сделать нужно обновление данных раз в секунду и выбор отображения только процессов или только потоков
+пиши на русском
+#include "controlProcess.h"
+#include <stdio.h>
+#include <signal.h>
+
+// Функция для завершения процесса по PID
+int kill_process_by_pid(int pid) {
+    if (kill(pid, SIGKILL) == 0) {
+        printf("Процесс с PID %d завершен успешно.\n", pid);
+        return 0;
+    } else {
+        perror("Ошибка при завершении процесса");
+        return -1;
+    }
+}
+#ifndef CONTROLPARAMS_H
+#define CONTROLPARAMS_H
+
+#include "process.h"
+
+// Функция для завершения процесса по PID
+int kill_process_by_pid(int pid);
+
+#endif /* CONTROLPARAMS_H */
+#include "controlThreads.h"
+#include <stdio.h>
+#include <sys/syscall.h>
+#include <unistd.h>
+#include <signal.h>
+
+// Функция для завершения потока по TID
+int kill_thread_by_tid(int tid) {
+    if (syscall(SYS_tkill, tid, SIGKILL) == 0) {
+        printf("Поток с TID %d завершен успешно.\n", tid);
+        return 0;
+    } else {
+        perror("Ошибка при завершении потока");
+        return -1;
+    }
+}
+#ifndef CONTROLTHREADS_H
+#define CONTROLTHREADS_H
+
+#include "process.h"
+
+// Функция для завершения потока по PID
+int kill_thread_by_tid(int tid);
+
+#endif /* CONTROLTHREADS_H */
+#include "displayProcess.h"
+#include <stdio.h>
+
+// Функция для отображения информации о процессах
+void display_processes(Process *processes, int num_processes) {
+    printf("%-8s %-15s %-8s %-12s %-12s %-8s %-8s %s\n", 
+           "PID", "USER", "PRIORITY", "VM(KB)", "RM(KB)", "CPU(%)", "COMMAND");
+
+    for (int i = 0; i < num_processes; ++i) {
+        printf("%-8d %-15s %-8d %-12ld %-12ld %-8.2f %-8s\n", 
+               processes[i].pid, processes[i].user, processes[i].priority, 
+               processes[i].virtual_memory, processes[i].resident_memory, 
+               processes[i].cpu_usage, processes[i].command);
+    }
+}
+#ifndef DISPLAYPROCESS_H
+#define DISPLAYPROCESS_H
+
+#include "process.h"
+
+// Функция для отображения информации о процессах
+void display_processes(Process *processes, int num_processes);
+
+#endif /* DISPLAYPROCESS_H */
+#include "displayThreads.h"
+#include <stdio.h>
+
+// Функция для отображения информации о потоках
+void display_threads(Thread *threads, int num_threads) {
+    printf("%-8s %-15s %-8s %-12s %-12s %-8s %-8s %s\n", 
+           "PID", "USER", "TID", "VM(KB)", "RM(KB)", "CPU(%)", "COMMAND");
+
+    for (int i = 0; i < num_threads; ++i) {
+        printf("%-8d %-15s %-8d %-12ld %-12ld %-8.2f %-8s\n", 
+               threads[i].pid, threads[i].user, threads[i].tid, 
+               threads[i].virtual_memory, threads[i].resident_memory, 
+               threads[i].cpu_usage, threads[i].command);
+    }
+}
+#ifndef DISPLAYTHREADS_H
+#define DISPLAYTHREADS_H
+
+#include "process.h"
+
+// Функция для отображения информации о потоках
+void display_threads(Thread *threads, int num_threads);
+
+#endif /* DISPLAYTHREADS_H */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "sort.h"
+#include "sortThreads.h"
+#include "controlProcess.h"
+#include "controlThreads.h"
+
+// Функция для обработки пользовательского ввода
+void handle_input(Process *processes, int num_processes, Thread *threads, int num_threads) {
+    char input[50];
+    printf("Введите команду (например, 'kill pid', 'sort user'):\n");
+    fgets(input, sizeof(input), stdin);
+
+    char *token = strtok(input, " ");
+    if (token != NULL) {
+        if (strcmp(token, "kill") == 0) {
+            // Команда для завершения процесса или потока
+            token = strtok(NULL, " ");
+            int id = atoi(token);
+            if (id > 0) {
+                if (id < 10000) {
+                    // Завершение процесса
+                    kill_process_by_pid(id);
+                } else {
+                    // Завершение потока
+                    kill_thread_by_tid(id);
+                }
+            } else {
+                printf("Неверный формат ID.\n");
+            }
+        } else if (strcmp(token, "sort") == 0) {
+            // Команда для сортировки
+            token = strtok(NULL, " \n");
+            if (strcmp(token, "pid") == 0) {
+                sort_processes_by_pid(processes, num_processes);
+            } else if (strcmp(token, "user") == 0) {
+                sort_processes_by_user(processes, num_processes);
+            } else if (strcmp(token, "vm") == 0) {
+                sort_processes_by_virtual_memory(processes, num_processes);
+            } else if (strcmp(token, "rm") == 0) {
+                sort_processes_by_resident_memory(processes, num_processes);
+            } else if (strcmp(token, "cpu") == 0) {
+                sort_processes_by_cpu_usage(processes, num_processes);
+            } else {
+                printf("Неверный критерий сортировки.\n");
+            }
+        } else {
+            printf("Неверная команда.\n");
+        }
+    }
+}
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <signal.h>
+#include <termios.h>
+#include <fcntl.h>
+#include "process.h"
+#include "threads.h"
+#include "readProcess.h"
+#include "readThreads.h"
+#include "updateThreads.h"
+#include "updateProcess.h" 
+
+
+// Объявление функции для получения нажатых клавиш без ожидания Enter
+int kbhit(void);
+
+// Объявление обработчика сигнала для выхода из программы
+void handle_signal(int signal);
+
+int main() {
+    Process processes[MAX_PROC];
+    Thread threads[MAX_THREADS];
+
+    // Чтение данных при запуске
+    int num_processes = read_processes(processes);
+    if (num_processes < 0) {
+        fprintf(stderr, "Ошибка чтения процессов\n");
+        return 1;
+    }
+
+    // Установка обработчика сигнала SIGINT (Ctrl+C)
+    signal(SIGINT, handle_signal);
+
+    // Бесконечный цикл обновления данных
+    while (1) {
+    
+        // Отображение SysInfo
+        displaySystemInfo();
+
+        // Обновление данных о процессах
+        update_process_data(processes, num_processes);
+
+        // Обновление данных о потоках
+        update_thread_data(threads, MAX_THREADS);
+
+        // Отображение информации о процессах и потоках
+        display_process_info(processes, num_processes);
+        display_thread_info(threads);
+
+        // Ожидание 1 секунда перед следующим обновлением данных
+        sleep(1);
+
+        // Если Ctrl+C, выходим из программы
+        if (kbhit()) {
+            break;
+        }
+    }
+    return 0;
+}
+
+// Функция для получения нажатых клавиш без ожидания Enter
+int kbhit(void) {
+    struct termios oldt, newt;
+    int ch;
+    int oldf;
+
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
+    fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
+
+    ch = getchar();
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    fcntl(STDIN_FILENO, F_SETFL, oldf);
+
+    if(ch != EOF) {
+        ungetc(ch, stdin);
+        return 1;
+    }
+
+    return 0;
+}
+
+// Обработчик сигнала для выхода из программы
+void handle_signal(int signal) {
+    if (signal == SIGINT) {
+        printf("Программа завершена.\n");
+        exit(0);
+    }
+}
+#ifndef PROCESS_H
+#define PROCESS_H
+
+#define MAX_PROC 1000
+
+// Структура для хранения информации о процессе
+typedef struct {
+    int pid;                // Идентификатор процесса
+    char user[50];          // Имя пользователя
+    int priority;           // Приоритет процесса
+    long virtual_memory;    // Потребление виртуальной памяти (KB)
+    long resident_memory;   // Потребление физической памяти (KB)
+    float cpu_usage;        // % использования CPU
+    char command[100];      // Название команды, инициализировавшей процесс
+} Process;
+
+#endif /* PROCESS_H */
+#include "readProcess.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <errno.h>
+
+// Функция для чтения информации о процессах
+int read_processes(Process *processes) {
+    DIR *dir;
+    struct dirent *entry;
+    int count = 0;
+
+    if ((dir = opendir("/proc")) == NULL) {
+        perror("Ошибка opendir()");
+        return -1;
+    }
+
+    while ((entry = readdir(dir)) != NULL && count < MAX_PROC) {
+        if (isdigit(*entry->d_name)) {
+            char path[256];
+            sprintf(path, "/proc/%s/status", entry->d_name);
+
+            FILE *fp;
+            if ((fp = fopen(path, "r")) != NULL) {
+                char line[256];
+                while (fgets(line, sizeof(line), fp)) {
+                    if (strncmp(line, "Pid:", 4) == 0) {
+                        sscanf(line, "%*s %d", &processes[count].pid);
+                    } else if (strncmp(line, "Uid:", 4) == 0) {
+                        sscanf(line, "%*s %s", processes[count].user);
+                    } else if (strncmp(line, "VmSize:", 7) == 0) {
+                        sscanf(line, "%*s %ld", &processes[count].virtual_memory);
+                    } else if (strncmp(line, "VmRSS:", 6) == 0) {
+                        sscanf(line, "%*s %ld", &processes[count].resident_memory);
+                    } else if (strncmp(line, "Cpu(s):", 7) == 0) {
+                        sscanf(line, "%*s %lf", &processes[count].cpu_usage);
+                    } else if (strncmp(line, "Cmdline:", 8) == 0) {
+                        sscanf(line, "%*s %[^\n]", processes[count].command);
+                    }
+                }
+                fclose(fp);
+                count++;
+            }
+        }
+    }
+
+    closedir(dir);
+    return count;
+}
+#ifndef READPROCESS_H
+#define READPROCESS_H
+
+#include "process.h"
+
+int read_processes(Process *processes);
+
+#endif /* READPROCESS_H */
+#include "readThreads.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <errno.h>
+
+// Функция для чтения информации о потоках
+int read_threads(Thread *threads) {
+    DIR *dir;
+    struct dirent *entry;
+    int count = 0;
+
+    if ((dir = opendir("/proc")) == NULL) {
+        perror("Ошибка opendir()");
+        return -1;
+    }
+
+    while ((entry = readdir(dir)) != NULL && count < MAX_THREADS) {
+        if (isdigit(*entry->d_name)) {
+            char path[256];
+            sprintf(path, "/proc/%s/task/%s/status", entry->d_name, entry->d_name);
+
+            FILE *fp;
+            if ((fp = fopen(path, "r")) != NULL) {
+                char line[256];
+                while (fgets(line, sizeof(line), fp)) {
+                    if (strncmp(line, "Pid:", 4) == 0) {
+                        sscanf(line, "%*s %d", &threads[count].tid);
+                    } else if (strncmp(line, "Uid:", 4) == 0) {
+                        sscanf(line, "%*s %s", threads[count].user);
+                    } else if (strncmp(line, "VmSize:", 7) == 0) {
+                        sscanf(line, "%*s %lu", &threads[count].vm_size);
+                    } else if (strncmp(line, "VmRSS:", 6) == 0) {
+                        sscanf(line, "%*s %lu", &threads[count].vm_rss);
+                    } else if (strncmp(line, "Cpu(s):", 7) == 0) {
+                        sscanf(line, "%*s %*s %*s %*s %lf", &threads[count].cpu_usage);
+                    } else if (strncmp(line, "Cmdline:", 8) == 0) {
+                        sscanf(line, "%*s %s", threads[count].cmd);
+                    }
+                }
+                fclose(fp);
+                threads[count].pid = atoi(entry->d_name);
+                count++;
+            }
+        }
+    }
+
+    closedir(dir);
+    return count;
+}
+#ifndef READTHREADS_H
+#define READTHREADS_H
+
+#include "threads.h"
+
+int read_threads(Thread *threads);
+
+#endif /* READTHREADS_H */
+#include "sort.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Функция сравнения для сортировки по PID
+int compare_pid(const void *a, const void *b) {
+    const Process *processA = (const Process *)a;
+    const Process *processB = (const Process *)b;
+    return processA->pid - processB->pid;
+}
+
+// Функция сравнения для сортировки по пользователю
+int compare_user(const void *a, const void *b) {
+    const Process *processA = (const Process *)a;
+    const Process *processB = (const Process *)b;
+    return strcmp(processA->user, processB->user);
+}
+
+// Функция сравнения для сортировки по потреблению виртуальной памяти
+int compare_virtual_memory(const void *a, const void *b) {
+    const Process *processA = (const Process *)a;
+    const Process *processB = (const Process *)b;
+    return processA->virtual_memory - processB->virtual_memory;
+}
+
+// Функция сравнения для сортировки по потреблению физической памяти
+int compare_resident_memory(const void *a, const void *b) {
+    const Process *processA = (const Process *)a;
+    const Process *processB = (const Process *)b;
+    return processA->resident_memory - processB->resident_memory;
+}
+
+// Функция сравнения для сортировки по использованию процессора
+int compare_cpu_usage(const void *a, const void *b) {
+    const Process *processA = (const Process *)a;
+    const Process *processB = (const Process *)b;
+    return (int)(processA->cpu_usage - processB->cpu_usage);
+}
+
+// Функция для сортировки процессов по PID
+void sort_processes_by_pid(Process *processes, int num_processes) {
+    qsort(processes, num_processes, sizeof(Process), compare_pid);
+}
+
+// Функция для сортировки процессов по пользователю
+void sort_processes_by_user(Process *processes, int num_processes) {
+    qsort(processes, num_processes, sizeof(Process), compare_user);
+}
+
+// Функция для сортировки процессов по потреблению виртуальной памяти
+void sort_processes_by_virtual_memory(Process *processes, int num_processes) {
+    qsort(processes, num_processes, sizeof(Process), compare_virtual_memory);
+}
+
+// Функция для сортировки процессов по потреблению физической памяти
+void sort_processes_by_resident_memory(Process *processes, int num_processes) {
+    qsort(processes, num_processes, sizeof(Process), compare_resident_memory);
+}
+
+// Функция для сортировки процессов по использованию процессора
+void sort_processes_by_cpu_usage(Process *processes, int num_processes) {
+    qsort(processes, num_processes, sizeof(Process), compare_cpu_usage);
+}
+#ifndef SORT_H
+#define SORT_H
+
+#include "process.h"
+
+// Функция для сортировки процессов по PID
+void sort_processes_by_pid(Process *processes, int num_processes);
+
+// Функция для сортировки процессов по пользователю
+void sort_processes_by_user(Process *processes, int num_processes);
+
+// Функция для сортировки процессов по потреблению виртуальной памяти
+void sort_processes_by_virtual_memory(Process *processes, int num_processes);
+
+// Функция для сортировки процессов по потреблению физической памяти
+void sort_processes_by_resident_memory(Process *processes, int num_processes);
+
+// Функция для сортировки процессов по использованию процессора
+void sort_processes_by_cpu_usage(Process *processes, int num_processes);
+
+#endif /* SORT_H */
+#include "sortThreads.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Функция сравнения для сортировки потоков по PID
+int compare_thread_pid(const void *a, const void *b) {
+    const Thread *threadA = (const Thread *)a;
+    const Thread *threadB = (const Thread *)b;
+    return threadA->pid - threadB->pid;
+}
+
+// Функция сравнения для сортировки потоков по пользователю
+int compare_thread_user(const void *a, const void *b) {
+    const Thread *threadA = (const Thread *)a;
+    const Thread *threadB = (const Thread *)b;
+    return strcmp(threadA->user, threadB->user);
+}
+
+// Функция сравнения для сортировки потоков по потреблению виртуальной памяти
+int compare_thread_virtual_memory(const void *a, const void *b) {
+    const Thread *threadA = (const Thread *)a;
+    const Thread *threadB = (const Thread *)b;
+    return threadA->virtual_memory - threadB->virtual_memory;
+}
+
+// Функция сравнения для сортировки потоков по потреблению физической памяти
+int compare_thread_resident_memory(const void *a, const void *b) {
+    const Thread *threadA = (const Thread *)a;
+    const Thread *threadB = (const Thread *)b;
+    return threadA->resident_memory - threadB->resident_memory;
+}
+
+// Функция сравнения для сортировки потоков по использованию процессора
+int compare_thread_cpu_usage(const void *a, const void *b) {
+    const Thread *threadA = (const Thread *)a;
+    const Thread *threadB = (const Thread *)b;
+    return (int)(threadA->cpu_usage - threadB->cpu_usage);
+}
+
+// Функция для сортировки потоков по PID
+void sort_threads_by_pid(Thread *threads, int num_threads) {
+    qsort(threads, num_threads, sizeof(Thread), compare_thread_pid);
+}
+
+// Функция для сортировки потоков по пользователю
+void sort_threads_by_user(Thread *threads, int num_threads) {
+    qsort(threads, num_threads, sizeof(Thread), compare_thread_user);
+}
+
+// Функция для сортировки потоков по потреблению виртуальной памяти
+void sort_threads_by_virtual_memory(Thread *threads, int num_threads) {
+    qsort(threads, num_threads, sizeof(Thread), compare_thread_virtual_memory);
+}
+
+// Функция для сортировки потоков по потреблению физической памяти
+void sort_threads_by_resident_memory(Thread *threads, int num_threads) {
+    qsort(threads, num_threads, sizeof(Thread), compare_thread_resident_memory);
+}
+
+// Функция для сортировки потоков по использованию процессора
+void sort_threads_by_cpu_usage(Thread *threads, int num_threads) {
+    qsort(threads, num_threads, sizeof(Thread), compare_thread_cpu_usage);
+}
+#ifndef SORTTHREADS_H
+#define SORTTHREADS_H
+
+#include "process.h"
+
+// Функция для сортировки потоков по PID
+void sort_threads_by_pid(Thread *threads, int num_threads);
+
+// Функция для сортировки потоков по пользователю
+void sort_threads_by_user(Thread *threads, int num_threads);
+
+// Функция для сортировки потоков по потреблению виртуальной памяти
+void sort_threads_by_virtual_memory(Thread *threads, int num_threads);
+
+// Функция для сортировки потоков по потреблению физической памяти
+void sort_threads_by_resident_memory(Thread *threads, int num_threads);
+
+// Функция для сортировки потоков по использованию процессора
+void sort_threads_by_cpu_usage(Thread *threads, int num_threads);
+
+#endif /* SORTTHREADS_H */
+#include <stdio.h>
+#include <time.h>
+#include <sys/sysinfo.h>
+
+void readString1() {
+    // Получение текущего времени
+    time_t current_time = time(NULL);
+    struct tm *tm_info = localtime(&current_time);
+    char time_str[9]; // Для формата HH:MM:SS
+    strftime(time_str, sizeof(time_str), "%H:%M:%S", tm_info);
+
+    printf("Bruh - (%s), ", time_str);
+
+    // Получение информации о системе
+    struct sysinfo info;
+    if (sysinfo(&info) != 0) {
+        perror("Ошибка при получении информации о системе");
+        return;
+    }
+
+    printf("(%ld days, %ld:%02ld), ", 
+           info.uptime / (60 * 60 * 24), (info.uptime % (60 * 60 * 24)) / (60 * 60), (info.uptime % (60 * 60)) / 60);
+    printf("(%d users), ", info.procs);
+    printf("(%.2f, %.2f, %.2f - за 1 минуту, 5 минут и 15 минут).\n", 
+           (float)info.loads[0] / (1 << SI_LOAD_SHIFT), (float)info.loads[1] / (1 << SI_LOAD_SHIFT), 
+           (float)info.loads[2] / (1 << SI_LOAD_SHIFT));
+}
+
+void readString2() {
+    // Открываем файл /proc/stat для чтения
+    FILE *file = fopen("/proc/stat", "r");
+    if (file == NULL) {
+        perror("Ошибка при открытии файла /proc/stat");
+        return;
+    }
+
+    // Объявляем переменные для хранения данных
+    int total_processes = 0, running_processes = 0, sleeping_processes = 0, stopped_processes = 0, zombie_processes = 0;
+    char line[256];
+
+    // Считываем данные из файла
+    while (fgets(line, sizeof(line), file) != NULL) {
+        // Проверяем строки, начинающиеся с "procs_"
+        if (strstr(line, "procs_") != NULL) {
+            // Считываем количество процессов из каждой категории
+            if (strstr(line, "total") != NULL) {
+                sscanf(line, "processes %d", &total_processes);
+            } else if (strstr(line, "running") != NULL) {
+                sscanf(line, "procs_running %d", &running_processes);
+            } else if (strstr(line, "blocked") != NULL) {
+                sscanf(line, "procs_blocked %d", &sleeping_processes);
+            } else if (strstr(line, "stopped") != NULL) {
+                sscanf(line, "procs_blocked %d", &stopped_processes);
+            } else if (strstr(line, "zombie") != NULL) {
+                sscanf(line, "procs_blocked %d", &zombie_processes);
+            }
+        }
+    }
+
+    // Закрываем файл
+    fclose(file);
+
+    // Выводим считанные значения
+    printf("Tasks - total: %d, running: %d, sleeping: %d, stopped: %d, zombie: %d\n", total_processes, running_processes, sleeping_processes, stopped_processes, zombie_processes);
+}
+
+void readString3() {
+    // Открываем файл /proc/stat для чтения информации о процессоре
+    FILE *file = fopen("/proc/stat", "r");
+    if (file == NULL) {
+        perror("Ошибка при открытии файла /proc/stat");
+        return;
+    }
+
+    // Объявляем переменные для хранения значений процентов
+    float user, system, nice, idle, iowait, irq, softirq, steal;
+
+    // Считываем данные из файла
+    fscanf(file, "cpu %f %f %f %f %f %f %f %f", 
+           &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal);
+
+    // Закрываем файл
+    fclose(file);
+
+    // Выводим считанные значения
+    printf("%%Cpu(s) - user: %.1f%%, system: %.1f%%, nice: %.1f%%, idle: %.1f%%, iowait: %.1f%%, irq: %.1f%%, softirq: %.1f%%, steal: %.1f%%\n", user, system, nice, idle, iowait, irq, softirq, steal);
+}
+
+void displaySystemInfo() {
+    readString1();
+    readString2();
+    readString3();
+}
+#ifndef SYSINFO_H
+#define SYSINFO_H
+
+// Функция для чтения информации о системе и вывода ее на экран
+void displaySystemInfo();
+
+#endif /* SYSINFO_H */
+#ifndef THREADS_H
+#define THREADS_H
+
+#define MAX_THREADS 1000
+
+// Структура для хранения информации о потоке
+typedef struct {
+    int pid;                // Идентификатор процесса
+    int tid;                // Идентификатор потока
+    char user[50];          // Имя пользователя
+    int priority;           // Приоритет потока
+    long virtual_memory;    // Потребление виртуальной памяти (KB)
+    long resident_memory;   // Потребление физической памяти (KB)
+    float cpu_usage;        // % использования CPU
+    char command[100];      // Название команды, инициализировавшей процесс
+} Thread;
+
+#endif /* THREADS_H */
+#include "updateProcess.h"
+#include "readProcess.h" 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <dirent.h>
+
+// Функция для обновления данных о процессах
+void update_process_data(Process *processes, int num_processes) {
+    // Используем функцию read_processes() для чтения информации о процессах
+    int updated_processes = read_processes(processes);
+    if (updated_processes < 0) {
+        perror("Ошибка при чтении информации о процессах");
+        return;
+    }
+
+    // Если количество прочитанных процессов больше, чем необходимо, обрабатываем только num_processes процессов
+    if (updated_processes > num_processes) {
+        updated_processes = num_processes;
+    }
+}
+#ifndef UPDATEPROCESS_H
+#define UPDATEPROCESS_H
+
+#include "process.h"
+
+// Функция для обновления данных о процессах
+void update_process_data(Process *processes, int num_processes);
+
+#endif /* UPDATEPROCESS_H */
+#include "updateThreads.h"
+#include "readThreads.h"
+
+// Функция для обновления данных о потоках
+void update_thread_data(Thread *threads, int num_threads) {
+    // Вызываем функцию для чтения информации о потоках
+    int thread_count = read_threads(threads);
+    if (thread_count < 0) {
+        // Обработка ошибки
+        return;
+    }
+    
+    if (thread_count > num_threads) {
+        // Если количество прочитанных потоков больше, чем необходимо, обрабатываем только num_threads потоков
+        thread_count = num_threads;
+    }
+}
+#ifndef UPDATETHREADS_H
+#define UPDATETHREADS_H
+
+#include "threads.h"
+
+void update_thread_data(Thread *threads, int num_threads);
+
+#endif /* UPDATETHREADS_H */

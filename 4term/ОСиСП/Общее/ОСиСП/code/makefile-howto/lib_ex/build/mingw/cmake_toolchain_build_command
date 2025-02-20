@@ -1,0 +1,4 @@
+#! /bin/sh
+#
+export MINGW=__MINGW32__
+cmake -DCMAKE_TOOLCHAIN_FILE=/usr/share/mingw/toolchain-mingw64.cmake ../..
