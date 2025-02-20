@@ -1,0 +1,3 @@
+﻿  Source.cpp
+Source.obj : error LNK2005: _main уже определен в Lab3.obj
+E:\Прочее\Проекты VisualStudio\Lab3\Debug\Lab3.exe : fatal error LNK1169: обнаружен многократно определенный символ - один или более

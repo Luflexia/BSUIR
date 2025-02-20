@@ -1,0 +1,32 @@
+https://www.geeksforgeeks.org/data-encryption-standard-des-set-1/
+
+
+для понимания:
+https://www.opennet.ru/docs/RUS/inet_book/6/des_641.html
+https://protect.htmlweb.ru/des.htm
+https://uchil.net/?cm=65220  + схемы
+https://intellect.icu/des-shifr-algoritm-6431
+
+Видео
+
+https://www.youtube.com/watch?v=4BFy8fnuoEg
+
+https://www.youtube.com/watch?v=NSc3XKZKBgA
+
+https://www.youtube.com/watch?v=0vj7EX5KbCk
+
+
+
+
+Текст для оформления
+
+https://www.geeksforgeeks.org/strength-of-data-encryption-standard-des/?ref=gcse
+
+
+https://knowledge.allbest.ru/programming/3c0b65635a3ad78b5c43b88521206d27_0.html
+
+https://www.educative.io/edpresso/how-to-implement-the-des-algorithm-in-cpp   ????
+
+https://xreferat.com/33/5932-1-programmnaya-realizaciya-algoritma-shifrovaniya-des-rezhim-ecb.html    полезно!!!
+
+https://www.geeksforgeeks.org/data-encryption-standard-des-set-1/amp/   ?

@@ -1,0 +1,3 @@
+﻿  LabStr.c
+e:\прочее\проекты visualstudio\labstr\labstr\labstr.c(23): warning C4013: del: нет определения; предполагается "extern" с возвратом типа "int"
+  LabStr.vcxproj -> E:\Прочее\Проекты VisualStudio\LabStr\Debug\LabStr.exe

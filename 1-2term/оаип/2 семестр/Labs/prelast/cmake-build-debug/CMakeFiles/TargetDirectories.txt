@@ -1,0 +1,4 @@
+E:/Downloads/Labs/prelast/cmake-build-debug/CMakeFiles/prelast.dir
+E:/Downloads/Labs/prelast/cmake-build-debug/CMakeFiles/edit_cache.dir
+E:/Downloads/Labs/prelast/cmake-build-debug/CMakeFiles/main.dir
+E:/Downloads/Labs/prelast/cmake-build-debug/CMakeFiles/rebuild_cache.dir
