@@ -1,0 +1,9 @@
+class parking
+id 4
+phone +375264561231
+email всемпривет"
+cost 55
+sqr 45
+addr 
+actual 1
+type 2

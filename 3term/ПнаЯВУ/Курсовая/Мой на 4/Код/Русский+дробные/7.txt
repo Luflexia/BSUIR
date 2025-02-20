@@ -1,0 +1,13 @@
+class empty
+id 7
+phone +375281231122
+email 
+cost 55
+sqr 45
+addr Соловьева12,34 д.12
+actual 1
+pond 0
+plant 0
+commun 0
+suifcons 0
+suiffarm 0

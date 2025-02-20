@@ -1,0 +1,13 @@
+quki|2|15|Cookie|round
+test|56|15|Cake|5|4
+77|5|45|Cake|1|0
+66|25|374|Cake|5|3
+44|1|1|Cake|1|0||asd asda asd
+asdqew1|1|1|Cake|1|0|asdf wer sd f sdsf dsf
+Napolewon|20|800|Cake|3|2
+55|12|55|Cake|5.45|0|dfgdf
+Ivory|46|637|Cake|6|3|Vanilla, Raspberry, Buttercream, White chocolate
+Brownie|15|378|Cake|1|0|Dark chocolate, Butter, Sugar, Eggs, Flour
+qwerty|645|23|Cake|2|4|asd qwe rty 
+QWERTYQ|54|500|Cake|4|2|eggs milk
+ddd|45|75|Cake|1|0|milk milk

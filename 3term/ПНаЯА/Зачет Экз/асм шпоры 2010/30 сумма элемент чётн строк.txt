@@ -1,0 +1,80 @@
+30. Найти сумму элементов четных строк матрицы.
+
+.model small
+.stack 100h
+.data
+mes1	db	10,13,"Vvedite elementy matricy(5*4)!!$"
+mes3	db	10,13,"Suuma 4etnyx strok(5*4):$",10,13
+mes2	db	10,13,"$"
+mas	db	20	dup(0)
+sum	dw	5	dup(0)
+.code
+begin:
+	mov ax,@data
+	mov ds,ax
+	lea dx,mes1
+	mov ah,9h
+	int 21h
+	xor bx,bx
+	mov cx,20
+again:
+	mov ah,1
+	int 21h
+	sub al,'0'
+	mov mas[bx],al
+	inc bx
+	loop again
+
+	lea dx,mes2
+	mov ah,9
+	int 21h
+	mov cx,20
+	xor bx,bx
+	xor dh,dh
+output:
+	mov dl,mas[bx]
+	add dx,30h
+	mov ah,2
+	int 21h
+	inc bx
+	loop output
+	xor cx,cx
+	mov cl, 4       ;4islo strok
+	lea bx,mas	    ;adres matricy
+	add bx,4	   ;perexod na 4etnuju str
+	mov si,0
+p2:	push cx
+	mov di,0
+	xor dx,dx     ; dlja xranenija summy
+	mov cx,4     ; kol-vo stolbcov
+p1:
+	mov al,[bx+di]
+	cbw
+	add dx,ax
+	inc di
+	loop p1
+	mov sum[si],dx
+	add si,2	
+	add bx,8	;na sled 4etnuju stroku
+	pop cx
+	dec cx
+	loop p2
+	xor dx,dx
+	
+	lea dx,mes3
+	mov ah,9
+	int 21h
+	
+	mov dx,sum[0]
+	add dx,30h
+	mov ah,09h
+	int 21h
+	
+	mov dx,sum[2]
+	add dx,30h
+	mov ah,09h
+	int 21h	
+exit:
+	mov ah,4ch
+	int 21h
+	end begin

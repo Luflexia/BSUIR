@@ -1,0 +1,127 @@
+.MODEL small
+.STACK 100h
+.DATA
+msg1	DB	"Enter string: $"
+msg2	DB	0Ah, 0Dh, "Enter symbol: $"
+msg3	DB	0Ah, 0Dh, "Result: $"
+
+str1ml	DB	200
+str1l	DB	'$'
+str1	DB	200 dup('$')
+
+symbol  DB  ?
+
+.CODE
+begin:
+	mov	ax, @data
+	mov	ds, ax
+	mov	es,ax
+	xor	ax,ax
+
+	lea	dx, msg1	
+	call	strout
+
+	lea	dx, str1ml	
+	call	strin
+
+	lea	dx, msg2	
+	call	strout
+
+	mov ah, 01h
+	int 21h
+    mov [symbol], al
+    
+    xor cx, cx
+    mov cl, str1l
+    xor si, si
+    xor di, di   
+    xor bx, bx
+    mov di, offset str1
+    mov si, offset str1      
+    mov bl, [symbol]
+    cld
+main_loop:
+    cmp [si], ' '       ;esli probel
+    je  cont            ;propuskaem
+    cmp [si], 13        ;esli konec
+    je  end_main_loop       ;vyvodim stroku 
+    cmp [si], bl      
+    jne cont             ;esli ne sovpalo
+
+    in_loop:
+        inc si    
+        cmp [si], ' '       ;esli probel
+        je  stop            ;stop
+        cmp [si], 13        ;esli konec
+        je  stop            ;stop
+        dec cx
+        jmp in_loop   
+        
+    stop:     
+    call delete        ;udalyaem
+   
+    cont:  
+    mov di, si     
+    inc si 
+                                        
+loop    main_loop     
+
+    end_main_loop:
+    lea dx, msg3
+    call strout
+    
+    lea dx, str1
+    call strout
+
+_end:
+	mov 	ah, 4ch		;vyhod
+	int	21h
+
+
+;*****************Процедуры***********************
+nextstr	proc
+	push	dx
+	push	ax
+	mov	dl, 0Dh		
+	mov	ah, 02h
+	int	21h
+	mov	dl, 0Ah
+	mov	ah, 02h
+	int	21h
+	pop	ax
+	pop	dx
+	ret
+nextstr	endp
+;*************************************************
+strin	proc
+	mov	ah, 0Ah
+	int	21h
+	ret
+strin	endp
+;*************************************************
+strout	proc
+	mov	ah, 09h
+	int	21h
+	ret
+strout	endp
+;*************************************************    
+;v si - index nachala podstroki
+;v di - index konca
+delete	proc
+	push	bx
+	push	di
+	push	si   
+	push    cx
+	
+	xor	cx, cx
+	mov	cl, str1l
+	repe	movsb  
+	
+	pop cx
+	pop	si
+	pop	di
+	pop	bx
+	ret
+delete	endp
+
+end 	begin

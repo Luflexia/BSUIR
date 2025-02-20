@@ -1,0 +1,3463 @@
+#pragma once
+#include <iostream>
+#include <windows.h>
+#include <locale.h>
+
+#include "Interface.h"
+
+using namespace std;
+
+int main()                      //функция main
+{
+    setlocale(LC_ALL, "ru");    //русификатор
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+
+    Interface qwerty;
+    qwerty.start();             //вызов меню работы с препаратами
+
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include <string>
+#include<iostream>
+#include<fstream>
+
+#include "Exception_input.h"
+
+using namespace std;
+
+class Medication								//класс лекарственный препарат
+{
+	string name;								//название 
+	float price;								//стоимость
+	string manufacturer;						//производитель
+public:
+	Medication();								//конструктор
+	Medication(const Medication&);				//конструктор копирования
+	Medication(Medication&&) noexcept;			//конструктор перемещения
+	~Medication();								//деструктор
+
+	string get_name();							//получить название
+	float get_price();							//получить цену
+	string get_manufacturer();					//получить производителя
+	
+	void set_name(string);						//установить название
+	void set_price(float);						//установить цену
+	void set_manufacturer(string);				//установить производителя
+
+	friend bool equ(Medication&, Medication&);	//эквиволентвы ли объекты
+	friend bool operator==(Medication&, Medication&);		//перегрузка оператора ==
+
+	Medication& operator=(const Medication& equ_string);	//перегрузка оператора =			
+
+	friend ostream& operator<<(ostream& os, Medication&);	//перегрузка оператор вывода
+	friend istream& operator>>(istream& is, Medication&);	//перегрузка оператор ввода
+	friend ofstream& operator<<(ofstream& fs, Medication&);	//перегрузка оператор вывода в файл
+	friend ifstream& operator>>(ifstream& fs, Medication&);	//перегрузка оператор ввода из файла
+};
+
+/////////////////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Medication.h"
+
+using namespace std;
+
+Medication::Medication()
+{
+    name = "";
+    price = 0;
+    manufacturer = "";
+}
+
+Medication::Medication(const Medication& copy)
+{
+    name = copy.name;
+    price = copy.price;
+    manufacturer = copy.manufacturer;
+}
+
+Medication::Medication(Medication&& copy) noexcept
+{
+    name = copy.name;
+    price = copy.price;
+    manufacturer = copy.manufacturer;
+}
+
+Medication::~Medication()
+{
+
+}
+
+string Medication::get_name()
+{
+	return name;
+}
+
+float  Medication::get_price()
+{
+	return price;
+}
+
+string Medication::get_manufacturer()
+{
+	return manufacturer;
+}
+
+void   Medication::set_name(string inf)
+{
+	name = inf;
+}
+
+void   Medication::set_price(float inf)
+{
+	price = inf;
+}
+
+void   Medication::set_manufacturer(string inf)
+{
+	manufacturer = inf;
+}
+
+bool equ(Medication& first_object, Medication& second_object)
+{
+    if (first_object.get_name() == second_object.get_name() &&
+        first_object.get_price() == second_object.get_price() &&
+        first_object.get_manufacturer() == second_object.get_manufacturer())
+        return 1;
+    else
+        return 0;
+}
+
+bool operator==(Medication& first_object, Medication& second_object)
+{
+    if (second_object.get_name().length())
+        if (first_object.get_name() != second_object.get_name())
+            return false;
+    if (second_object.get_price())
+        if (first_object.get_price() != second_object.get_price())
+            return false;
+    if (second_object.get_manufacturer().length())
+        if (first_object.get_manufacturer() != second_object.get_manufacturer())
+            return false;
+    return true;
+}
+
+Medication& Medication::operator=(const Medication& equ_object)
+{
+    if (this != &equ_object)
+    {   
+        if (equ_object.name.length())
+            this->name = equ_object.name;
+        if (equ_object.price)
+            this->price = equ_object.price;
+        if (equ_object.manufacturer.length())
+        this->manufacturer = equ_object.manufacturer;
+    }
+    return *this;
+}
+
+std::ostream& operator<<(std::ostream& os, Medication& obj)
+{
+    os.width(20);
+    os << obj.name;
+    os.width(10);
+    os << obj.price;
+    os.width(20);
+    os << obj.manufacturer;
+
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, Medication& obj)
+{
+    char BUFF[2048];
+
+    std::cout << "Введите название препарата\n";
+    obj.name = input_ru_string(is);
+    std::cout << "Введите цену\n";
+    obj.price = input_price(is);
+    std::cout << "Введите производителя\n";
+    obj.manufacturer = input_ru_string(is);
+    return is;
+}
+
+std::ofstream& operator<<(std::ofstream& fs, Medication& obj)
+{
+    fs << obj.name << " " << obj.price << " " << obj.manufacturer;
+
+    return fs;
+}
+
+std::ifstream& operator>>(std::ifstream& fs, Medication& obj)
+{
+
+    fs >> obj.name;
+    fs >> obj.price;
+    fs >> obj.manufacturer;
+
+    return fs;
+}
+
+/////////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Medication.h"
+
+using namespace std;
+
+class Aerosols :						//класс аэрозоли		
+	public Medication
+{
+	float concetration;					//концентрация
+    std::string time;					//время действия препарата
+public:
+	Aerosols();							//конструктор
+	Aerosols(const Aerosols&);			//конструктор копирования
+	Aerosols(Aerosols&&) noexcept;		//конструктор перемещения
+	~Aerosols();						//деструктор
+
+	std::string get_time();				//получить время действия препарата
+	float get_concentration();			//получить концентрацию
+	std::string get_something(char);	//получить выбранное поле 
+
+	void set_time(std::string);			//установить время действия препарата
+	void set_concentration(float);		//установить концентрацию
+	bool set_something();				//установить выбранное поле 
+
+	friend bool equ(Aerosols&, Aerosols&);				//эквиволентвы ли объекты
+	friend bool compare(Aerosols&, Aerosols&, int&);	//сравнивает объекты по выбранному полю
+	friend bool operator==(Aerosols&, Aerosols&);		//перегрузка оператора ==
+
+	Aerosols& operator=(const Aerosols&);				//перегрузка оператора =
+
+	friend ostream& operator<<(ostream&, Aerosols&);	//перегрузка оператор вывода
+	friend istream& operator>>(istream&, Aerosols&);	//перегрузка оператор ввода
+	friend ofstream& operator<<(ofstream&, Aerosols&);	//перегрузка оператор вывода в файл
+	friend ifstream& operator>>(ifstream&, Aerosols&);	//перегрузка оператор ввода из файла
+
+	void print_table();					//вывод шапки таблицы
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Aerosols.h"
+
+Aerosols::Aerosols()
+{
+    concetration = 0;
+    time = "";
+}
+
+Aerosols::Aerosols(const Aerosols& copy)
+{
+    (Medication&)*this = (Medication&)copy;
+    concetration = copy.concetration;
+    time = copy.time;
+}
+
+Aerosols::Aerosols(Aerosols&& copy) noexcept
+{
+    (Medication&)*this = (Medication&)copy;
+    concetration = copy.concetration;
+    time = copy.time;
+}
+
+Aerosols::~Aerosols()
+{
+
+}
+
+std::string Aerosols::get_time()
+{
+	return time;
+}
+
+float Aerosols::get_concentration()
+{
+    return concetration;
+}
+
+std::string Aerosols::get_something(char menu)
+{
+    bool iteration = true;
+    do
+    {
+        switch (menu)
+        {
+        case '1':
+        {
+            return get_name();
+            break;
+        }
+        case '2':
+        {
+            return get_manufacturer();
+            break;
+        }
+        case '3':
+        {
+            std::string temp_string;
+            temp_string = std::to_string(get_price());
+            return temp_string;
+            break;
+        }
+        case '4':
+        {
+            std::string temp_string;
+            temp_string = std::to_string(get_concentration());
+            return temp_string;
+            break;
+        }
+        case '5':
+        {
+            return get_time();
+            break;
+        }
+        default:
+            break;
+        }
+    } while (iteration);
+}
+
+void Aerosols::set_time(std::string inf)
+{
+	time = inf;
+}
+
+void Aerosols::set_concentration(float inf)
+{
+    concetration = inf;
+}
+
+bool Aerosols::set_something()
+{
+    std::cout << "1 - выбрать по названию\n" << "2 - выбрать по цене\n" << "3 - выбрать по производителю\n"
+        << "4 - выбрать по концентрации\n" << "5 - выбрать по времени действия\n" << "0 - закончить\n";
+    rewind(stdin);
+    do
+    {
+        switch (input_int(std::cin))
+        {
+        case 1:
+        {
+            std::cout << "Введите название\n";
+            set_name(input_ru_string(std::cin));
+            return 1;
+            break;
+        }
+        case 2:
+        {
+            std::cout << "Введите цену\n";
+            set_price(input_price(std::cin));
+            return 1;
+            break;
+        }
+        case 3:
+        {
+            std::cout << "Введите производителя\n";
+            set_manufacturer(input_ru_string(std::cin));
+            return 1;
+            break;
+        }
+        case 4:
+        {
+            std::cout << "Введите концентрацию препарата\n";
+            set_concentration(input_int(std::cin));
+            return 1;
+            break;
+        }
+        case 5:
+        {
+            std::cout << "Введите время работы препарата\n";
+            set_time(input_dimension(std::cin, "время"));
+            return 1;
+            break;
+        }
+        case 0:
+        {
+            return 0;
+        }
+        default:
+        {
+            std::cout << "такого пункта нет, введите число от 1 до 5\n";
+            system("pause");
+            break;
+        }
+        }
+    } while (true);
+}
+
+bool equ(Aerosols& first_object, Aerosols& second_object)
+{
+    if ((Medication&)first_object == (Medication&)second_object &&
+        first_object.get_time() == second_object.get_time() &&
+        first_object.get_concentration() == second_object.get_concentration())
+        return 1;
+    else
+        return 0;
+}
+
+bool compare(Aerosols& first_obj, Aerosols& second_obj, int& menu)
+{
+
+    do
+    {
+        if (menu == 0)
+        {
+            std::cout << "1 - сравнивать по названию\n" << "2 - сравнивать по цене\n" << "3 - сравнивать по производителю\n"
+                << "4 - сравнивать по концентрации\n" << "5 - сравнивать по времени действия\n";
+            menu = input_int(std::cin);
+        }
+        switch (menu)
+        {
+        case 1:
+        {
+            if (first_obj.get_name() > second_obj.get_name())
+                return 1;
+            break;
+        }
+        case 2:
+        {
+            if (first_obj.get_price() > second_obj.get_price())
+                return 1;
+            break;
+        }
+        case 3:
+        {
+            if (first_obj.get_manufacturer() > second_obj.get_manufacturer())
+                return 1;
+            break;
+        }
+        case 4:
+        {
+            if (first_obj.get_concentration() > second_obj.get_concentration())
+                return 1;
+            break;
+        }
+        case 5:
+        {
+            if (first_obj.get_time()[first_obj.get_time().length() - 1] == 'ч' 
+                && (second_obj.get_time()[second_obj.get_time().length() - 1] == 'н'
+                || second_obj.get_time()[second_obj.get_time().length() - 1] == 'с'))
+                return 1;
+            if (first_obj.get_time()[first_obj.get_time().length() - 1] == 'н' 
+                && second_obj.get_time()[second_obj.get_time().length() - 1] == 'с')
+                return 1;
+            if (first_obj.get_time()[first_obj.get_time().length() - 1] == 'с' 
+                && (second_obj.get_time()[second_obj.get_time().length() - 1] == 'н'
+                || second_obj.get_time()[second_obj.get_time().length() - 1] == 'ч'))
+                return 0;
+            if (first_obj.get_time()[first_obj.get_time().length() - 1] == 'н' 
+                && second_obj.get_time()[second_obj.get_time().length()] == 'ч')
+                return 0;
+            if (first_obj.get_time() > second_obj.get_time())
+                return 1;
+            break;
+        }
+        default:
+        {
+            std::cout << "такого пункта нет, введите число от 1 до 5\n";
+            system("pause");
+            menu = 0;
+            break;
+        }
+        }
+        return 0;
+    } while (true);
+}
+
+bool operator==(Aerosols& first_object, Aerosols& second_object)
+{
+    if (!((Medication&)first_object == (Medication&)second_object))
+        return false;
+    if (second_object.get_time().length())
+        if (first_object.get_time() != second_object.get_time())
+            return false;
+    if (second_object.get_concentration())
+        if (first_object.get_concentration() != second_object.get_concentration())
+            return false;
+    return true;
+}
+
+Aerosols& Aerosols::operator=(const Aerosols& equ_object)
+{
+    if (this != &equ_object)
+    {
+        (Medication&)*this = (Medication&)equ_object;
+        if (equ_object.concetration)
+            this->concetration = equ_object.concetration;
+        if(equ_object.time.length())
+            this->time = equ_object.time;
+    }
+    return *this;
+}
+
+std::ostream& operator<<(std::ostream& os, Aerosols& obj)
+{
+    os << (Medication&)obj;
+    os.width(20);
+    os << obj.concetration;
+    os.width(20);
+    os << obj.time;
+    os << '\n';
+    os.fill('-');
+    os.width(93);
+    os << '\n';
+    os.fill(' ');
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, Aerosols& obj)
+{
+    char BUFF[2048];
+
+    is >> (Medication&)obj;
+    std::cout << "Введите концентрацию препарата\n";
+    obj.concetration = input_int(is);
+    std::cout << "Введите время работы препарата\n";
+    rewind(stdin);
+    obj.time = input_dimension(is, "время");
+    return is;
+}
+
+std::ofstream& operator<<(std::ofstream& fs, Aerosols& obj)
+{
+    fs << (Medication&)obj << " " << obj.concetration << " " << obj.time << '\n';
+
+    return fs;
+}
+
+std::ifstream& operator>>(std::ifstream& fs, Aerosols& obj)
+{
+    fs >> (Medication&)obj;
+    fs >> obj.concetration;
+    fs >> obj.time;
+
+    return fs;
+}
+
+void Aerosols::print_table()
+{
+    std::cout << " |";
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(10);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout << '\n';
+
+    std::cout << " |";
+    std::cout.fill(' ');
+    std::cout.width(19);
+    std::cout << "Название препарата";
+    std::cout << '|';
+
+    std::cout.width(9);
+    std::cout << "Цена";
+    std::cout << '|';
+
+    std::cout.width(19);
+    std::cout << "Производитель";
+    std::cout << '|';
+
+    std::cout.width(19);
+    std::cout << "Концентрация(%)";
+    std::cout << '|';
+
+    std::cout.width(19);
+    std::cout << "Время действия";
+    std::cout << "|\n";
+
+    std::cout << " |";
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(10);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout << '\n';
+    std::cout.fill(' ');
+}
+
+///////////////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Medication.h"
+
+class Solid :					//класс твёрдые
+    public Medication
+{
+    string weight;				//масса
+public:
+	Solid();					//конструктор
+	Solid(const Solid&);		//конструктор копирования
+	Solid(Solid&&) noexcept;	//конструктор перемещения
+	~Solid();					//деструктор
+
+	string get_weight();		//получить масса
+
+	void set_weight(string);	//установить масса
+
+	friend bool equ(Solid&, Solid&);				//эквиволентвы ли объекты
+	friend bool operator==(Solid&, Solid&);			//перегрузка оператора ==
+
+	Solid& operator=(const Solid&);					//перегрузка оператора =
+
+	friend ostream& operator<<(ostream&, Solid&);	//перегрузка оператор вывода
+	friend istream& operator>>(istream&, Solid&);	//перегрузка оператор ввода
+	friend ofstream& operator<<(ofstream&, Solid&);	//перегрузка оператор вывода в файл
+	friend ifstream& operator>>(ifstream&, Solid&);	//перегрузка оператор ввода в файл
+};
+
+////////////////////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Solid.h"
+
+Solid::Solid()
+{
+    weight = '\0';
+}
+
+Solid::Solid(const Solid& copy)
+{
+    (Medication&)*this = (Medication&)copy;
+    weight = copy.weight;
+}
+
+Solid::Solid(Solid&& copy) noexcept
+{
+    (Medication&)*this = (Medication&)copy;
+    weight = copy.weight;
+}
+
+Solid::~Solid()
+{
+
+}
+
+std::string Solid::get_weight()
+{
+	return weight;
+}
+
+void Solid::set_weight(std::string inf)
+{
+	weight = inf;
+}
+
+bool equ(Solid& first_object, Solid& second_object)
+{
+    if ((Medication&)first_object == (Medication&)second_object &&
+        first_object.get_weight() == second_object.get_weight())
+        return 1;
+    else
+        return 0;
+}
+
+bool operator==(Solid& first_object, Solid& second_object)
+{
+    if (!((Medication&)first_object == (Medication&)second_object))
+        return false;
+    if (second_object.get_weight().length() != 1)
+        if (first_object.get_weight() != second_object.get_weight())
+            return false;
+    return true;
+}
+
+Solid& Solid::operator=(const Solid& equ_object)
+{
+    if (this != &equ_object)
+    {
+        (Medication&)*this = (Medication&)equ_object;
+        if(equ_object.weight.length() != 1)
+            this->weight = equ_object.weight;
+    }
+    return *this;
+}
+
+std::ostream& operator<<(std::ostream& os, Solid& obj)
+{
+    os << (Medication&)obj;
+    os.width(20);
+    os << obj.weight;
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, Solid& obj)
+{
+    char BUFF[2048];
+
+    is >> (Medication&)obj;
+    std::cout << "Введите массу препарата\n";
+    obj.weight = input_dimension(is, "масса");
+    return is;
+}
+
+std::ofstream& operator<<(std::ofstream& fs, Solid& obj)
+{
+    fs << (Medication&)obj << " " << obj.weight;
+
+    return fs;
+}
+
+std::ifstream& operator>>(std::ifstream& fs, Solid& obj)
+{
+    fs >> (Medication&)obj;
+    fs >> obj.weight;
+
+    return fs;
+}
+
+///////////////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Medication.h"
+
+class Liquid :						//класс жидкие
+    public Medication
+{
+    string volume;					//объём
+	float concentration;			//концентрация
+public:
+	Liquid();						//конструктор
+	Liquid(const Liquid&);			//конструктор копирования
+	Liquid(Liquid&&) noexcept;		//конструктор перемещения
+	~Liquid();						//деструктор
+
+	string get_volume();			//получить объём
+	float get_concentration();		//получить концентрацию
+
+	void set_volume(string);		//установить объём
+	void set_concentration(float);	//установить концентрацию
+
+	friend bool equ(Liquid&, Liquid&);				//эквиволентвы ли объекты
+	friend bool operator==(Liquid&, Liquid&);		//перегрузка оператора ==
+
+	Liquid& operator=(const Liquid&);				//перегрузка оператора =
+
+	friend ostream& operator<<(ostream&, Liquid&);	//перегрузка оператор вывода
+	friend istream& operator>>(istream&, Liquid&);	//перегрузка оператор ввода
+	friend ofstream& operator<<(ofstream&, Liquid&);//перегрузка оператор вывода в файл
+	friend ifstream& operator>>(ifstream&, Liquid&);//перегрузка оператор ввода из файла
+};
+
+///////////////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Liquid.h"
+
+Liquid::Liquid()
+{
+    concentration = 0;
+    volume = "";
+}
+
+Liquid::Liquid(const Liquid& copy)
+{
+    (Medication&)*this = (Medication&)copy;
+    concentration = copy.concentration;
+    volume = copy.volume;
+}
+
+Liquid::Liquid(Liquid&& copy) noexcept
+{
+    (Medication&)*this = (Medication&)copy;
+    concentration = copy.concentration;
+    volume = copy.volume;
+}
+
+Liquid::~Liquid()
+{
+
+}
+
+std::string Liquid::get_volume()
+{
+	return volume;
+}
+
+float Liquid::get_concentration()
+{
+    return concentration;
+}
+
+void Liquid::set_volume(std::string inf)
+{
+	volume = inf;
+}
+
+void Liquid::set_concentration(float inf)
+{
+    concentration = inf;
+}
+
+bool equ(Liquid& first_object, Liquid& second_object)
+{
+    if ((Medication&)first_object == (Medication&)second_object &&
+        first_object.get_volume() == second_object.get_volume() &&
+        first_object.get_concentration() == second_object.get_concentration())
+        return 1;
+    else
+        return 0;
+}
+
+bool operator==(Liquid& first_object, Liquid& second_object)
+{
+    if ((Medication&)first_object == (Medication&)second_object)
+        return true;
+    if (second_object.get_volume().length())
+        if (first_object.get_volume() != second_object.get_volume())
+            return false;
+    if (second_object.get_concentration())
+        if (first_object.get_concentration() != second_object.get_concentration())
+            return false;
+    return true;
+}
+
+Liquid& Liquid::operator=(const Liquid& equ_object)
+{
+    if (this != &equ_object)
+    {
+        (Medication&)*this = (Medication&)equ_object;
+        if (equ_object.concentration)
+            this->concentration = equ_object.concentration;
+        if(equ_object.volume.length())
+            this->volume = equ_object.volume;
+    }
+    return *this;
+}
+
+std::ostream& operator<<(std::ostream& os, Liquid& obj)
+{
+    os << (Medication&)obj;
+    os.width(20);
+    os << obj.concentration;
+    os.width(20);
+    os << obj.volume;
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, Liquid& obj)
+{
+    char BUFF[2048];
+
+    is >> (Medication&)obj;
+    std::cout << "Введите концентрацию препарата\n";
+    obj.concentration = input_int(is);
+    std::cout << "Введите объём препарата\n";
+    obj.volume = input_dimension(is, "объём");
+    return is;
+}
+
+std::ofstream& operator<<(std::ofstream& fs, Liquid& obj)
+{
+    fs << (Medication&)obj << " " << obj.concentration << " " << obj.volume;
+
+    return fs;
+}
+
+std::ifstream& operator>>(std::ifstream& fs, Liquid& obj)
+{
+    fs >> (Medication&)obj;
+    fs >> obj.concentration;
+    fs >> obj.volume;
+
+    return fs;
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Solid.h"
+
+class Powder :						//класс порошок
+    public Solid
+{
+	string environment;				//жидкость для растворения
+public:
+	Powder();						//конструктор
+	Powder(const Powder&);			//конструктор копирования
+	Powder(Powder&&) noexcept;		//конструктор перемещения
+	~Powder();						//деструктор
+
+	string get_environment();		//получить жидкость для растворения
+
+	void set_environment(string);	//установить жидкость для растворения
+	bool set_something();			//установить по выбранному полю
+
+	friend bool equ(Powder&, Powder&);				//эквиволентвы ли объекты
+	friend bool compare(Powder&, Powder&, int&);	//сравнивает объекты по выбранному полю
+	friend bool operator==(Powder&, Powder&);		//перегрузка оператора ==
+
+	Powder& operator=(const Powder&);				//перегрузка оператора =
+
+	friend ostream& operator<<(ostream&, Powder&);	//перегрузка оператор вывода
+	friend istream& operator>>(istream&, Powder&);	//перегрузка оператор ввода
+	friend ofstream& operator<<(ofstream&, Powder&);//ерегрузка оператор вывода в файл
+	friend ifstream& operator>>(ifstream&, Powder&);//регрузка оператор ввода в файл
+
+	void print_table();				//вывод шапки таблицы
+};
+
+/////////////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Powder.h"
+
+Powder::Powder()
+{
+    environment = "";
+}
+
+Powder::Powder(const Powder& copy)
+{
+    (Solid&)*this = (Solid&)copy;
+    environment = copy.environment;
+}
+
+Powder::Powder(Powder&& copy) noexcept
+{
+    (Solid&)*this = (Solid&)copy;
+    environment = copy.environment;
+}
+
+Powder::~Powder()
+{
+
+}
+
+std::string Powder::get_environment()
+{
+	return environment;
+}
+
+void Powder::set_environment(std::string inf)
+{
+	environment = inf;
+}
+
+bool Powder::set_something()
+{
+    std::cout << "1 - выбрать по названию\n" << "2 - выбрать по цене\n" << "3 - выбрать по производителю\n"
+        << "4 - выбрать по массе\n" << "5 - выбрать по среде для растворения\n" << "0 - закончить\n";
+    rewind(stdin);
+    do
+    {
+        switch (input_int(std::cin))
+        {
+        case 1:
+        {
+            std::cout << "Введите название\n";
+            set_name(input_ru_string(std::cin));
+            return 1;
+            break;
+        }
+        case 2:
+        {
+            std::cout << "Введите цену\n";
+            set_price(input_price(std::cin));
+            return 1;
+            break;
+        }
+        case 3:
+        {
+            std::cout << "Введите производителя\n";
+            set_manufacturer(input_ru_string(std::cin));
+            return 1;
+            break;
+        }
+        case 4:
+        {
+            std::cout << "Введите массу\n";
+            set_weight(input_dimension(std::cin, "масса"));
+            return 1;
+            break;
+        }
+        case 5:
+        {
+            std::cout << "Введите жидкость для растворения\n";
+            set_environment(input_ru_string(std::cin));
+            return 1;
+            break;
+        }
+        case 0:
+        {
+            return 0;
+        }
+        default:
+        {
+            std::cout << "такого пункта нет, введите число от 1 до 5\n";
+            system("pause");
+            break;
+        }
+        }
+    } while (true);
+}
+
+bool equ(Powder& first_object, Powder& second_object)
+{
+    if ((Solid&)first_object == (Solid&)second_object &&
+        first_object.get_environment() == second_object.get_environment())
+        return 1;
+    else
+        return 0;
+}
+
+bool compare(Powder& first_obj, Powder& second_obj, int& menu)
+{
+    do
+    {
+        if (menu == 0)
+        {
+            std::cout << "1 - сравнивать по названию\n" << "2 - сравнивать по цене\n" << "3 - сравнивать по производителю\n"
+                << "4 - сравнивать по массе\n" << "5 - сравнивать по жидкость для растворения\n";
+            menu = input_int(std::cin);
+        }
+        switch (menu)
+        {
+        case 1:
+        {
+            if (first_obj.get_name() > second_obj.get_name())
+                return 1;
+            break;
+        }
+        case 2:
+        {
+            if (first_obj.get_price() > second_obj.get_price())
+                return 1;
+            break;
+        }
+        case 3:
+        {
+            if (first_obj.get_manufacturer() > second_obj.get_manufacturer())
+                return 1;
+            break;
+        }
+        case 4:
+        {
+            if (first_obj.get_weight() > second_obj.get_weight())
+                return 1;
+            break;
+        }
+        case 5:
+        {
+            if (first_obj.get_environment() > second_obj.get_environment())
+                return 1;
+            break;
+        }
+        default:
+        {
+            std::cout << "такого пункта нет, введите число от 1 до 5\n";
+            system("pause");
+            menu = 0;
+            break;
+        }
+        }
+        return 0;
+    } while (true);
+}
+
+bool operator==(Powder& first_object, Powder& second_object)
+{
+    if (!((Solid&)first_object == (Solid&)second_object))
+        return false;
+    if (second_object.get_environment().length())
+        if (first_object.get_environment() != second_object.get_environment())
+            return false;
+    return true;
+}
+
+Powder& Powder::operator=(const Powder& equ_object)
+{
+    if (this != &equ_object)
+    {
+        (Solid&)*this = (Solid&)equ_object;
+        if (equ_object.environment.length())
+            this->environment = equ_object.environment;
+    }
+    return *this;
+}
+
+std::ostream& operator<<(std::ostream& os, Powder& obj)
+{
+    os << (Solid&)obj;
+    os.width(30);
+    os << obj.environment;
+    os << '\n';
+    os.fill('-');
+    os.width(103);
+    os << '\n';
+    os.fill(' ');
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, Powder& obj)
+{
+    char BUFF[2048];
+
+    is >> (Solid&)obj;
+    std::cout << "Введите жидкость для растворения\n";
+    obj.environment = input_ru_string(is);
+    return is;
+}
+
+std::ofstream& operator<<(std::ofstream& fs, Powder& obj)
+{
+    fs << (Solid&)obj << " " << obj.environment;
+
+    return fs;
+}
+
+std::ifstream& operator>>(std::ifstream& fs, Powder& obj)
+{
+    fs >> (Solid&)obj;
+    fs >> obj.environment;
+
+    return fs;
+}
+
+void Powder::print_table()
+{
+    std::cout << " |";
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(10);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(30);
+    std::cout << '|';
+    std::cout << '\n';
+
+    std::cout << " |";
+    std::cout.fill(' ');
+    std::cout.width(19);
+    std::cout << "Название препарата";
+    std::cout << '|';
+
+    std::cout.width(9);
+    std::cout << "Цена";
+    std::cout << '|';
+
+    std::cout.width(19);
+    std::cout << "Производитель";
+    std::cout << '|';
+
+    std::cout.width(19);
+    std::cout << "Масса";
+    std::cout << '|';
+
+    std::cout.width(29);
+    std::cout << "Жидкость для растворения";
+    std::cout << "|\n";
+
+    std::cout << " |";
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(10);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(30);
+    std::cout << '|';
+    std::cout << '\n';
+    std::cout.fill(' ');
+}
+
+/////////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Solid.h"
+
+class Tablets :					//класс таблетки
+    public Solid
+{
+	int kol_package;			//количество в упаковке
+public:
+	Tablets();					//конструктор
+	Tablets(const Tablets&);	//конструктор копирования
+	Tablets(Tablets&&) noexcept;//конструктор перемещения
+	~Tablets();					//деструктор
+
+	int get_kol_package();		//получить количество в упаковке
+
+	void set_kol_package(int);	//установить количество в упаковке
+	bool set_something();		//установить по выбранному полю
+
+	friend bool equ(Tablets&, Tablets&);				//эквиволентвы ли объекты
+	friend bool compare(Tablets&, Tablets&, int&);		//сравнивает объекты по выбранному полю
+	friend bool operator==(Tablets&, Tablets&);			//перегрузка оператора ==
+
+	Tablets& operator=(const Tablets&);					//перегрузка оператора =
+
+	friend ostream& operator<<(ostream&, Tablets&);		//перегрузка оператор вывода
+	friend istream& operator>>(istream&, Tablets&);		//перегрузка оператор ввода
+	friend ofstream& operator<<(ofstream&, Tablets&);	//перегрузка оператор вывода в файл
+	friend ifstream& operator>>(ifstream&, Tablets&);	//перегрузка оператор ввода в файл
+
+	void print_table();			//вывод шапки таблицы
+};
+
+////////////////////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Tablets.h"
+
+Tablets::Tablets()
+{
+    kol_package = 0;
+}
+
+Tablets::Tablets(const Tablets& copy)
+{
+    (Solid&)*this = (Solid&)copy;
+    kol_package = copy.kol_package;
+}
+
+Tablets::Tablets(Tablets&& copy) noexcept
+{
+    (Solid&)*this = (Solid&)copy;
+    kol_package = copy.kol_package;
+}
+
+Tablets::~Tablets()
+{
+
+}
+
+int Tablets::get_kol_package()
+{
+	return kol_package;
+}
+
+void Tablets::set_kol_package(int inf)
+{
+	kol_package = inf;
+}
+
+bool Tablets::set_something()
+{
+    std::cout << "1 - выбрать по названию\n" << "2 - выбрать по цене\n" << "3 - выбрать по производителю\n"
+        << "4 - выбрать по массе\n" << "5 - выбрать по количеству в упаковке\n" << "0 - закончить\n";
+    rewind(stdin);
+    do
+    {
+        switch (input_int(std::cin))
+        {
+        case 1:
+        {
+            std::cout << "Введите название\n";
+            set_name(input_ru_string(std::cin));
+            return 1;
+            break;
+        }
+        case 2:
+        {
+            std::cout << "Введите цену\n";
+            set_price(input_price(std::cin));
+            return 1;
+            break;
+        }
+        case 3:
+        {
+            std::cout << "Введите производителя\n";
+            set_manufacturer(input_ru_string(std::cin));
+            return 1;
+            break;
+        }
+        case 4:
+        {
+            std::cout << "Введите массу\n";
+            set_weight(input_dimension(std::cin, "масса"));
+            return 1;
+            break;
+        }
+        case 5:
+        {
+            std::cout << "Введите количество таблеток в упаковке\n";
+            set_kol_package(input_int(std::cin));
+            return 1;
+            break;
+        }
+        case 0:
+        {
+            return 0;
+        }
+        default:
+        {
+            std::cout << "такого пункта нет, введите число от 1 до 5\n";
+            system("pause");
+            break;
+        }
+        }
+    } while (true);
+}
+
+bool equ(Tablets& first_object, Tablets& second_object)
+{
+    if ((Solid&)first_object == (Solid&)second_object &&
+        first_object.get_kol_package() == second_object.get_kol_package())
+        return 1;
+    else
+        return 0;
+}
+
+bool compare(Tablets& first_obj, Tablets& second_obj, int& menu)
+{
+    do
+    {
+        if (menu == 0)
+        {
+            std::cout << "1 - сравнивать по названию\n" << "2 - сравнивать по цене\n" << "3 - сравнивать по производителю\n"
+                << "4 - сравнивать по массе\n" << "5 - сравнивать по количеству таблеток в упаковке\n";
+            int menu = input_int(std::cin);
+        }
+        switch (menu)
+        {
+        case 1:
+        {
+            if (first_obj.get_name() > second_obj.get_name())
+                return 1;
+            break;
+        }
+        case 2:
+        {
+            if (first_obj.get_price() > second_obj.get_price())
+                return 1;
+            break;
+        }
+        case 3:
+        {
+            if (first_obj.get_manufacturer() > second_obj.get_manufacturer())
+                return 1;
+            break;
+        }
+        case 4:
+        {
+            if (first_obj.get_weight() > second_obj.get_weight())
+                return 1;
+            break;
+        }
+        case 5:
+        {
+            if (first_obj.get_kol_package() > second_obj.get_kol_package())
+                return 1;
+            break;
+        }
+        default:
+        {
+            std::cout << "такого пункта нет, введите число от 1 до 5\n";
+            system("pause");
+            menu = 0;
+            break;
+        }
+        }
+        return 0;
+    } while (true);
+}
+
+bool operator==(Tablets& first_object, Tablets& second_object)
+{
+    if ((Solid&)first_object == (Solid&)second_object)
+        return true;
+    if (second_object.get_kol_package())
+        if (first_object.get_kol_package() != second_object.get_kol_package())
+            return false;
+    return true;
+}
+
+Tablets& Tablets::operator=(const Tablets& equ_object)
+{
+    if (this != &equ_object)
+    {
+        (Solid&)*this = (Solid&)equ_object;
+        if (equ_object.kol_package)
+            this->kol_package = equ_object.kol_package;
+    }
+    return *this;
+}
+
+std::ostream& operator<<(std::ostream& os, Tablets& obj)
+{
+    os << (Solid&)obj;
+    os.width(20);
+    os << obj.kol_package;
+    os << '\n';
+    os.fill('-');
+    os.width(93);
+    os << '\n';
+    os.fill(' ');
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, Tablets& obj)
+{
+    char BUFF[2048];
+
+    is >> (Solid&)obj;
+    std::cout << "Введите количество таблеток в упаковке\n";
+    obj.kol_package = input_int(is);
+    return is;
+}
+
+std::ofstream& operator<<(std::ofstream& fs, Tablets& obj)
+{
+    fs << (Solid&)obj << " " << obj.kol_package << '\n';
+
+    return fs;
+}
+
+std::ifstream& operator>>(std::ifstream& fs, Tablets& obj)
+{
+    fs >> (Solid&)obj;
+    fs >> obj.kol_package;
+
+    return fs;
+}
+
+void Tablets::print_table()
+{
+    std::cout << " |";
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(10);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout << '\n';
+
+    std::cout << " |";
+    std::cout.fill(' ');
+    std::cout.width(19);
+    std::cout << "Название препарата";
+    std::cout << '|';
+
+    std::cout.width(9);
+    std::cout << "Цена";
+    std::cout << '|';
+
+    std::cout.width(19);
+    std::cout << "Производитель";
+    std::cout << '|';
+
+    std::cout.width(19);
+    std::cout << "Масса";
+    std::cout << '|';
+
+    std::cout.width(19);
+    std::cout << "Количество таблеток";
+    std::cout << "|\n";
+
+    std::cout << " |";
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(10);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout << '\n';
+    std::cout.fill(' ');
+
+}
+
+////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Liquid.h"
+
+class Solutions :					//класс мазь
+    public Liquid
+{
+    string type_using;				//способ нанесения
+public:
+	Solutions();					//конструктор
+	Solutions(const Solutions&);	//конструктор копирования		
+	Solutions(Solutions&&) noexcept;//конструктор перемещения
+	~Solutions();					//деструктор
+
+	string get_type_using();		//получить способ нанесения
+
+	void set_type_using(string);	//установить способ нанесения
+	bool set_something();			//установить по выбранному полю
+
+	friend bool equ(Solutions&, Solutions&);			//эквиволентвы ли объекты
+	friend bool compare(Solutions&, Solutions&, int&);	//сравнивает объекты по выбранному полю
+	friend bool operator==(Solutions&, Solutions&);		//перегрузка оператора ==
+
+	Solutions& operator=(const Solutions&);				//перегрузка оператора =
+
+	friend ostream& operator<<(ostream&, Solutions&);	//перегрузка оператор вывода
+	friend istream& operator>>(istream&, Solutions&);	//перегрузка оператор ввода
+	friend ofstream& operator<<(ofstream&, Solutions&);	//перегрузка оператор вывода в файл
+	friend ifstream& operator>>(ifstream&, Solutions&);	//перегрузка оператор ввода в файл
+
+	void print_table();				//вывод шапки таблицы
+};
+ 
+///////////////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Solutions.h"
+
+Solutions::Solutions()
+{
+    type_using = "";
+}
+
+Solutions::Solutions(const Solutions& copy)
+{
+    (Liquid&)*this = (Liquid&)copy;
+    type_using = copy.type_using;
+}
+
+Solutions::Solutions(Solutions&& copy) noexcept
+{
+    (Liquid&)*this = (Liquid&)copy;
+    type_using = copy.type_using;
+}
+
+Solutions::~Solutions()
+{
+
+}
+std::string Solutions::get_type_using()
+{
+	return type_using;
+}
+
+void Solutions::set_type_using(std::string inf)
+{
+	type_using = inf;
+}
+
+bool Solutions::set_something()
+{
+    std::cout << "1 - выбрать по названию\n" << "2 - выбрать по цене\n" << "3 - выбрать по производителю\n"
+        << "4 - выбрать по концентрации\n" << "5 - выбрать по объёму\n" << "6 - выбрать по типу использования\n" << "0 - закончить\n";
+    rewind(stdin);
+    do
+    {
+        switch (input_int(std::cin))
+        {
+        case 1:
+        {
+            std::cout << "Введите название\n";
+            set_name(input_ru_string(std::cin));
+            return 1;
+            break;
+        }
+        case 2:
+        {
+            std::cout << "Введите цену\n";
+            set_price(input_price(std::cin));
+            return 1;
+            break;
+        }
+        case 3:
+        {
+            std::cout << "Введите производителя\n";
+            set_manufacturer(input_ru_string(std::cin));
+            return 1;
+            break;
+        }
+        case 4:
+        {
+            std::cout << "Введите концентрацию\n";
+            set_concentration(input_int(std::cin));
+            return 1;
+            break;
+        }
+        case 5:
+        {
+            std::cout << "Введите объём\n";
+            set_volume(input_dimension(std::cin, "объём"));
+            return 1;
+            break;
+        }
+        case 6:
+        {
+            std::cout << "Введите способ нанесения\n";
+            set_type_using(input_ru_string(std::cin));
+            return 1;
+            break;
+        }
+        case 0:
+        {
+            return 0;
+        }
+        default:
+        {
+            std::cout << "такого пункта нет, введите число от 1 до 6\n";
+            system("pause");
+            break;
+        }
+        }
+    } while (true);
+}
+
+bool equ(Solutions& first_object, Solutions& second_object)
+{
+    if ((Liquid&)first_object == (Liquid&)second_object &&
+        first_object.get_type_using() == second_object.get_type_using())
+        return 1;
+    else
+        return 0;
+}
+
+bool compare(Solutions& first_obj, Solutions& second_obj, int& menu)
+{
+    do
+    {
+        if (menu == 0)
+        {
+            std::cout << "1 - сравнивать по названию\n" << "2 - сравнивать по цене\n" << "3 - сравнивать по производителю\n"
+                << "4 - сравнивать по концентрации\n" << "5 - сравнивать по объёму\n" << "6 - сравнивать по способу нанесения\n";
+            int menu = input_int(std::cin);
+        }
+        switch (menu)
+        {
+        case 1:
+        {
+            if (first_obj.get_name() > second_obj.get_name())
+                return 1;
+            break;
+        }
+        case 2:
+        {
+            if (first_obj.get_price() > second_obj.get_price())
+                return 1;
+            break;
+        }
+        case 3:
+        {
+            if (first_obj.get_manufacturer() > second_obj.get_manufacturer())
+                return 1;
+            break;
+        }
+        case 4:
+        {
+            if (first_obj.get_concentration() > second_obj.get_concentration())
+                return 1;
+            break;
+        }
+        case 5:
+        {
+            if (first_obj.get_volume() > second_obj.get_volume())
+                return 1;
+            break;
+        }
+        case 6:
+        {
+            if (first_obj.get_type_using() > second_obj.get_type_using())
+                return 1;
+            break;
+        }
+        {
+            std::cout << "такого пункта нет, введите число от 1 до 6\n";
+            system("pause");
+            menu = 0;
+            break;
+        }
+        }
+        return 0;
+    } while (true);
+}
+
+bool operator==(Solutions& first_object, Solutions& second_object)
+{
+    if ((Liquid&)first_object == (Liquid&)second_object)
+        return true;
+    if (second_object.get_type_using().length())
+        if (first_object.get_type_using() != second_object.get_type_using())
+            return false;
+    return true;
+}
+
+Solutions& Solutions::operator=(const Solutions& equ_object)
+{
+    if (this != &equ_object)
+    {
+        (Liquid&)*this = (Liquid&)equ_object;
+        if (equ_object.type_using.length())
+            this->type_using = equ_object.type_using;
+    }
+    return *this;
+}
+
+std::ostream& operator<<(std::ostream& os, Solutions& obj)
+{
+    os << (Liquid&)obj;
+    os.width(20);
+    os << obj.type_using;
+    os << '\n';
+    os.fill('-');
+    os.width(113);
+    os << '\n';
+    os.fill(' ');
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, Solutions& obj)
+{
+    char BUFF[2048];
+
+    is >> (Liquid&)obj;
+    std::cout << "Введите способ нанесения\n";
+    rewind(stdin);
+    obj.type_using = input_ru_string(is);
+    return is;
+}
+
+std::ofstream& operator<<(std::ofstream& fs, Solutions& obj)
+{
+    fs << (Liquid&)obj << " " << obj.type_using << '\n';
+
+    return fs;
+}
+
+std::ifstream& operator>>(std::ifstream& fs, Solutions& obj)
+{
+    fs >> (Liquid&)obj;
+    fs >> obj.type_using;
+
+    return fs;
+}
+
+void Solutions::print_table()
+{
+    std::cout << " |";
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(10);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout << '\n';
+
+    std::cout << " |";
+    std::cout.fill(' ');
+    std::cout.width(19);
+    std::cout << "Название препарата";
+    std::cout << '|';
+
+    std::cout.width(9);
+    std::cout << "Цена";
+    std::cout << '|';
+
+    std::cout.width(19);
+    std::cout << "Производитель";
+    std::cout << '|';
+
+    std::cout.width(19);
+    std::cout << "Концентрация(%)";
+    std::cout << '|';
+
+    std::cout.width(19);
+    std::cout << "Объём";
+    std::cout << "|";
+
+    std::cout.width(19);
+    std::cout << "Cпособ нанесения";
+    std::cout << "|\n";
+
+    std::cout << " |";
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(10);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout << '\n';
+    std::cout.fill(' ');
+
+}
+
+/////////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Liquid.h"
+
+class Salve :										//класс раствор
+    public Liquid
+{
+	string application_method;						//способ применения
+public:
+	Salve();										//конструктор
+	Salve(const Salve&);							//конструктор копирования
+	Salve(Salve&&) noexcept;						//конструктор перемещения
+	~Salve();										//деструктор
+
+	string get_application_method();				//получить способ применения
+
+	void set_application_method(string);			//установить способ применения
+	bool set_something();							//установить по выбранному полю
+
+	friend bool equ(Salve&, Salve&);				//эквиволентвы ли объекты
+	friend bool compare(Salve&, Salve&, int&);		//сравнивает объекты по выбранному полю
+	friend bool operator==(Salve&, Salve&);			//перегрузка оператора ==
+
+	Salve& operator=(const Salve& equ_string);		//перегрузка оператора =
+
+	friend ostream& operator<<(ostream&, Salve&);	//перегрузка оператор вывода
+	friend istream& operator>>(istream&, Salve&);	//перегрузка оператор ввода
+	friend ofstream& operator<<(ofstream&, Salve&);	//перегрузка оператор вывода в файл
+	friend ifstream& operator>>(ifstream&, Salve&);	//перегрузка оператор ввода в файл
+
+	void print_table();								//вывод шапки таблицы
+};
+
+//////////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Salve.h"
+
+Salve::Salve()
+{
+    application_method = "";
+}
+
+Salve::Salve(const Salve& copy)
+{
+    (Liquid&)*this = (Liquid&)copy;
+    application_method = copy.application_method;
+}
+
+Salve::Salve(Salve&& copy) noexcept
+{
+    (Liquid&)*this = (Liquid&)copy;
+    application_method = copy.application_method;
+}
+
+Salve::~Salve()
+{
+
+}
+
+std::string Salve::get_application_method()
+{
+	return application_method;
+}
+
+void Salve::set_application_method(std::string inf)
+{
+	application_method = inf;
+}
+
+bool Salve::set_something()
+{
+    std::cout << "1 - выбрать по названию\n" << "2 - выбрать по цене\n" << "3 - выбрать по производителю\n"
+        << "4 - выбрать по концентрации\n" << "5 - выбрать по объёму\n" << "6 - выбрать по способу применения\n" << "0 - закончить\n";
+    rewind(stdin);
+    do
+    {
+        switch (input_int(std::cin))
+        {
+        case 1:
+        {
+            std::cout << "Введите название\n";
+            set_name(input_ru_string(std::cin));
+            return 1;
+            break;
+        }
+        case 2:
+        {
+            std::cout << "Введите цену\n";
+            set_price(input_price(std::cin));
+            return 1;
+            break;
+        }
+        case 3:
+        {
+            std::cout << "Введите производителя\n";
+            set_manufacturer(input_ru_string(std::cin));
+            return 1;
+            break;
+        }
+        case 4:
+        {
+            std::cout << "Введите концентрацию\n";
+            set_concentration(input_int(std::cin));
+            return 1;
+            break;
+        }
+        case 5:
+        {
+            std::cout << "Введите объём\n";
+            set_volume(input_dimension(std::cin, "объём"));
+            return 1;
+            break;
+        }
+        case 6:       
+        {
+            std::cout << "Введите способ применения\n";
+            set_application_method(input_ru_string(std::cin));
+            return 1;
+            break;
+        }
+        case 0:
+        {
+            return 0;
+        }
+        default:
+        {
+            std::cout << "такого пункта нет, введите число от 1 до 5\n";
+            system("pause");
+            break;
+        }
+        }
+    } while (true);
+}
+
+bool equ(Salve& first_object, Salve& second_object)
+{
+    if ((Liquid&)first_object == (Liquid&)second_object &&
+        first_object.get_application_method() == second_object.get_application_method())
+        return 1;
+    else
+        return 0;
+}
+
+bool compare(Salve& first_obj, Salve& second_obj, int& menu)
+{
+    do
+    {
+        if (menu == 0)
+        {
+            std::cout << "1 - сравнивать по названию\n" << "2 - сравнивать по цене\n" << "3 - сравнивать по производителю\n"
+                << "4 - сравнивать по концентрации\n" << "5 - сравнивать по объёму\n" << "6 - сравнивать по способу применения\n";
+            int menu = input_int(std::cin);
+        }
+        switch (menu)
+        {
+        case 1:
+        {
+            if (first_obj.get_name() > second_obj.get_name())
+                return 1;
+            break;
+        }
+        case 2:
+        {
+            if (first_obj.get_price() > second_obj.get_price())
+                return 1;
+            break;
+        }
+        case 3:
+        {
+            if (first_obj.get_manufacturer() > second_obj.get_manufacturer())
+                return 1;
+            break;
+        }
+        case 4:
+        {
+            if (first_obj.get_concentration() > second_obj.get_concentration())
+                return 1;
+            break;
+        }
+        case 5:
+        {
+            if (first_obj.get_volume() > second_obj.get_volume())
+                return 1;
+            break;
+        }
+        case 6:
+        {
+            if (first_obj.get_application_method() > second_obj.get_application_method())
+                return 1;
+            break;
+        }
+        default:
+        {
+            std::cout << "такого пункта нет, введите число от 1 до 5\n";
+            system("pause");
+            menu = 0;
+            break;
+        }
+        }
+        return 0;
+    } while (true);
+}
+
+bool operator==(Salve& first_object, Salve& second_object)
+{
+    if ((Liquid&)first_object == (Liquid&)second_object)
+        return true;
+    if (second_object.get_application_method().length())
+        if (first_object.get_application_method() != second_object.get_application_method())
+            return false;
+    return true;
+}
+
+Salve& Salve::operator=(const Salve& equ_object)
+{
+    if (this != &equ_object)
+    {
+        (Liquid&)*this = (Liquid&)equ_object;
+        if (equ_object.application_method.length())
+            this->application_method = equ_object.application_method;
+    }
+    return *this;
+}
+
+std::ostream& operator<<(std::ostream& os, Salve& obj)
+{
+    os << (Liquid&)obj;
+    os.width(20);
+    os << obj.application_method;
+    os << '\n';
+    os.fill('-');
+    os.width(113);
+    os << '\n';
+    os.fill(' ');
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, Salve& obj)
+{
+    char BUFF[2048];
+
+    is >> (Liquid&)obj;
+    std::cout << "Введите способ применения\n";
+    rewind(stdin);
+    obj.application_method = input_ru_string(is);
+    return is;
+}
+std::ofstream& operator<<(std::ofstream& fs, Salve& obj)
+{
+    fs << (Liquid&)obj << " " << obj.application_method << '\n';
+
+    return fs;
+}
+
+std::ifstream& operator>>(std::ifstream& fs, Salve& obj)
+{
+    fs >> (Liquid&)obj;
+    fs >> obj.application_method;
+
+    return fs;
+}
+
+
+void Salve::print_table()
+{
+    std::cout << " |";
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(10);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout << '\n';
+
+    std::cout << " |";
+    std::cout.fill(' ');
+    std::cout.width(19);
+    std::cout << "Название препарата";
+    std::cout << '|';
+
+    std::cout.width(9);
+    std::cout << "Цена";
+    std::cout << '|';
+
+    std::cout.width(19);
+    std::cout << "Производитель";
+    std::cout << '|';
+
+    std::cout.width(19);
+    std::cout << "Концентрация(%)";
+    std::cout << '|';
+
+    std::cout.width(19);
+    std::cout << "Объём";
+    std::cout << "|";
+
+    std::cout.width(19);
+    std::cout << "Способ применения";
+    std::cout << "|\n";
+
+    std::cout << " |";
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(10);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout.fill('-');
+    std::cout.width(20);
+    std::cout << '|';
+    std::cout << '\n';
+    std::cout.fill(' ');
+
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include <iostream>
+
+class Exception
+{
+	char massage[80];
+	int code;
+public:
+	Exception(int, const char[80]);
+	~Exception();
+
+	void what();
+};
+
+////////////////////////////////////////////////////////////////////////////
+
+
+#pragma once
+
+#include "Exception.h"
+
+Exception::Exception(int input_code, const char input_massage[80])
+{
+	strcpy_s(massage, 80, input_massage);
+	code = input_code;
+};
+
+Exception::~Exception()
+{
+
+};
+
+void Exception::what()
+{
+	std::cout << "код ошибки " << code << ':' << massage << ", ";
+};
+
+////////////////////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Exception.h"
+
+class  Exception_input : public Exception
+{
+	char input_massage[80];
+public:
+	Exception_input(int, const char[80], const char[80]);
+	~Exception_input();
+
+	void what_input();
+};
+
+float input_price(std::istream&);
+std::string input_ru_string(std::istream&);
+std::string input_en_string(std::istream&);
+std::string input_ru_en_string(std::istream&);
+std::string input_dimension(std::istream&, std::string);
+int input_int(std::istream&);
+
+////////////////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include"Exception_input.h"
+
+Exception_input::Exception_input(int input_code, const char first_massage[80], const char second_massage[80])
+	: Exception(input_code, first_massage)
+{
+	strcpy_s(input_massage, 80, second_massage);
+};
+
+Exception_input::~Exception_input()
+{
+
+};
+
+void Exception_input::what_input()
+{
+	this->what();
+	std::cout << input_massage << '\n';
+};
+
+bool is_dimension(std::string str, char dimension)
+{
+    int temp = 0;
+
+    if (str.length() < 2)
+        return false;
+
+    if (str[str.length() - 1] != dimension || (str[str.length() - 2] != 'м' && str[str.length() - 1] != dimension))
+        return false;
+
+    for (int i = 0; i < str.length() - 2; i++)
+        if (str[i] <= '9' && str[i] >= '0')
+            temp = temp * 10 + ((int)str[i] - '0');
+        else return false;
+
+    if (str[str.length() - 2] <= '9' && str[str.length() - 2] >= '0')
+        temp = temp * 10 + ((int)str[str.length() - 2] - '0');
+    else
+        if (str[str.length() - 2] != 'м')
+            return false;
+
+    if (temp >= 1000)
+        return false;
+    return true;
+}
+
+bool is_time(std::string str)
+{
+    int temp = 0;
+    if (str.length() < 2)
+        return false;
+    if (str[str.length() - 1] == 'с' || str[str.length() - 1] == 'ч')
+    {
+        for (int i = 0; i < str.length() - 1; i++)
+            if (str[i] <= '9' && str[i] >= '0')
+                temp = temp * 10 + ((int)str[i] - '0');
+            else return false;
+        if (str[str.length() - 1] != 'ч' && temp >= 60)
+            return false;
+        else
+            if (temp > 240)
+                return false;
+        return true;
+    }
+
+    if (str.length() < 4)
+        return false;
+    if (str[str.length() - 3] != 'м' && str[str.length() - 2] != 'и' && str[str.length() - 1] != 'н')
+        return false;
+    else
+        for (int i = 0; i < str.length() - 3; i++)
+            if (str[i] <= '9' && str[i] >= '0')
+                temp = temp * 10 + ((int)str[i] - '0');
+            else return false;
+
+    if (temp >= 60)
+        return false;
+    return true;
+}
+
+float input_price(std::istream& is)
+{
+    bool flag = true;
+    float num;
+    do
+    {
+        flag = true;
+        try
+        {
+            rewind(stdin);
+            is >> num;
+            if (is.fail() || std::cin.peek() != '\n')
+            {
+                throw Exception_input(1, "ошибка ввода числа", "вы ввели символ");
+            }
+            if ((int)(num * 1000) % 10 != 0)
+            {
+                throw Exception_input(2, "ошибка ввода числа", "такой цены не существует");
+            }
+        }
+        catch (Exception_input& obj)
+        {
+            std::cin.clear();
+            obj.what_input();
+            flag = false;
+        }
+
+    } while (!flag);
+
+    return num;
+}
+
+std::string input_ru_string(std::istream& is)
+{
+    bool flag = true;
+    char BUFF[2048];
+    std::string str;
+    do
+    {
+        flag = true;
+        try
+        {
+            rewind(stdin);
+
+            is.getline(BUFF, sizeof BUFF);
+            str = BUFF;
+            if (str.length() == 0)
+                throw Exception_input(5, "ошибка ввода строки", "вы ничего не ввели");
+            for (int i = 0; i < str.length(); i++)
+                if (str[i] > 'я' || str[i] < 'А')
+                {
+                    throw Exception_input(3, "ошибка ввода строки", "смените на русскую раскладку");
+                }
+        }
+        catch (Exception_input& obj)
+        {
+            std::cin.clear();
+            obj.what_input();
+            flag = false;
+        }
+
+    } while (!flag);
+
+    return str;
+}
+
+std::string input_en_string(std::istream& is)
+{
+    bool flag = true;
+    char BUFF[2048];
+    std::string str;
+    do
+    {
+        flag = true;
+        try
+        {
+            rewind(stdin);
+
+            is.getline(BUFF, sizeof BUFF);
+            str = BUFF;
+            if (str.length() == 0)
+                throw Exception_input(5, "ошибка ввода строки", "вы ничего не ввели");
+            for (int i = 0; i < str.length(); i++)
+                if ((str[i] > 'z' || str[i] < 'a') && (str[i] > 'Z' || str[i] < 'A'))
+                {
+                    throw Exception_input(3, "ошибка ввода строки", "смените на английскую раскладку");
+                }
+        }
+        catch (Exception_input& obj)
+        {
+            std::cin.clear();
+            obj.what_input();
+            flag = false;
+        }
+
+    } while (!flag);
+
+    return str;
+}
+
+std::string input_ru_en_string(std::istream& is)
+{
+    bool flag = true;
+    char BUFF[2048];
+    std::string str;
+    do
+    {
+        flag = true;
+        try
+        {
+            rewind(stdin);
+
+            is.getline(BUFF, sizeof BUFF);
+            str = BUFF;
+            if (str.length() == 0)
+                throw Exception_input(5, "ошибка ввода строки", "вы ничего не ввели");
+            for (int i = 0; i < str.length(); i++)
+                if ((str[i] > 'z' || str[i] < 'a') && (str[i] > 'Z' || str[i] < 'A'))
+                {
+                    throw Exception_input(3, "ошибка ввода строки", "смените на английскую раскладку");
+                }
+        }
+        catch (Exception_input& obj)
+        {
+            std::cin.clear();
+            obj.what_input();
+            flag = false;
+        }
+
+    } while (!flag);
+
+    return str;
+}
+
+std::string input_dimension(std::istream& is, std::string dimension)
+{
+    bool flag = true;
+    char BUFF[2048];
+    std::string str;
+    do
+    {
+        flag = true;
+        try
+        {
+            rewind(stdin);
+
+            is.getline(BUFF, sizeof BUFF);
+            str = BUFF;
+            if (dimension == "время")
+                if (!is_time(str))
+                    throw Exception_input(7, "ошибка ввода времени", "масса вводится по стандарту ЧИСЛОразмерность(с, мин, ч)");
+            if (dimension == "объём")
+                if (!is_dimension(str, 'л'))
+                    throw Exception_input(6, "ошибка ввода объёма", "масса вводится по стандарту ЧИСЛОразмерность(л, мл)");
+            if (dimension == "масса")
+                if (!is_dimension(str, 'г'))
+                    throw Exception_input(5, "ошибка ввода массы", "масса вводится по стандарту ЧИСЛОразмерность(г, мг)");
+        }
+        catch (Exception_input& obj)
+        {
+            std::cin.clear();
+            obj.what_input();
+            flag = false;
+        }
+
+    } while (!flag);
+
+    return str;
+}
+
+int input_int(std::istream& is)
+{
+    int num;
+    bool flag = true;
+    do
+    {
+        flag = true;
+        try
+        {
+            rewind(stdin);
+            is >> num;
+            if (is.fail() || std::cin.peek() != '\n')
+            {
+                throw Exception_input(1, "ошибка ввода числа", "вы ввели символ, вводите числа");
+            }
+        }
+        catch (Exception_input& obj)
+        {
+            std::cin.clear();
+            obj.what_input();
+            flag = false;
+        }
+
+    } while (!flag);
+
+    return num;
+}
+
+///////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Exception.h"
+#include "Ring.h"
+
+class  Exception_cont : public Exception
+{
+	char cont_massage[80];
+public:
+	Exception_cont(int, const char[80], const char[80]);
+	~Exception_cont();
+
+	void what_cont();
+};
+
+template <class T>
+int is_(Ring<T> ring)
+{
+    try
+    {
+        if (!ring.isNoEmpty()) // если текущая позиция имеет нулевое значение
+            throw Exception_cont(6, "ошибка контейнера", "контейнер пуст");
+    }
+    catch (Exception_cont& obj)
+    {
+        obj.what_cont();
+        system("pause");
+        return false;
+    }
+    return true;
+}
+
+///////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Exception_cont.h"
+
+Exception_cont::Exception_cont(int input_code, const char first_massage[80], const char second_massage[80])
+	: Exception(input_code, first_massage)
+{
+	strcpy_s(cont_massage, 80, second_massage);
+};
+
+Exception_cont::~Exception_cont()
+{
+
+};
+
+void Exception_cont::what_cont()
+{
+	this->what();
+	std::cout << cont_massage << '\n';
+};
+
+////////////////////////////////////////////////////////////
+
+#pragma once
+#include <fstream>
+
+#include "Exception.h"
+
+using namespace std;
+
+class  Exception_file : public Exception
+{
+	char file_massage[80];
+public:
+	Exception_file(int, const char[80], const char[80]);
+	~Exception_file();
+
+	void what_file();
+};
+
+int exist_file(const char* name_file);
+
+////////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Exception_file.h"
+
+Exception_file::Exception_file(int input_code, const char first_massage[80], const char second_massage[80])
+	: Exception(input_code, first_massage)
+{
+	strcpy_s(file_massage, 80, second_massage);
+};
+
+Exception_file::~Exception_file()
+{
+
+};
+
+void Exception_file::what_file()
+{
+	this->what();
+	std::cout << file_massage << '\n';
+};
+
+int exist_file(const char* name_file)
+{
+    ifstream in_test(name_file, ios::in);
+    try
+    {
+        if (!in_test)
+            throw (Exception_file(1, "ошибка файла", "файл не существует"));
+        if (!in_test.is_open())
+            throw (Exception_file(3, "ошибка файла", "файл не открылся"));
+        in_test.seekg(0, ios::end);
+        if (in_test.tellg() == 0)
+            throw (Exception_file(2, "ошибка файла", "файл пуст"));
+    }
+    catch (Exception_file obj)
+    {
+        obj.what_file();
+        system("pause");
+        return 0;
+    }
+    return 1;
+}
+
+//////////////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Ring.h"
+
+class File								//базовый класс работы с файлами
+{
+protected:
+	char file_name[80];					//название файла
+	ifstream file_i;					//поток для чтения из файла
+	ofstream file_o;					//поток для записи в файл
+public:
+	File(const char* name)				//конструктор с параметром
+	{
+		strcpy_s(file_name, 80, name);
+	};
+};
+
+////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Ring.h"
+#include "Iterator.h"
+
+class Algorithm
+{
+public:
+	template <class T>
+	void sort_Ring(Ring<T>& ring);
+	template <class T>
+	void find(Ring<T>& ring, T inf);
+};
+
+//////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Algorithm.h"
+
+template <class T> 
+void Algorithm::sort_Ring(Ring<T>& ring) 
+{
+    int menu = 0;
+    T temp;
+    Ring<T>::template Iterator it = ring.Begin();
+    Ring<T>::template Iterator jt = ring.Begin();
+    it--;
+    do
+    {
+        it++;
+        do
+        {
+            jt++;
+            if (compare(*it, *jt, menu))
+            {
+                temp = *it;
+                *it = *jt;
+                *jt = temp;
+            }
+        } while (jt != ring.End());
+    } while (it != ring.End());
+
+}
+
+template <class T>                                         //поиск элеменьов класса
+void Algorithm::find(Ring<T>& ring, T inf)
+{
+    Ring<T> temp;
+    Ring<T>::template Iterator it = ring.Begin();
+    it--;
+    do
+    {
+        it++;
+        if (*it == inf)
+            temp.push(*it);
+    } while (it != ring.End());
+    ring.clear();
+    ring.past(temp);
+}
+
+///////////////////////////////////////////////////////
+
+#pragma once
+#include<string>
+#include<iostream>
+#include <fstream>
+
+using namespace std;
+
+template <class T>
+struct Element // структура представляющая единичный элемент списка
+{
+    T data; // переменная необходимая для хранения данных в элементе списка
+    Element* next; // указатель на следующий элемент списка
+    Element* prev; // указатель на предыдущий элемент списка
+};
+
+template <class T>
+class Ring                // шаблон класса кольцо
+{
+
+private:                 // данные доступные для класса
+    Element<T>* Curr;    // указатель на текущий элемент
+    Element<T>* Head;    // указатель первый добавленный  элемент
+public:
+    int length;          // количество элементов в списке
+
+    Ring();              // конструктор
+    Ring(T);	         // конструктор с параметром
+    Ring(const Ring<T>&);// конструктор копий
+    ~Ring();             // деструктор
+    void init();         // текущий элемент ссылается на первый
+    void push(T);        // добавляем новый элемент в список
+    void push();	     // реализация добавления элемента
+    T pop();             // извлекаем текущий элемент
+    void fiend(Ring<T>, T);//поиск элемента
+    void del(Ring<T>&);  // удаление
+    void reInf(T);       // перезапись
+    void loop();         // вывести весь список в консоль
+    void clear();        // очистить весь список
+    void next();         // перейти к следующему элементу
+    void prev();         // перейти к предыдущему элементу
+    int isNoEmpty();     // проверка состояния списка (если список не пуст)
+    void past(Ring<T>);  // вставить в список все элементы другого списка
+
+    class Iterator
+    {
+        Element<T>* curr;           // указатель на текущий элемент
+
+    public:
+        Iterator();                 // Конструктор
+        Iterator(Element<T>*);      // Конструктор для функций Begin() и End()
+
+        T& operator++(int);         // Двинуться впереёд по кольцу
+        T& operator--(int);         // Двинуться назад по кольцу
+
+        T& operator*();             // Получить данные по указателю
+
+        bool operator!=(Iterator);  //перегрузка оператора !=
+        bool operator==(Iterator);  //перегрузка оператора ==
+    };
+    Iterator Begin();       // Вернуть начало кольца
+    Iterator End();         // Вернуть конец кольца
+};
+
+// Конструктор итератора
+template<typename T>
+Ring<T>::Iterator::Iterator()
+{
+    curr = nullptr;
+}
+
+// Конструктор для функций Begin() и End()
+template<typename T>
+Ring<T>::Iterator::Iterator(Element<T>* current)
+{
+    this->curr = current;
+}
+
+// Сдвинуться впереёд по дереву
+template<typename T>
+T& Ring<T>::Iterator::operator++(int value)
+{
+    this->curr = curr->next;
+
+    return curr->data;
+}
+
+// Сдануться назад по дереву
+template<typename T>
+T& Ring<T>::Iterator::operator--(int value)
+{
+    this->curr = curr->prev;
+
+    return curr->data;
+}
+
+// Получить данные в узле
+template<typename T>
+T& Ring<T>::Iterator::operator*()
+{
+    return this->curr->data;
+}
+
+//перегрузка оператора !=
+template<typename T>
+bool Ring<T>::Iterator::operator!=(Iterator b)
+{
+    if (this->curr != b.curr) 
+        return true;
+    else 
+        return false;
+}
+
+//перегрузка оператора ==
+template<typename T>
+bool Ring<T>::Iterator::operator==(Iterator b)
+{
+    return !(*this == b);
+}
+
+// Вернуть начало кольца
+template<typename T>
+Ring<T>::template Iterator Ring<T>::Begin()
+{
+    Iterator it(this->Head);
+    return it;
+}
+
+// Вернуть конец кольца
+template<typename T>
+Ring<T>::template Iterator Ring<T>::End()
+{
+    Iterator it(this->Head->prev);
+    return it;
+}
+
+////////////////////////////////////////////////////////////////////
+
+#include "Ring.h"
+
+template <class T>
+Ring<T>::Ring() // реализация конструктора
+{
+    Head = NULL; // обнуляем указатель на первый элемент
+    Curr = NULL; // обнуляем указатель на текущий элемент
+    length = 0; // обнуляем количество элементов в списке
+}
+template <class T>
+Ring<T>::Ring(T x) // реализация конструктора с параметром
+{
+    Head = NULL; // обнуляем указатель на первый элемент
+    Curr = NULL; // обнуляем указатель на текущий элемент
+    length = 0; // обнуляем количество элементов в списке
+    push(x); // добавляем в список элемент с данными, переданными в конструктор 
+}
+template <class T>
+Ring<T>::Ring(const Ring<T>& C) // реализация конструктора копий	
+{
+    this->Head = NULL; // обнуляем указатель на первый элемент
+    this->Curr = NULL; // обнуляем указалель на текущий элемент
+    this->length = 0; // обнуляем количество элементов в списке
+    Element<T>* p = C.Head;	 // сохраняем указатель на текущий элемент списка 
+    for (int i = 0; i < C.length; i++) // заводим цикл на количество элементов списка-параметра
+    {
+        push(p->data); // добавляем в список текущий элемент списка-параметра
+        p = p->next; // переходим к следующему элементу списка-параметра
+    }
+}
+template <class T>
+Ring<T>::~Ring() // реализация деструктора 
+{
+    clear(); // очистить список
+}
+template <class T>
+void Ring<T>::init() //  приведения списка к состоянию текущий элемент - первый не удаленный 
+{
+    Curr = Head; // устанавливаем текущий элемент на первый не удаленный
+}
+
+template <class T> void Ring<T>::next() // реализация перехода к следующему элементу
+{
+    if (isNoEmpty()) // если список не пуст
+        Curr = Curr->next; // установить текущую позицию на следующую
+}
+template <class T> void Ring<T>::prev() // реализация перехода к предыдущему элементу
+{
+    if (!isNoEmpty()) // если список не пуст
+        Curr = Curr->prev; // установить текущую позицию на предыдущую
+}
+template <class T> int Ring<T>::isNoEmpty() // реализация проверки списка на наличие элементов
+{
+    if (Curr == NULL) // если текущая позиция имеет нулевое значение
+        return 0; // вернуть "ложь"
+    else // иначе
+        return 1; // вернуть "истина"
+}
+
+template <class T> void Ring<T>::push(T data)	// реализация добавления элемента
+{
+    Element<T>* inserted; // создать новый указатель на элемент
+    inserted = new Element<T>;	// выделить память под элемент
+    inserted->data = data; // установить входной параметр в поле данных элемента
+    if (!isNoEmpty()) // если список  пуст
+    {
+        Head = inserted; // установить указатель первого элемента на новый элемент
+        Curr = inserted; // установить указатель текущего элемента на новый элемент
+        Curr->next = inserted; // установить указатель следующего элемента на новый элемент
+        Curr->prev = inserted; // установить указатель предыдущего элемента на новый элемент
+    }
+    else // если список не пуст
+    {
+        inserted->next = Curr->next; // перенаправляем указатель следующего элемента в добавляемом
+        inserted->next->prev = inserted;	// перенаправляем указатель следующего элемента на добавляемый
+        Curr->next = inserted;  // перенаправляем следующий указатель на добавляемый
+        inserted->prev = Curr;  // перенаправляем предыдущий добавляемого на текущий
+    }
+    length++; // увеличиваем количество элементов в списке
+    Curr = inserted; // устанавливаем текущий указатель на добавленный
+}
+
+template <class T> void Ring<T>::push()	// реализация добавления элемента
+{
+    Element<T>* inserted; // создать новый указатель на элемент
+    Element<T>* temp = Head;
+    inserted = new Element<T>;	// выделить память под элемент
+    cin >> inserted->data; // установить входной параметр в поле данных элемента
+    if (!isNoEmpty()) // если список  пуст
+    {
+        Head = inserted; // установить указатель первого элемента на новый элемент
+        Curr = inserted; // установить указатель текущего элемента на новый элемент
+        Curr->next = inserted; // установить указатель следующего элемента на новый элемент
+        Curr->prev = inserted; // установить указатель предыдущего элемента на новый элемент
+    }
+    else // если список не пуст
+    {
+        for (int i = 0; i < length; i++)
+            if (equ(inserted->data, temp->data))
+            {
+                cout << "Такой объект уже есть\n";
+                system("pause");
+                return;
+            }
+            else
+            {
+                temp = temp->next;
+            }
+        inserted->next = Curr->next; // перенаправляем указатель следующего элемента в добавляемом
+        inserted->next->prev = inserted;	// перенаправляем указатель следующего элемента на добавляемый
+        Curr->next = inserted;  // перенаправляем следующий указатель на добавляемый
+        inserted->prev = Curr;  // перенаправляем предыдущий добавляемого на текущий
+    }
+    length++; // увеличиваем количество элементов в списке
+    Curr = inserted; // устанавливаем текущий указатель на добавленный
+}
+
+template <class T> T Ring<T>::pop() // реализация  извлечения текущего элемента
+{
+    Element<T>* temp = Curr; // сохраняем указатель на текущий элемент
+    T tag = temp->data;; // переменная под возвращаемое значение
+    if (!isNoEmpty()) return tag; // если список пуст вернуть "ложь"
+    if (length == 1) // если элемент единственный в списке
+    {
+        Head = NULL; // обнулить значение первого элемента
+        Curr = NULL; // обнулить значение текущего элемента
+    }
+    else // если элемент не единственный
+    {
+        Curr->next->prev = Curr->prev; // связываем следующий и предыдущий
+        Curr->prev->next = Curr->next; // связываем предыдущий и следующий
+        Curr = Curr->next; // перенаправляем текущий элемент на следующий
+    }
+    if (temp == Head) // если удаляемый элемент - первый добавленный
+        Head = Head->next; // перенаправить первый на следующий
+    length--;  // уменьшить количество элементов
+    delete temp; // удалить предыдущий текущий элемент
+    return tag; // вернуть данные удаленного элемента
+}
+
+template <class T>                                         //поиск элеменьов класса
+void Ring<T>::fiend(Ring<T> ring, T inf)
+{
+    Element<T>* tempCar = ring.Head;
+    Element<T>* tempFiend = Head;
+    for (int j = 0; j < ring.length; j++)
+    {
+        if (tempCar->data == inf)
+            push(tempCar->data);
+        tempCar = tempCar->next;
+    }
+}
+
+template <class T>
+void Ring<T>::del(Ring<T>& ring)                      //удалить элементы класса
+{
+    if (ring.isNoEmpty())
+    {
+        Element<T>* tempCar = Head;
+        Element<T>* tempFiend = ring.Head;
+        int n = this->length;
+        for (int j = 0; j < n; j++)
+        {
+            if (tempCar->data == tempFiend->data)
+            {
+                if (Curr == tempCar) // если искомое значение находится в текущем состоянии до поиска
+                    tempCar = tempCar->next;
+                pop();
+                tempFiend = tempFiend->next;
+            }
+            else
+                tempCar = tempCar->next;
+            Curr = tempCar;
+        }
+    }
+}
+
+template <class T>                                         //перезапись поля класса
+void Ring<T>::reInf(T finded)
+{
+    if (isNoEmpty())
+    {
+        Element<T>* tempCar = Head;
+        int n = this->length;
+        T new_inf;
+        new_inf.set_something();
+        for (int j = 0; j < n; j++)
+        {
+            if (tempCar->data == finded)
+            {
+                if (Curr == tempCar) // если искомое значение находится в текущем состоянии до поиска
+                    tempCar = tempCar->next;
+                this->Curr->data = new_inf;
+            }
+            else
+                tempCar = tempCar->next;
+            Curr = tempCar;
+        }
+    }
+}
+
+template <class T> void Ring<T>::loop() // реализация вывода всех элементов списка
+{
+    if (isNoEmpty()) // если список не пуст
+    {
+        Element<T>* tempCar = Head; // сохраняем указатель на текущий элемент
+        tempCar->data.print_table();
+        for (int i = 0; i < length; i++) // заводим цикл на количество элементов списка
+        {
+            cout << i + 1 << tempCar->data; // выводим данные текущего элемента
+            tempCar = tempCar->next; // переходим к следующему элементу
+        }
+        cout << "\n"; // вывод терминального символа
+    }
+    else // если список пуст
+        cout << "List is empty\n"; // вывести предупреждение 
+}
+template <class T> void Ring<T>::clear() // реализация очистки всего списка
+{
+    for (int i = 0; i < length;) // заводим цикл на количество элементов списка
+        pop(); // извлекаем текущий элемент
+}
+
+template <class T> void Ring<T>::past(Ring<T> a) // вставка одного списка в другой
+{
+    init(); // устанавливаем текущий элемент на первый
+    a.init(); // устанавливаем текущий элемент на первый в списке - параметре
+    for (int i = 0; i < a.length; i++)  // заводим цикл на количество элементов списка-параметра
+    {
+        push(a.Curr->data); // вставить в список данные текущего элемента списка-параметра
+        a.next(); // перейти к следующему элементу списка-параметра
+    }
+}
+
+///////////////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include <fstream>
+#include <deque>
+
+#include "File_text.h"
+#include "File_text.cpp"
+#include "Ring.h"
+#include "myRing.cpp"
+#include "Aerosols.h"
+#include "Liquid.h"
+#include "Medication.h"
+#include "Powder.h"
+#include "Salve.h"
+#include "Solid.h"
+#include "Solutions.h"
+#include "Tablets.h"
+#include "Exception.h"
+#include "Exception_input.h"
+#include "Exception_cont.h"
+#include "Exception_file.h"
+#include "Algorithm.h"
+#include "Algorithm.cpp"
+
+class Interface                                 //класс интерфейс           
+{
+public:
+    template <class T>
+    void delete_ring(Ring<T>&);                 //меню удаления препаратов
+
+    template <class T>
+    void show_ring(Ring<T>);                    //меню вывода препаратов
+
+    template <class T>
+    void reInf_ring(Ring<T>&);                  //меню изменения информации о препаратах
+
+    template <class T>
+    void save_ring(Ring<T>, deque<Ring<T>>&);   //сохранение последнего действия
+
+    template <class T>
+    void ctrl_z(Ring<T>&, deque<Ring<T>>&);     //отмена последнего действия
+
+    template <class T>
+    void get_file(Ring<T>&, const char*);       //достать всю информацию из файла
+
+    template <class T>
+    void geve_file(Ring<T>&, const char*);      //записать всю информацию в файл
+
+    template <class T>
+    int chouse(Ring<T>&, const char*);          //меню выбора операции над препаратами
+
+    int start();                                //меню выбора типа препарата
+};
+
+/////////////////////////////////////////////////////////////
+
+#pragma once
+
+#include "Interface.h"
+
+template <class T>
+void Interface::show_ring(Ring<T> test)         //меню вывода препаратов
+{
+    T information;
+    Algorithm alg;
+    do
+    {
+        system("CLS");
+        test.loop();                            //вывод контейнера на экран
+        if (!information.set_something())       //параметр поиска
+            break;
+        alg.find(test, information);            //поиск по контейнеру
+    } while (true);
+};
+
+template <class T>
+void Interface::delete_ring(Ring<T>& test)      //меню удаления препаратов
+{
+    Ring<T> temp;
+    T information;
+    Algorithm alg;
+    temp.past(test);                        //вставка элементов
+    do
+    {
+        system("CLS");
+        temp.loop();                        //вывод контейнера на экран
+        if (!information.set_something())       //параметр поиска
+            break;
+        alg.find(temp, information);        //поиск по контейнеру
+        cout << "Нажмите ENTER чтобы применить удаление, или любую другую клавишу для продолжения\n";
+        rewind(stdin);
+        if (getchar() == '\n')
+        {
+            test.del(temp);                 //удаление элементов
+            break;
+        }
+    } while (true);
+}
+
+template <class T>
+void Interface::reInf_ring(Ring<T>& test)       //меню изменения информации о препаратах
+{
+    Ring<T> show_obj;
+    T information;
+    show_obj.past(test);                        //вставка элементов
+    do
+    {
+        system("CLS");
+        show_obj.loop();                        //вывод контейнера на экран
+        if (!information.set_something())       //параметр поиска
+            break;
+        show_obj.reInf(information);            //изменение полей
+        cout << "Нажмите ENTER чтобы применить изменения, или любую другую клавишу для продолжения\n";
+        rewind(stdin);
+        if (getchar() == '\n')
+        {
+            test.clear();                       //очистка контейнера
+            test.past(show_obj);         
+            break;
+        }
+    } while (true);
+}
+
+template <class T>                              //сохранение последнего действия
+void Interface::save_ring(Ring<T> ring, deque<Ring<T>>& memorry)
+{
+    Ring<T> temp;
+    temp.past(ring);
+    if (memorry.size() > 5)                     //удаляем самое старое сохранение
+        memorry.pop_front();                        //если количество сохранений больше 5
+    memorry.push_back(temp);                    //добавляем сохранение
+    temp.clear();
+}
+
+template <class T>                              //отмена последнего действия
+void Interface::ctrl_z(Ring<T>& ring, deque<Ring<T>>& memorry)
+{
+    if (memorry.size() == 0)                    //выводис мообщение на экран
+    {                                               //если сохранений нет
+        cout << "Сохранений нет!\n";
+        system("pause");
+        return;
+    }
+    ring.clear();
+    ring.past(memorry[memorry.size() - 1]);     //дприсваиваем последнее сохранение
+    memorry.pop_back();                         //удаляем последнее сохранение
+}
+
+template <class T>                              //достать всю информацию из файла
+void Interface::get_file(Ring<T>& test, const char* name_file)
+{
+    File_text<T> fl_txt(name_file);
+    fl_txt.open_file_in();                      //открываем файл
+    while (!fl_txt.feof())                      //пока не конец файла
+    {
+        T obj;
+        fl_txt.read_record_in_file_text(obj);   //читаем из файла
+        test.push(obj);                         //заносим элемент в контейнер
+    }
+    test.pop();                         //удаляем лишний элемент, который добавился
+}                                           //из-за '\n' в конце файла 
+
+template <class T>                              //записать всю информацию в файл
+void Interface::geve_file(Ring<T>& test, const char* name_file)
+{
+    File_text<T> fl_txt(name_file);
+    fl_txt.open_file_out();                     //открываем файл
+    while (test.isNoEmpty())                    //пока не пустой контейнер
+    {
+        T obj;
+        obj = test.pop();                       //достаём элемент из контейнера
+        fl_txt.write_record_in_file_text(obj);  //записать элемент в файл
+    }
+}
+
+template <class T>                              //меню выбора операции над препаратами
+int Interface::chouse(Ring<T>& test, const char* name_file)
+{
+    Algorithm alg;
+    deque<Ring<T>> memorry;
+    Ring<T> temp;
+    do
+    {
+
+        system("CLS");
+        cout << "1 - Добавить\n" << "2 - удалить\n" << "3 - посмотреть\n" << "4 - изменить поле\n" 
+            << "5 - достать всю информацию из файла\n" << "6 - записать всю информацию в файл\n"
+            << "7 - очистить файл\n" << "8 - сортировать контейнер\n" << "9 - отмена последнего действия\n" << "0 - назад\n";
+        switch (input_int(cin))
+        {
+            system("CLS");
+        case 1:
+        {
+            test.push();
+            break;
+        }
+        case 2:
+        {
+            if (is_(test))
+            {
+                save_ring(test, memorry);
+                delete_ring(test);
+            }
+            break;
+        }
+        case 3:
+        {
+            if (is_(test))
+                show_ring(test);
+            break;
+        }
+        case 4:
+        {
+            if (is_(test))
+            {
+                save_ring(test, memorry);
+                reInf_ring(test);
+            }
+            break;
+        }
+        case 5:
+        {
+            if (exist_file(name_file))
+                get_file(test, name_file);
+            break;
+        }
+        case 6:
+        {
+            if (is_(test))
+                geve_file(test, name_file);
+            break;
+        }
+        case 7:
+        {
+            if (exist_file(name_file))
+            {
+                File_text<T> fl_txt(name_file);
+                fl_txt.file_clear();
+            }
+            break;
+        }
+        case 8:
+        {
+            if (is_(test))
+            {
+                save_ring(test, memorry);
+                alg.sort_Ring(test);
+            }
+            break;
+        }
+        case 9:
+        {
+            ctrl_z(test, memorry);
+            break;
+        }
+        case 0:
+        {
+            return 0;
+            break;
+        }
+        default:
+        {
+            std::cout << "такого пункта нет, введите число от 0 до 8\n";
+            system("pause");
+            break;
+        }
+        }
+
+
+    } while (true);
+}
+
+int Interface::start()                      //меню выбора типа препарата
+{
+    Ring <Aerosols> test_Aerosols;
+    Ring <Powder> test_Powder;
+    Ring <Tablets> test_Tablets;
+    Ring <Solutions> test_Solutions;
+    Ring <Salve> test_Salve;
+    do
+    {
+        system("CLS");
+        cout << "1 - работать с аэрозолями\n" << "2 - работать с порошками\n" << "3 - работать с таблетками\n" 
+            << "4 - работать с мазями\n" << "5 - работать с растворами\n" << "0 - закончить выполнение программы\n";
+        switch (input_int(std::cin))
+        {
+        case 1:
+        {
+            chouse(test_Aerosols, "Aerosols.txt");
+            break;
+        }
+        case 2:
+        {
+            chouse(test_Powder, "Powder.txt");
+            break;
+        }
+        case 3:
+        {
+            chouse(test_Tablets, "Tablets.txt");
+            break;
+        }
+        case 4:
+        {
+            chouse(test_Solutions, "Solutions.txt");
+            break;
+        }
+        case 5:
+        {
+            chouse(test_Salve, "Salve.txt");
+            break;
+        }
+        case 0:
+        {
+            return 0;
+            break;
+        }
+        default:
+        {
+            std::cout << "такого пункта нет, введите число от 0 до 5\n";
+            system("pause");
+            break;
+        }
+        }
+    } while (true);
+}
+
+////////////////////////////////////////////////////////////////
+
+

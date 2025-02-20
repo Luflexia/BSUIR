@@ -1,0 +1,83 @@
+37. ѕеревод числа из одной системы счислени€ в другую. ƒанные вводить с клавиатуры.
+
+.modl small
+.stack	256
+.data
+Mess1  db 'Enter number in 10c: $'
+Mess2  db 0Dh, 0Ah,'Result in 16c: $'
+.code
+start:
+	mov ax,@data
+	mov ds,ax
+	mov ah,9
+	mov dx,offset Mess1
+	int 21h; ¬ыводим первое сообщение
+	xor bx,bx
+num_in:	
+; ¬водим символы числа, пока не нажметс€ энтэр
+	mov ah,01h
+	int 21h
+	cmp al,0Dh
+	je end_num_in
+	sub al,'0'	; переводим в дес€тичный вид
+	xor ah,ah
+	push ax ; и ложим его в стек
+	inc bx
+	jmp num_in
+end_num_in:
+	mov cx,1
+num_preobr:
+	cmp bx,0
+	je end_num_preobr ; если цифры ;числа закончились, то переходим на ;end_num_preobr
+	pop ax
+	xor dx,dx ; умножаем на число в cx (1, 10, 100, 1000, Е)
+	mul cx
+; и добавл€ем к конечному числу
+	add di,ax
+	dec bx
+; умножаем на 10, чтобы получить 10, 100, 1000, Е
+	mov ax,10
+	mul cx
+	mov cx,ax
+	jmp num_preobr
+end_num_preobr:
+; ¬ыводитс€ сообщение 2
+	mov ah,9
+	mov dx,offset Mess2
+	int 21h
+; начало коныертации в 16 систему
+	mov ax,di
+	mov bx,0
+	mov cx,16
+num_convert:
+; непосредственно перевод
+	cmp ax,0
+	je end_convert
+	xor dx,dx
+; делим на систему счислени€
+	div cx
+; сравниваем остаток от делени€ с 9, если больше, добавл€ем  С7Т, иначе С0Т
+	cmp dx,9
+	ja above_9 
+	add dx,'0'
+	jmp next
+above_9:
+	add dx,'7'
+next:
+	push dx
+	inc bx
+	jmp num_convert
+end_convert:
+out_num:
+; если цифры закончились, то переходим ;на end_out_num
+	cmp bx,0
+	je end_out_num
+	pop dx
+	mov ah,02h
+	int 21h
+	dec bx
+	jmp out_num
+end_out_num:
+	mov ax,4C00h
+	int 21h
+end start

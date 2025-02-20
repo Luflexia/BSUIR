@@ -1,0 +1,93 @@
+52. Определить, входит ли в строку, определенную в сегменте данных, подстрока, введенная с клавиатуры. Результат работы программы – текст соответствующего сообщения. 
+
+.MODEL small
+.STACK 100h
+.DATA
+msg1	DB	"Enter string: $"
+msg2	DB	0Ah, 0Dh, "Enter substring to find: $"
+msg3	DB	0Ah, 0Dh, "Yes!$"
+msg4	DB	0Ah, 0Dh, "No such substring:($"
+
+str1ml	DB	200
+str1l	DB	'$'
+str1	DB	200 dup('$')
+
+str2ml	DB	200
+str2l	DB	'$'
+str2	DB	200 dup('$')
+
+.CODE
+begin:
+	mov	ax, @data
+	mov	ds, ax
+	mov	es,ax
+	xor	ax,ax
+
+	lea	dx, msg1	;вывод приглашения msg1
+	call	strout
+
+	lea	dx, str1ml	;ввод строки str1
+	call	strin
+
+	lea	dx, msg2	;вывод приглашения msg2
+	call	strout
+
+	lea	dx, str2ml	;ввод строки str2
+	call	strin
+
+	xor	cx, cx
+	mov	cl, str1l	;устанавливается кол-во повторений
+	sub	cl, str2l
+	inc	cl
+	cld			;обход вперёд
+	lea	di, str2	;в di - строка, которую надо найти
+	lea	si, str1	;в si - строка, в которой ищем
+	xor	ax, ax
+
+all_string:			;повторяется для str1 до конца строки минус длина str2
+	
+	push	cx
+	push	di
+	push	si
+	mov	bx, si
+	mov	cl, str2l
+	repe	cmpsb
+	je	_eq
+	jne	_neq
+_eq:
+	lea	dx, msg3	;вывод приглашения msg1
+	call	strout
+	jmp	_end
+	;inc	al
+_neq:
+	pop	si
+	pop	di
+	pop	cx
+
+	inc	si
+loop	all_string
+	
+	lea	dx, msg4
+	call	strout
+
+_end:
+	mov 	ah, 4ch		;канэц, просто канэц какой-та
+	int	21h
+
+
+;*****************Процедуры***********************
+
+;*************************************************
+strin	proc
+	mov	ah, 0Ah
+	int	21h
+	ret
+strin	endp
+;*************************************************
+strout	proc
+	mov	ah, 09h
+	int	21h
+	ret
+strout	endp
+;*************************************************
+end 	begin

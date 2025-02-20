@@ -1,0 +1,46 @@
+21. Транспонирование матрицы заданной в кодовом сегменте.
+
+.model small
+.stack 100h
+.code
+start:
+	jmp continue			; оставить место для матрицы
+	razmer equ 4
+	matrix	dw	1,2,3,4
+		dw	5,6,7,8
+		dw	9,10,11,12
+		dw	13,14,15,16
+continue:
+	push cs
+	pop ds				; направляем ds на сегмент кода
+	mov si,2				; si - указывает на matrix[0][1]
+	mov bx,razmer			; в bx - размер матрицы
+	shl bx,1				; bx=bx*2, то есть bx указывает на matrix[1][0]
+	mov ax,bx				; в ax - смещение, равное длине строки
+	mov cx,razmer			; в cx - razmer 
+	dec cx				; количество перестановок на 1 меньше, чем размер матрицы
+loop1:					; внешний цикл по строкам
+	push cx				; сохранить cx в стеке
+loop2:					; внутренний цикл по столбцам (выше главной диагонали)
+	mov dx,matrix[bx]			; в dx - элемент ниже диагонали		
+	mov di,matrix[si]			; в di - элемент выше диагонали
+	mov matrix[bx],di			; переставляем их
+	mov matrix[si],dx
+	add si,2				; смещаемся вправо
+	add bx,ax				; смещаемся вниз
+	loop loop2				; цикл повторяется cx раз
+	pop cx				; восстанавливаем сохраненное cx
+	push ax				; сохраняем в стеке длину строки
+	mov ax,razmer			; вычисляем, на сколько сместиться, чтобы оказаться 
+	sub ax,cx				; главной диагональю
+	inc ax
+	shl ax,1
+	add si,ax				; смещаемся на matrix[i][i+1], i - номер очередного ци
+	mov bx,si				; уставнавливаем bx на si
+	pop ax				; восстанавливаем длину строки
+	add bx,ax				; смещаем bx на строку вниз
+	sub bx,2				; и на 1 элемент назад
+	loop loop1				; цикл, пока cx != 0
+	mov ah,4ch
+	int 21h
+end start

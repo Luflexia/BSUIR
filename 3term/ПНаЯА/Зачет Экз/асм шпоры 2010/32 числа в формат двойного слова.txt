@@ -1,0 +1,70 @@
+﻿32. В сегменте данных расположены числа в формате двойного слова. С клавиатуры вводится число и определяется, имеется ли это число в сегменте данных.
+
+.model small
+.stack 100h
+.data 
+	massiv	dd		12345678,13579246,24681357
+	chislo	dd		0
+	c10		dw		10
+	str1	db		0ah,0dh,"Vvedite chislo:",0ah,0dh,'$'
+	str2	db		0ah,0dh,"Vvedennoe chislo ne naydeno.",0ah,0dh,'$'
+	str3	db		0ah,0dh,"Vvedennoe vami chislo naydeno!",'$'
+.code
+.386
+start:
+	mov ax,@data
+	mov ds,ax
+	mov ah,09h
+	lea dx,str1
+	int 21h
+input_loop:
+	mov ah,01h
+	int 21h
+	cmp al,0dh
+	je end_input
+	sub al,30h
+	xor bx,bx
+	mov bl,al
+	xor dx,dx							; ввод длинного числа
+	mov ax,word ptr[chislo+2]
+	mul c10
+	mov word ptr[chislo+2],ax
+	mov ax,word ptr[chislo]
+	mul c10
+	add dx,word ptr[chislo+2]
+	add ax,bx
+	mov word ptr[chislo],ax
+	mov word ptr[chislo+2],dx
+	jmp input_loop
+end_input:
+	mov cx,offset chislo						; в сх - количество чисел
+	sub cx,offset massiv
+	shr cx,2
+	mov ax,word ptr[chislo]						; в ax - младшее слово числа				
+	mov dx,word ptr[chislo+2]					; в dx - старшее слово числа
+cmp_loop:								; цикл сравнения
+	mov bx,cx
+	dec bx
+	shl bx,2
+	add bx,offset massiv
+	cmp ax,word ptr[bx]
+	je continue_cmp
+	jmp cmp_end
+continue_cmp:
+	add bx,2
+	cmp dx,word ptr[bx]
+	je find
+cmp_end:								; если ничего не найдено
+	loop cmp_loop
+	mov ah,09h
+	mov dx,offset str2
+	int 21h
+	jmp end_start
+find:									; если число найдено
+	mov ah,09h
+	mov dx,offset str3
+	int 21h
+end_start:
+	mov ah,4ch
+	int 21h
+end star

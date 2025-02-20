@@ -1,0 +1,80 @@
+46.¬вести массив символов, выделить из него числа и сложить их.
+
+.model small
+.stack 100h
+.code
+endl	macro
+	mov	ah, 02h
+	mov	dl, 0Ah
+	int	21h
+	mov	dl, 0Dh
+	int	21h
+	endm
+start:
+	mov	ax, @data
+	mov	ds, ax
+	mov	[buffer], 99
+	mov	ah, 0Ah
+	int	21h
+	
+	mov	si, 2
+	xor	ch, ch
+	mov	cl, [buffer+1]
+	xor	ax, ax
+str_loop:
+	mov	dl, [buffer+si]
+	cmp	dl, '0'
+	jl	not_int
+	cmp	dl, '9'
+	jg	not_int
+	
+	xor	dh, dh
+	sub	dl, '0'
+	push	dx
+	mov	bx, 10
+	mul	bx
+	pop	dx
+	add	ax, dx
+	
+	jmp	no_add
+	
+not_int:
+	cmp	ax, 0
+	je	no_add
+	add	sum, ax
+	xor	ax, ax	
+no_add:
+	inc	si
+	loop	str_loop
+
+	cmp	ax, 0
+	je	no_add_2
+	add	sum, ax
+no_add_2:
+; out int sum
+	endl
+	mov	ax,sum
+	mov	bx, 10
+	xor	cx, cx
+cont_out:
+	xor	dx, dx
+	div	bx
+	push	dx	
+	inc	cx
+	cmp	ax, 0
+	jne	cont_out
+	
+	mov	ah, 02h
+out_loop:
+	pop	dx
+	add	dl, '0'
+	int	21h
+	loop	out_loop
+	
+	endl
+	mov	ax, 4C00h
+	int	21h
+.data
+buffer	db 100 dup(?)
+sum	dw 0
+end start

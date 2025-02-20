@@ -1,0 +1,9 @@
+class parking
+id 3
+phone +375346555555
+email 
+cost 55
+sqr 25
+addr 
+actual 1
+type 1

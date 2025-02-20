@@ -1,0 +1,57 @@
+28 Транспонировать битовую матрицу использую операторы  сдвига.
+
+.model small
+.stack 100h
+.data
+mes1	db	10,13,"Vvedite elementy matricy(8 elem)!!$"
+mes2	db	10,13,"$"
+mas	db	8	dup(0)
+mas_tr	db	8	dup(0)
+.code
+begin:
+	mov ax,@data			;перемещаем сегмент данных в ах
+	mov ds,ax			;перемещаем сегмент данных в dx 
+	lea dx,mes1			;в dx адрес mes1 
+	mov ah,9h			;вывод строкм mas1 	
+	int 21h	
+	xor bx,bx
+	mov cx,8
+again:					;ввод массива
+	mov ah,1
+	int 21h
+	sub al,'0'
+	mov mas[bx],al
+	inc bx
+	loop again			;повторение цикла again, пока сх не = 0
+	lea dx,mes2			;адрес mes2 в dX
+	mov ah,9
+	int 21h
+	mov cx,8
+	xor bx,bx
+	xor dh,dh
+output:					; вывод матрицы
+	mov dl,mas[bx]
+	add dx,30h
+	mov ah,2
+	int 21h
+	inc bx
+	loop output
+	mov cx,8
+	lea di,mas_tr
+repeat:					;транспонирование
+	push cx		
+	mov cx,8
+	lea si,mas
+rep1:
+	rol BYTE PTR[si],1
+	rcl al,1
+	inc si
+	loop rep1
+	pop cx
+	mov [di],al
+	inc di
+	loop repeat
+	
+exit:
+	mov ah,4с00h
+	int 21h			end begin

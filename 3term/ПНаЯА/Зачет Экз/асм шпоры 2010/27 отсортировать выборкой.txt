@@ -1,0 +1,47 @@
+27. Дана строка в сегменте кода. Отсортировать методом выборки
+
+.model small
+.stack 100h
+.code
+start:
+	jmp continue
+	stroka	db	254, 0 dup(255)
+continue:
+	push cs
+	pop ds					; направляем ds на сегмент кода
+	mov bx,2
+	xor dx, dx
+	mov ah, 0Ah
+	int 21h
+	mov ah, 0dh
+	xor di,di
+
+loop1:
+	mov al,stroka[bx]
+	cmp ah,stroka[bx+1]			; проверка, конец строки или нет
+	je end_program
+	mov si,bx				
+	inc si
+loop2:						; поиск 
+	cmp ah,stroka[si]
+	je end_loop1
+	cmp al,stroka[si]
+	jna next_iter					; поиск
+	mov al,stroka[si]				; минимального
+	mov di,si					; элемента
+next_iter:
+	inc si
+	jmp loop2
+end_loop1:
+	mov dh,stroka[bx]				;перестановка
+	mov stroka[bx],al				;
+	mov stroka[di],dh
+	inc bx
+	jmp loop1
+end_program:
+	mov ah,09h
+	lea dx,stroka
+	int 21h
+	mov ah,4ch
+	int 21h
+end start

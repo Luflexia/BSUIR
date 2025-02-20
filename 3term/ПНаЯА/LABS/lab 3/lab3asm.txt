@@ -1,0 +1,433 @@
+.model small
+
+.stack 100h
+
+.data
+
+div_0_str                   db 0Ah, 0Dh, 'division by 0 error$'
+                            
+ArrayLength                 db  ?
+InputArrayLengthMsgStr      db  0Dh,'Input the length of array(1<length<31): $'
+tmp                         db  ?
+
+
+InputMsgStr                 db  0Dh,'Arr['    
+CurEl1                      db  48 
+CurEl2                      db  48
+InputMsgStr_2               db  '] - $'                            
+
+TaskMsg                     db 0Ah,0Dh,'Result((MaxEl-MinEl)/MaxEl) = $'
+ErrorInputMsgStr            db 0Ah, 0Dh,'Incorrect input' ,0Ah,'$' 
+
+ 
+minus_flag                  db 0
+minus_flag_max              db 0
+minus_flag_min              db 0
+ 
+accuracy                    dw 6   ;кол-во цифр после запятой 
+            
+num_10	                    dw	10
+b_num_10                    db 10
+
+MaxArrayLength              equ 30 
+Array                       dw  MaxArrayLength dup (0)           
+
+sk db 0Ah, 0Dh, '$'             
+
+MinEl                       dw  ?     ;минимальный элемент
+MaxEl                       dw  ?     ;максимальный элемент
+ 
+
+.code
+ 
+mov ax, @data
+mov ds, ax                          
+
+                                                                                                     
+;---------------------------------------- ввод длины массива  
+
+                        
+input_array_length proc    
+    
+    call arr_length_mess 	
+    call inp_length 		
+         
+endp                                             
+
+
+arr_length_mess proc    ;Вывод ArrayMsgString
+    xor bx, bx 		    ;bx = 0		
+    mov ah, 09h 			 
+    lea dx, InputArrayLengthMsgStr
+    int 21h 		
+    ret 
+endp   
+
+
+inp_length proc         ;Ввод ArrayLength (al = asci код length)
+    
+    mov ah,01h 				
+	int 21h 				
+	cmp al, 0Dh 			
+	je  push_to_arr_len ;если al = 0Dh
+	jmp isNum 			;если al != 0Dh	
+  next:                 ;в bx хранится число
+	sub al,'0'		    ;вычитаем 30h от ASCII кода цифры и получаем число (Например в al было '3', а станет 3)		
+	xor ah,ah		    ;ah = 0(расширяем до слова)	
+	mov cx, ax		    ;cx = ax(в cx цифра числа)
+	xor ax,ax		    ;ax = 0	 
+	mov ax, bx		    ;ax = bx(ax становится числом, cx новая цифра)		 				
+	mul num_10		    ;умножаем ax на 10 для формирования числа 	
+	add ax,cx			;ax = ax*10+cx	 
+	mov bx,ax 			;bx число	
+	jmp check_arr_length 	
+endp
+
+
+isNum proc              ;(сдвиг влево для получения числа) проверяем является ли введенный символ символом числа(0 <= ASCII код цифры <= 9) 
+    
+    cmp al, '0'				
+    jae nx				;если al >= 0	
+    jmp errorArrLength		
+  nx:
+    cmp al, '9'				
+    jle next			;если al <= 9	
+    jmp errorArrLength		
+    
+endp  
+
+
+check_arr_length:          ;проверка длинны массива 
+    mov cx, MaxArrayLength 	
+	cmp bx, cx			   
+ 	jle inp_length	       ;если bx(введенное число) <= 30		
+ 	jmp errorArrLength 	   
+                   
+
+                    
+push_to_arr_len:		   ;проверка длины массива(после введенного enter)
+    cmp bx, 1					
+    jle errorArrLength	   ;если bx(введенное число) <=1
+    mov ArrayLength, bl	   ;записываем длину массива
+    mov tmp, bl				
+    jmp inp_array_of_shorts	
+                                  
+       
+;---------------------------------------- ввод массива       
+       
+    
+inp_array_of_shorts proc 
+    xor si, si			  ;si = 0	
+    call inp_num			
+endp
+                         
+                                              
+;----------------------------------------
+
+                     
+print_arr_index:          ;вывод сообщения на экран  
+    mov ah, 09h
+    lea dx, sk				
+    int 21h            
+    
+    mov ah,09h;
+    lea dx,InputMsgStr		
+    int 21h   
+    
+    add CurEl2, 1		
+    cmp CurEl2, 58		
+    je set_counter			
+    z:						
+    jmp exe
+
+set_counter:				
+    add CurEl1, 1  
+    mov CurEl2, 48
+    jmp   z 
+    
+    					    
+inp_num proc  
+    
+    jmp print_arr_index 	
+  exe:                 
+    xor bx,bx 			  ;bx = 0      
+    xor dx,dx			  ;dx = 0	
+  loop2:                  ;вводим число             
+    mov ah,01h 				
+	int 21h					
+	cmp al, 0dh 		  ;если введен enter
+	je  mini_max		  ;
+	cmp al, '-'		  ;если число отрицательное
+	je minus_check			
+	jmp isNm			   
+  nxt:                    ;формируем число по схеме Горнера(как в next)
+	sub al,'0'            
+	xor ah,ah	
+	mov cx, ax
+	xor ax,ax
+	mov ax, bx	 		 				
+	mul num_10 
+	jo error
+	add ax,cx             ;число в bx
+	mov bx, ax
+    jmp overflow_check 
+endp     
+
+
+
+overflow_check:			  ;проверка на переполнение	
+    cmp bx, 32768
+    ja error				
+    jmp loop2             ;вводим следующую цифру числа
+
+minus_check proc          ;установка -
+   test bx, bx
+   jnz error   
+   call set_minus_flag
+   mov minus_flag, 1
+   jmp loop2
+endp
+ 
+ 
+set_minus_flag proc       ;установка -
+    push cx 				
+    mov cl, minus_flag 		
+    test cl, cl 			 
+											
+    pop cx 					
+    jnz error				
+    
+    ret  
+endp 
+ 
+ 
+isNm proc                 ;является ли введенный символ цифрой
+    
+    cmp al, '0'
+    jae nex
+    jmp error
+  nex:
+    cmp al, '9'
+    jle nxt
+    jmp error 
+    
+endp
+
+
+push_to_arr proc 		  ;записываем число в массив	
+    add si, 2
+    sub tmp, 1
+    cmp tmp, 0
+    ja inp_num			  ; tmp > 0(вводим следующее число)
+    jmp print_taskmsg
+endp
+ 
+ 
+;---------------------------------------- поиск минимального и максимального элементов   
+mini_max proc 
+                                                                                                        
+    mov cl, minus_flag
+    test cl, cl           ;сбрасываем флаг OF(переполнение) CF(перенос), изменяется ZF
+    jz pos                ;если 0  (ZF = 1)
+    neg bx                ;меняем знак bx                                                                          
+    er:
+    jns error				
+    jmp e_mm   
+  pos:                      
+    cmp bx, 32768         ;если bx = 32768
+    je error  
+  e_mm:                     
+   cmp si,0
+   je setMinMaxEl         ;Первое число становится мин и макс элементом
+   
+   cmp bx, MinEl          ;Если введенное число меньше минимального
+   jle setMinEl           ;1<2
+ 
+   cmp bx, MaxEl          ;Если введенное число больше максимального
+   jge setMaxEl           ;1>2
+ 
+   call push_to_arr   
+endp             
+
+setMinMaxEl:
+    mov cl, minus_flag
+    mov minus_flag_max, cl
+    mov minus_flag_min, cl
+    mov MinEl, bx 
+    mov MaxEl, bx
+    mov minus_flag,0
+    call push_to_arr
+    
+setMinEl:                 ;устанавливаем минимальный элемент
+    mov cl, minus_flag
+    mov minus_flag_min, cl
+    mov MinEl, bx
+    mov minus_flag,0
+    call push_to_arr
+
+setMaxEl:                 ;устанавливаем максимальный элемент
+    mov cl, minus_flag
+    mov minus_flag_max, cl
+    mov MaxEl, bx
+    mov minus_flag,0
+    call push_to_arr
+
+       
+print_taskmsg:            ;Выводим сообщение TaskMsg
+
+mov ah,09h
+lea dx,TaskMsg
+int 21h
+jmp calculate 
+
+  
+   
+;---------------------------------------- вывод  
+                           
+push_num_to_stack proc
+        push dx
+        push bx
+        mov bx,ax               ;Делимое в bx
+        mov bp,sp			
+							
+    loop1:  .            
+        cmp ax,0
+        je skip_actions
+        div b_num_10            ;
+        xor bx,bx
+        mov bl,ah
+        xor ah,ah
+    skip_actions:
+        push bx 
+        cmp al, 0
+        je print_num 
+        jmp loop1
+        
+     print_num:          
+     loop3:
+        xor dx,dx  
+        pop bx
+        add bx,'0'
+        mov ah,02h
+        mov dl,bl
+        int 21h
+        cmp bp,sp
+        jne loop3               ;если есть еще цифры
+        pop bx
+        pop dx    
+        ret
+endp
+ 
+   
+
+;---------------------------------------- (макс - мин)/макс  
+
+calculate:                
+                          
+    mov ax,MaxEl          ;ax = MaxEl
+    cmp ax,0             
+    je err_div_0          ;если MaxEl = 0
+    sub ax,MinEl          ;ax = MaxEl - MinEl
+    call pr_div
+    jmp end  
+
+
+pr_div proc               ;Деление
+    push ax               ;Делимое 
+    push dx 
+    push bx 
+     
+    mov bx,MaxEl          ;Делитель в bx
+    
+    mov dl,minus_flag 
+    cmp dl,minus_flag_max              
+    
+    
+  unsing_div:             
+    div MaxEl             ;(Max - Min) / Max    (DX:AX/MaxEl в AX целая цасть, DX дробная часть)
+    call push_num_to_stack 
+    test dx,dx 
+    jz pr_div_end 
+    mov ax, MaxEl 
+    call ost_output 
+    jmp pr_div_end 
+    
+  
+  pr_div_ost_unsign: 
+    call ost_output 
+    jmp pr_div_end 
+   
+  pr_div_end: 
+    pop bx 
+    pop dx 
+    pop ax 
+    ret 
+endp 
+
+
+ost_output proc          ;Вывод дробной части
+    push ax 
+    push dx 
+    push cx 
+    
+    push dx 
+    mov bx,ax 
+    mov ah,2h 
+    mov dl,'.' 
+    int 21h 
+    pop dx 				  
+    
+    mov cx,accuracy      ;Кол-во цифр в дробной части
+  ost_cycle: 
+    mov ax, dx 				
+    mul num_10 				
+    div bx 
+    
+    push dx 
+    mov dx,ax 
+    mov ah,2h 
+    add dx,'0' 
+    int 21h 
+    sub dx,'0' 
+    pop dx 
+    cmp dx,dx 
+    loopz ost_cycle 
+    
+  ost_end: 
+    pop cx 
+    pop dx 
+    pop ax 
+    ret 
+endp  
+
+
+;---------------------------------------- ошибки  
+
+
+errorArrLength:                ;если длина массива неверна
+    mov ah, 09h                
+    lea dx, ErrorInputMsgStr   ;вывод ошибки
+    int 21h
+    jmp input_array_length     ;повторный ввод длины
+ 
+error:
+    mov ah, 09h
+    lea dx, ErrorInputMsgStr
+    int 21h
+    sub CurEl2, 1 
+    mov minus_flag, 0
+    jmp inp_num
+    
+err_div_0:                     ;если делим 0
+    mov ah, 09h
+    lea dx,div_0_str
+    int 21h
+    jmp end                                    
+     
+     
+;---------------------------------------- выход
+
+
+end:     
+    mov ax, 4c00h
+    int 21h

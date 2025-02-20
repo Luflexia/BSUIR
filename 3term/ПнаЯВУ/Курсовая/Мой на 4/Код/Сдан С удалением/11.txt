@@ -1,0 +1,9 @@
+class parking
+id 11
+phone +375451231123
+email 
+cost 455.45
+sqr 45.45
+addr 
+actual 1
+type 1

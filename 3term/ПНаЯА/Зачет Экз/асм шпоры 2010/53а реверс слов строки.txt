@@ -1,0 +1,62 @@
+.model small			;размер блока памяти (тут для ехе-программы)
+.stack 100h			;для данных и стека
+.data				;сегмент данных
+msg1 	db 	0Ah,0Dh,"Enter string :",0Ah,0Dh,'$'	
+string  db   	80 dup(?)	;неинециализированная переменная
+msg2 	db 	0Ah,0Dh,"Reversed string:",0Ah,0Dh,'$'
+.code				;сегмент кода
+start:				;начало куска старт
+ 	mov ax,@data		;адрес начала сегмента данных
+ 	mov ds,ax		;
+ 	lea dx,msg1
+ 	mov ah,09h
+ 	int 21h 		;вызов дос-прерывания
+vvod:
+ 	mov ah,01h
+ 	int 21h
+ 	cmp al,0Dh		;сравнение 
+ 	je body			;и если символ равен вводу, то дальнейшее перенаправление
+ 	mov string[si],al	;заносим символы в строку
+ 	inc si			;si++
+ 	loop vvod		;повторять блок vvod
+body: 
+	mov ah,09h
+	lea dx,msg2		;копирование адресса
+	int 21h			;вывод текста оформления
+	cmp si,0
+	je exit
+	mov di,si		;создание третьего счётчика(si - второй, cx - конечно первый, но он тут неиспользуется ввиду того что он начинает изменяться в любом цикле, а тут алгоритм сложнее
+revers:				;функция для перемещения по строке
+	dec si			;si--
+	mov bp,si
+	cmp string[si], ' '	;сравнение для нахождения пробела между словами
+	je funk
+	cmp si,0		;проверка второго счётчика на конец строки
+	je funk3
+	loop revers
+	mov dl,string[0]	;допись последнего символа
+	mov ah,02h
+	int 21h			
+funk:				;функция для вывода слова
+	inc bp
+	mov dl,string[bp]
+	mov ah,02h
+	int 21h	
+	cmp bp,di
+	je funk2
+	loop funk
+funk2:				;функция для изменения di и дальнейшего направления в revers
+	mov di,si
+	je revers
+funk3:				;функция для вывода первого слова перед которым нет пробела	
+	mov dl,string[bp]
+	mov ah,02h
+	int 21h	
+	cmp bp,di
+	je exit
+	inc bp
+	loop funk3	
+exit:	 	
+	mov ah,4Ch 		;копирование для конца проги
+	int 21h			;вызов дос-прерывания
+	end start		;собственно сам конец проги

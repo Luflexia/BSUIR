@@ -1,0 +1,67 @@
+36.ƒан массив строк. Ќайти строку с max длинной и вывести ее на экран.
+
+.model small
+.stack 100h
+.data
+	str0 db "Hello",'$'
+	str1 db "Good day",'$'
+	str2 db "Hi!",'$'
+	str3 db "How do you do?",'$'
+	str4 db "I greet you",'$'
+	StrArray	dw offset str0 
+			dw offset str1 
+			dw offset str2 
+			dw offset str3 
+			dw offset str4	
+	StrCount dw 5
+.code
+program:
+	mov ax, @data
+	mov ds, ax
+	mov si, offset StrArray	; si - начало массива строк
+	mov cx, StrCount 		; инициализаци€ счетчика
+	xor ax, ax				; в ax - макс. длина строки
+calc_length:
+	mov bx, [si]			; bx - смещение текущей строки
+	add si, 2				; si сдвигаетс€ на следующую строку
+	push cx				; сохран€ем счетчик
+	call str_len				; определ€ем длину строки
+	cmp ax, cx			
+	ja end_loop			; если найденна€ длмна больше макс.
+	mov ax, cx				; сохран€ем эту длину в ax
+	mov dx, bx			; сохран€ем в dx смещение строки
+end_loop:
+	pop cx				; восстанавливаем счетчик	
+	loop calc_length
+	mov ah, 9				; выводим макс. строку на экран
+	int 21h
+	mov ax, 4c00h
+	int 21h
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Ќаходит длину строки
+; bx - смещение строки
+; –езультат: cx - искома€ длина
+str_len proc near
+	push bx
+	push ax
+	xor cx, cx
+	mov al, '$'
+	mov ah, 0
+len_lp:
+	cmp al, [bx]
+	je end_len  
+	cmp ah, [bx]
+	je end_len
+	inc cx
+	inc bx
+	jmp len_lp
+end_len:
+	pop ax
+	pop bx
+	ret
+str_len endp
+end program

@@ -1,0 +1,89 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Отсортировать элементы главной диагонали матрицы.
+;
+; 18.06.04
+;
+.model small
+.stack 300h
+.data
+	N equ 4 ; РАЗМЕР МАТРИЦЫ
+
+	THE_MATRIX db 'C', '1', '1', '1'
+		   db '2', 'B', '2', '2'
+		   db '3', '3', 'A', '3'
+		   db '4', '4', '4', 'W','$'
+
+	str1	db	0dh,0ah,'$'
+	str2	db	' $'
+
+.code	
+program:
+	mov ax, @data
+	mov ds, ax
+	
+	mov cx, N
+	mov si, offset THE_MATRIX	
+
+	push cx
+	mov cx, N		
+	dec cx
+;;;обычная сортировка пузырьком
+sort_loop:
+	mov bx, si		
+	add bx, N
+	inc bx
+	 
+	push cx
+
+cmp_loop:
+	mov al, [si]		
+	cmp al, [bx]
+	jna cont
+
+	mov dl, byte ptr [bx]
+	mov byte ptr [bx], al
+	mov byte ptr [si], dl
+	
+cont:
+	add bx, N
+	inc bx
+	loop cmp_loop
+	
+	pop cx
+	add si, N
+	inc si
+	loop sort_loop
+;;; Вывод матрицы
+
+	lea si,THE_MATRIX
+	mov   cx,0
+w3:
+	push  cx	
+	mov    cx,0
+w1:	
+	mov   	ah,2
+	mov	dx,[si]
+	int 	21h
+	
+	mov 	ah,9
+	lea 	dx,str2
+	int	 21h
+	inc 	cx
+	cmp 	cx, n
+	je 	w2
+	inc 	si
+	jmp 	w1
+w2:
+	mov ah,9
+	lea dx,str1
+	int 21h
+	inc si
+	pop cx
+	inc cx
+	cmp cl,n
+	jne w3
+
+exit:	
+	mov ax, 4c00h
+	int 21h
+end program

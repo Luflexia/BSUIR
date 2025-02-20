@@ -1,0 +1,30 @@
+39. ѕеревод строки в число.
+
+.model small
+.stack 100h
+.data
+	num	dw	?
+	c10	db	10
+.code
+begin:
+	mov ax,@data
+	mov ds,ax
+	xor bx,bx
+again:
+	mov ah,1
+	int 21h
+	cmp al, 0dh	; если энтер, то закончим ввод
+	je con
+	sub al,'0'		; вычитаем С0Т из символа дл€ 
+	xor ah,ah		; 
+	mov si,ax		
+	mov ax,bx		; помещаем конечный на данный момент результат в ax 
+	mul c10		; и умножаем его на 10
+	add ax,si		; добавл€ем к полученному значению введенную только что цифру
+	mov bx, ax	; формируем в bx конечное на данный момент значение
+	jmp again		; зацикливаем
+con:
+	mov num,bx 	 ; полученное число
+	mov ax, 4c00h
+	int 21h
+end begin

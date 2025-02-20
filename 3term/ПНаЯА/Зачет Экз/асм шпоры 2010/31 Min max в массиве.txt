@@ -1,0 +1,89 @@
+31 Ввести массив чисел, найти min и max, вывести на экран
+
+.model small
+ .stack 100h 
+.data
+	massiv	dw	80 dup(?)
+	msg1	db	0ah,0dh,"Vvodite chisla ",0ah,0dh,"$"
+	msg2	db	0ah,0dh,"max = $"
+	msg3	db	0ah,0dh,"min = $"
+	c10	dw	10
+.code
+start:
+	mov ax,@data
+	mov ds,ax
+	mov ah,09h		; вывод приглашения для ввода чисел
+	lea dx,msg1
+	int 21h
+	mov di,0			; в di - max
+	mov si,32767		; в si - min
+	xor dx,dx			; в dx - очередное число
+input_loop:
+	mov ah,01h		; ввод символа
+	int 21h
+	cmp al,0dh			; если enter
+	je chislo			; то занести число в массив
+	cmp al,20h			; если пробел
+	je chislo			; то занести число в массив
+	sub al,30h			; вычитаем '0'
+	mov cl,al			; сохраняем цифру в cl
+	mov ax,dx			; в ax - введенное число
+	mul c10			; умножаем на 10
+	xor ch,ch
+	add ax,cx			; добавляем цифру из al
+	mov dx,ax			; число снова в dx
+	jmp input_loop
+chislo:
+	mov bx,cx			; в bx - порядковый номер очередного числа
+	shl bx,1			; теперь - смещение очередного числа в массиве
+	mov massiv[bx],dx	; записываем в массив число
+	inc cx			; увеличиваем счетчик введенных чисел
+	cmp dx,si			; сравниваем число с минимальным
+	jb minimum		; если оно меньше, то jmp на minimum
+	cmp dx,di			; сравниваем число с максиальным
+	jg maximum		; если оно больше, то jmp на maximum
+	jmp chislo_cont		; иначе jmp на chislo_cont
+minimum:
+	mov si,dx			; запоминаем минимальное число в si
+	jmp chislo_cont		
+maximum:
+	mov di,dx			; запоминаем максимальное число в di
+chislo_cont:
+	xor dx,dx			; dx в ноль
+	cmp cx,80			; если ввели 80-ое число
+	je end_input		; то конец ввода
+	cmp al,0dh			; если был нажат enter
+	je end_input		; то конец ввода
+	jmp input_loop
+end_input:
+	mov ah,09h		; вывод на экран msg2
+	lea dx,msg2
+	int 21h
+	mov ax,di			; передаем в функцию output max через ax
+	call output			; выводим это число
+	lea dx,msg3		; вывод на экран msg3
+	mov ah,9
+	int 21h
+	mov ax,si			; передаем в ouptput min через ax
+	call output			; выводим это число
+	mov ah,4ch			; завершение программы
+	int 21h
+output proc				; процедура вывода числа, находящегосы в ax
+	xor cx,cx			; счетчик цифр
+div_loop:
+	xor dx,dx			; подготовка к делению
+	div c10			; деление
+	add dx,30h			; в dx - ASCII-код остатка от деления
+	push dx			; сохраняем его в стеке
+	inc cx			; инкремент счетчика
+	cmp ax,0			; деление, покуда частное не нулевое
+	je out_loop
+	jmp div_loop
+out_loop:				; цикл вывода числа
+	pop dx			; извлекаем из стека очередной остаток
+	mov ah,02h		; и выводим его на экран
+	int 21h
+	loop out_loop		; цикл продолжается cx раз
+	ret
+output endp
+end start

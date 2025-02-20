@@ -1,0 +1,24 @@
+45. Передать строку из сегмента данных в сегмент кода.
+
+.model small
+.stack 100h
+.data
+	STR_LEN	equ 20
+	string1	db STR_LEN dup ('0') 
+db '$'
+.code	
+start:
+	mov ax, @data
+	mov ds, ax
+	mov ax, cs
+	mov es, ax
+	mov si, offset string1	
+	mov di, offset string2
+	mov cx, STR_LEN
+	cld
+	rep movsb
+	mov ax, 4c00h
+	int 21h
+	string2	db STR_LEN dup ('2')
+			db '$'
+end start

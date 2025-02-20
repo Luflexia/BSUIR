@@ -1,0 +1,105 @@
+35. Ввести с клавиатуры массив чисел. Найти суммы положительных и отрицательных чисел. Вывести результат.
+
+.model small
+.stack 256
+.data
+	mas	dw 8 dup(0)
+	zz	db	0Dh, 0Ah,'-$'
+.code
+start:
+	mov ax,@data
+	mov ds,ax
+	mov cx,8
+mas_in:
+	xor bx,bx
+	num_s_in:	
+		cmp bx,6
+		je end_num_s_in
+		mov ah,01h
+		int 21h
+		cmp al,0Dh
+		je end_num_s_in
+		inc bx
+		xor ah,ah
+		push ax
+		jmp num_s_in
+	end_num_s_in:
+		mov bp,1
+		xor di,di
+	num_p:
+		cmp bx,1
+		je end_num_p
+		pop ax
+		sub al,'0'
+		mul bp
+		add di,ax
+		mov ax,bp
+		mov bp,10
+		mul bp
+		mov bp,ax
+		dec bx
+		jmp num_p
+         end_num_p:
+		pop ax
+		cmp al,'-'
+		jne ee
+		neg di
+ee:
+		mov ax,cx
+		;sub ax,2
+		shl ax,1
+		mov si,offset mas
+		add si,ax
+		mov word ptr [si],di
+                      loop mas_in
+____SOBSTVENNO SLOGENIE____
+	mov di,offset mas
+	xor ax,ax		;summa bolhih 0
+	xor bx,bx		;summa menshih 0
+	mov cx,9	
+add_num:
+	cmp word ptr[di],0
+	jl add_less_zero
+	add ax,word ptr [di]
+	jmp e
+	add_less_zero:
+	add bx,word ptr [di]
+	e:
+	add di,2
+	loop add_num
+___VYVOD_______
+div_num_s:	
+	mov cx,10
+	xor bp,bp
+div_num:
+	cmp ax,0
+	je end_div_num
+	xor dx,dx		
+	div cx
+	add dx,'0'
+	push dx
+	inc bp
+	jmp div_num
+end_div_num:
+vyvod:
+	cmp bp,0
+	je end_vyvod
+	pop ax
+	mov ah,02h
+	mov dl,al
+	int 21h
+	dec bp
+	jmp vyvod	
+end_vyvod:
+	cmp bx,0
+	je exit
+	neg bx
+	mov ah,9
+	mov dx,offset zz
+	int 21h
+	mov ax,bx
+	xor bx,bx
+	jmp div_num_s
+exit:		
+	mov ax,4C00h
+	int 21h       end start

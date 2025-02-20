@@ -1,0 +1,37 @@
+﻿40. В сегменте данных дана матрица. Отсортировать ее побочную дигональ
+
+.model small
+.stack 100h
+.data
+	razmer	equ	4
+	matrix	dw	1,2,3,13
+			dw	5,6,10,8
+			dw	9,7,11,12
+			dw	4,14,15,16
+.code
+start:
+	mov ax,@data
+	mov ds,ax
+	mov cx,razmer
+	dec cx
+	mov bx,cx
+	shl bx,1					; bx - смещение (длина строки -2)
+loop1:
+	mov si,bx
+	push cx
+loop2:
+	mov dx,matrix[si]			;
+	mov di,matrix[si][bx]			; перестановка
+	cmp dx,di					;
+	jl cont_loop2
+	mov matrix[si],di
+	mov matrix[si][bx],dx
+cont_loop2:
+	add si,bx					;
+	loop loop2					; смещение на следующую строку
+	pop cx					;
+	loop loop1
+	lea dx,matrix
+	mov ah,4ch
+	int 21h
+end start

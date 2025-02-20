@@ -1,0 +1,9 @@
+class parking
+id 6
+phone +375457894566
+email 
+cost 455
+sqr 56
+addr 
+actual 1
+type 1
