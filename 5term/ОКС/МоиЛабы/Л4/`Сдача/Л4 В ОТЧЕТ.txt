@@ -1,0 +1,71 @@
+class Collision:
+    def __init__(self, channel_busy_probability=0.4, collision_probability=0.6):
+        self.channel_busy_probability = channel_busy_probability
+        self.collision_probability = collision_probability
+        self.is_channel_busy = False
+
+        self.last_frame_index = None  
+
+    def listen_channel(self):
+        self.is_channel_busy = random.random() < self.channel_busy_probability  
+        return self.is_channel_busy  
+
+    def detect_collision(self):
+        collision_happened = random.random() < self.collision_probability  
+        return collision_happened  
+
+    def delay(self, collision_number):
+        k = min(collision_number, 10)  
+        r = random.randint(0, 2 ** k) 
+        slot_time = 0.000512  
+        delay_time = r * slot_time 
+
+        time.sleep(delay_time)  
+        return delay_time 
+        
+def send_data(self, event=None):
+
+			……..
+
+                    collision_count = 0  
+                    while True:
+                        while self.collision.listen_channel():
+                            time.sleep(0.1)  
+
+                        flag, frame_without_flag = self.create_frame(portion)
+                        stuffed_frame = self.byte_stuffing(frame_without_flag)
+                        full_frame = flag + stuffed_frame
+
+                        self.ser_out.write(full_frame)
+
+                        time.sleep(1)
+
+                        highlighted_frame_hex = ""
+                        for byte in full_frame:
+                            highlighted_frame_hex += f"0x{byte:02X} "
+                        self.log_status(f"Отправлен кадр: {highlighted_frame_hex}")  
+
+                        while self.collision.detect_collision():
+                            collision_count += 1
+                            if collision_count >= 16:
+                                break
+
+                            self.log_status(" #")
+                            self.root.update_idletasks() 
+                            self.collision.delay(collision_count)
+
+                            self.ser_out.write(full_frame)
+
+                            time.sleep(1)
+
+                        break 
+
+                    self.sent_portions += 1
+                    self.log_status(f"Отправлено порций: {self.sent_portions}")
+                    self.input_text.delete("1.0", tk.END)
+
+            except serial.SerialException as e:
+                messagebox.showerror("Ошибка", f"Не удалось отправить данные: {str(e)}")
+        else:
+            messagebox.showerror("Ошибка", "Порт передачи не открыт.")
+        return 'break'

@@ -1,0 +1,153 @@
+
+```cpp
+#include <windows.h> // Подключение заголовочного файла Windows API
+#include <setupapi.h> // Подключение заголовочного файла для работы с Setup API
+#include <cfgmgr32.h> // Подключение заголовочного файла для работы с Configuration Manager API
+#include <usbiodef.h> // Подключение заголовочного файла для определений USB-устройств
+#include <iostream> // Подключение стандартной библиотеки ввода-вывода
+#include <vector> // Подключение библиотеки для работы с векторами
+#include <string> // Подключение библиотеки для работы со строками
+#include <iomanip> // Подключение библиотеки для форматирования вывода
+#include <conio.h> // Подключение библиотеки для консольного ввода-вывода
+#include <chrono> // Подключение библиотеки для работы со временем
+#include <thread> // Подключение библиотеки для работы с потоками
+#include <functional> // Подключение библиотеки для работы с функциональными объектами
+
+std::wstring lastSafelyRemovedDeviceId; // Глобальная переменная для хранения ID последнего безопасно извлеченного устройства
+
+struct Device { // Определение структуры Device для хранения информации об устройстве
+    std::wstring name; // Имя устройства
+    std::wstring hardwareId; // Аппаратный ID устройства
+    bool ejectable; // Флаг, указывающий, можно ли извлечь устройство
+    DEVINST devInst; // Дескриптор экземпляра устройства
+
+    Device() : ejectable(false), devInst(0) {} // Конструктор по умолчанию
+
+    void print() const { // Метод для вывода информации об устройстве
+        std::wcout << std::setw(40) << std::left << hardwareId << L" | " << name << std::endl;
+    }
+
+    [[nodiscard]] bool eject() const { // Метод для извлечения устройства
+        if (ejectable) { // Если устройство можно извлечь
+            return CM_Request_Device_EjectW(devInst, nullptr, nullptr, 0, 0) == CR_SUCCESS; // Запрос на извлечение устройства
+        }
+        return false; // Если устройство нельзя извлечь, возвращаем false
+    }
+};
+
+std::vector<Device> devices; // Глобальный вектор для хранения списка устройств
+
+void updateDeviceList() { // Функция для обновления списка устройств
+    devices.clear(); // Очистка текущего списка устройств
+    HDEVINFO deviceInfo = SetupDiGetClassDevsW(&GUID_DEVINTERFACE_USB_DEVICE, nullptr, nullptr, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE); // Получение информации о классе USB-устройств
+    if (deviceInfo == INVALID_HANDLE_VALUE) return; // Если не удалось получить информацию, выходим из функции
+
+    SP_DEVINFO_DATA devInfoData; // Структура для хранения информации об устройстве
+    devInfoData.cbSize = sizeof(SP_DEVINFO_DATA); // Установка размера структуры
+
+    for (DWORD i = 0; SetupDiEnumDeviceInfo(deviceInfo, i, &devInfoData); i++) { // Перебор всех устройств
+        Device device; // Создание объекта устройства
+        device.devInst = devInfoData.DevInst; // Сохранение дескриптора экземпляра устройства
+        WCHAR buffer[256]; // Буфер для хранения строковых данных
+        if (SetupDiGetDeviceRegistryPropertyW(deviceInfo, &devInfoData, SPDRP_DEVICEDESC, nullptr, reinterpret_cast<PBYTE>(buffer), sizeof(buffer), nullptr)) {
+            device.name = buffer; // Получение и сохранение имени устройства
+        }
+        if (SetupDiGetDeviceRegistryPropertyW(deviceInfo, &devInfoData, SPDRP_HARDWAREID, nullptr, reinterpret_cast<PBYTE>(buffer), sizeof(buffer), nullptr)) {
+            device.hardwareId = buffer; // Получение и сохранение аппаратного ID устройства
+        }
+        DWORD properties; // Переменная для хранения свойств устройства
+        if (SetupDiGetDeviceRegistryPropertyW(deviceInfo, &devInfoData, SPDRP_CAPABILITIES, nullptr, reinterpret_cast<PBYTE>(&properties), sizeof(DWORD), nullptr)) {
+            device.ejectable = (properties & CM_DEVCAP_REMOVABLE) != 0; // Определение, является ли устройство извлекаемым
+        }
+
+        devices.push_back(device); // Добавление устройства в список
+    }
+    SetupDiDestroyDeviceInfoList(deviceInfo); // Освобождение ресурсов, связанных с информацией об устройствах
+}
+
+void printDevices() { // Функция для вывода списка устройств
+    system("cls"); // Очистка консоли
+    std::wcout << L"Список USB-устройств:\n"; // Вывод заголовка
+    for (size_t i = 0; i < devices.size(); i++) { // Перебор всех устройств
+        std::wcout << i + 1 << L". "; // Вывод номера устройства
+        devices[i].print(); // Вывод информации об устройстве
+    }
+    std::wcout << L"\nВыберите номер устройства для извлечения или 'q' для выхода.\n"; // Вывод инструкции
+}
+
+void checkForUnsafeRemoval() { // Функция для проверки небезопасного извлечения устройств
+    static std::vector<Device> previousDevices; // Статический вектор для хранения предыдущего списка устройств
+    static std::vector<std::wstring> reportedDevices; // Статический вектор для хранения ID устройств, о которых уже сообщалось
+    std::vector<Device> currentDevices = devices; // Копирование текущего списка устройств
+
+    // Проверяем устройства, которые были удалены
+    for (const auto& prevDevice : previousDevices) { // Перебор предыдущего списка устройств
+        auto it = std::find_if(currentDevices.begin(), currentDevices.end(),
+                               [&prevDevice](const Device& dev) { return dev.hardwareId == prevDevice.hardwareId; }); // Поиск устройства в текущем списке
+
+        if (it == currentDevices.end() && // Если устройство не найдено в текущем списке
+            std::find(reportedDevices.begin(), reportedDevices.end(), prevDevice.hardwareId) == reportedDevices.end() && // И о нем еще не сообщалось
+            prevDevice.hardwareId != lastSafelyRemovedDeviceId) { // И оно не было безопасно извлечено
+            std::wcout << L"Внимание: Устройство было извлечено небезопасно: " << prevDevice.name << L"\n"; // Вывод предупреждения
+            reportedDevices.push_back(prevDevice.hardwareId); // Добавление устройства в список сообщенных
+        }
+    }
+
+    // Очистка списка сообщенных устройств, которые снова появились
+    reportedDevices.erase(
+            std::remove_if(reportedDevices.begin(), reportedDevices.end(),
+                           [&currentDevices](const std::wstring& reportedId) {
+                               return std::any_of(currentDevices.begin(), currentDevices.end(),
+                                                  [&reportedId](const Device& dev) { return dev.hardwareId == reportedId; });
+                           }),
+            reportedDevices.end()
+    );
+
+    // Обновляем список предыдущих устройств
+    previousDevices = currentDevices;
+
+    // Сбрасываем ID последнего безопасно извлеченного устройства
+    lastSafelyRemovedDeviceId.clear();
+}
+
+int main() { // Главная функция программы
+    setlocale(LC_ALL, ""); // Установка локали для корректного отображения русских символов
+
+    bool running = true; // Флаг работы программы
+    auto lastUpdateTime = std::chrono::steady_clock::now(); // Время последнего обновления списка устройств
+
+    while (running) { // Основной цикл программы
+        auto currentTime = std::chrono::steady_clock::now(); // Текущее время
+        if (std::chrono::duration_cast<std::chrono::seconds>(currentTime - lastUpdateTime).count() >= 1) { // Если прошла 1 секунда с последнего обновления
+            updateDeviceList(); // Обновление списка устройств
+            printDevices(); // Вывод списка устройств
+            checkForUnsafeRemoval(); // Проверка на небезопасное извлечение
+            lastUpdateTime = currentTime; // Обновление времени последнего обновления
+        }
+
+        if (_kbhit()) { // Если нажата клавиша
+            int ch = _getch(); // Получение кода нажатой клавиши
+            if (ch == 'q' || ch == 'Q') { // Если нажата 'q' или 'Q'
+                running = false; // Завершение работы программы
+            } else if (ch >= '1' && ch <= '9') { // Если нажата цифра от 1 до 9
+                int index = ch - '1'; // Вычисление индекса устройства
+                if (index < devices.size()) { // Если индекс в пределах списка устройств
+                    if (devices[index].eject()) { // Попытка извлечения устройства
+                        std::wcout << L"Устройство успешно извлечено\n"; // Сообщение об успешном извлечении
+                        lastSafelyRemovedDeviceId = devices[index].hardwareId; // Сохранение ID безопасно извлеченного устройства
+                    } else {
+                        std::wcout << L"Не удалось извлечь устройство\n"; // Сообщение о неудачном извлечении
+                    }
+                    std::this_thread::sleep_for(std::chrono::seconds(3)); // Пауза на 3 секунды
+                    updateDeviceList(); // Обновление списка устройств
+                    printDevices(); // Вывод обновленного списка устройств
+                }
+            }
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Пауза в 100 миллисекунд для снижения нагрузки на процессор
+    }
+
+    return 0; // Завершение программы
+}
+```

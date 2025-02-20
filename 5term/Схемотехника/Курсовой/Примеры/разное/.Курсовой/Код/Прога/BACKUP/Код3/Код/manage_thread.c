@@ -1,0 +1,3 @@
+void manage_thread(int tid) {
+    // ...
+}

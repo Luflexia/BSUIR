@@ -1,0 +1,171 @@
+
+    def send_data(self, event=None):
+        if self.ser_out and self.ser_out.is_open:
+            data = self.input_text.get("1.0", tk.END).strip()
+            try:
+                if not data:  # Если данные пустые (пользователь просто нажал Enter)
+                    message = b'\n'  # Отправляем символ новой строки
+                else:
+                    message = data.encode('utf-8')
+
+                while message:
+                    portion = message[:21]  # Берем до 21 байта для поля данных
+                    message = message[21:]
+
+                    collision_count = 0  # Счетчик коллизий для текущего кадра
+                    frame_logged = False  # Флаг для отслеживания, был ли кадр уже записан в лог
+
+                    while True:
+                        # Прослушивание канала (CSMA/CD)
+                        while self.collision.listen_channel():
+                            time.sleep(0.1)  # Задержка перед повторной попыткой
+
+                        flag, frame_without_flag = self.create_frame(portion)
+                        stuffed_frame = self.byte_stuffing(frame_without_flag)
+                        full_frame = flag + stuffed_frame
+
+                        # Отправка данных
+                        self.ser_out.write(full_frame)
+
+                        # Окно коллизии
+                        time.sleep(1)
+
+                        # Логируем кадр только при первой отправке
+                        if not frame_logged:
+                            highlighted_frame_hex = ""
+                            for byte in full_frame:
+                                highlighted_frame_hex += f"0x{byte:02X} "
+                            self.log_status(f"Отправлен кадр: {highlighted_frame_hex}")
+                            frame_logged = True  # Устанавливаем флаг, чтобы больше не логировать этот кадр
+
+                        # Проверка на коллизию
+                        if self.collision.detect_collision():
+                            collision_count += 1
+                            if collision_count >= 16:
+                                break
+
+                            # Добавляем решётку за каждую коллизию
+                            self.log_status(" #")
+                            self.root.update_idletasks()  # Принудительно обновляем интерфейс
+
+                            # Розыгрыш случайной задержки
+                            self.collision.delay(collision_count)
+
+                            # Продолжаем передачу с того же места
+                            continue
+
+                        break  # Выход из цикла, если коллизии нет
+
+                    self.sent_portions += 1
+                    self.log_status(f"Отправлено порций: {self.sent_portions}")
+
+                # Очищаем поле ввода только после успешной отправки всех порций
+                self.input_text.delete("1.0", tk.END)
+
+            except serial.SerialException as e:
+                messagebox.showerror("Ошибка", f"Не удалось отправить данные: {str(e)}")
+        else:
+            messagebox.showerror("Ошибка", "Порт передачи не открыт.")
+        return 'break'
+
+    def receive_data(self):
+        buffer = b''
+        self.received_data_buffer = b''  # Буфер для склеивания полученных данных
+        expected_frame_length = 26  # 2 (flag) + 1 (dest) + 1 (source) + 21 (data) + 1 (CRC)
+        while not self.stop_receive_thread:
+            if self.ser_in and self.ser_in.is_open:
+                try:
+                    if self.ser_in.in_waiting >= expected_frame_length:
+                        buffer = self.ser_in.read(self.ser_in.in_waiting)
+                        if buffer.startswith(b'@u'):
+                            flag = buffer[0:2]
+                            frame_without_flag = buffer[2:]  # Исключаем флаг из кадра
+
+                            # Анстаффинг без флага
+                            unstuffed_frame = self.unstuffing(frame_without_flag)
+
+                            destination_address = unstuffed_frame[0]
+                            source_address = unstuffed_frame[1]
+                            data = unstuffed_frame[2:23]  # 21 байт данных
+                            received_crc = unstuffed_frame[23]  # Последний байт - CRC
+
+                            # Вносим ошибку с вероятностью 40%
+                            # data_with_error = self.introduce_error(data)
+
+                            # Проверяем CRC
+                            # calculated_crc = self.compute_crc8(data)
+                            # if calculated_crc == received_crc:
+                                # pass  CRC совпадает, ошибок нет - Продолжаем обработку данных
+                            # else: CRC не совпадает, ошибка обнаружена
+                                # corrected_data = self.cyclic_shift_correction(data, received_crc) # Попытка исправления ошибки циклическим сдвигом
+
+                            # Обрезаем данные по терминатору
+                            if TERMINATOR in data:
+                                parts = data.split(TERMINATOR)
+                                actual_data = parts[0]
+                                self.received_data_buffer += actual_data  # Добавляем данные в буфер
+
+                                # Выводим накопленные данные в окно разом
+                                self.update_output_text(self.received_data_buffer.decode(errors='ignore'))
+                                self.received_data_buffer = b''  # Очищаем буфер после вывода
+                            else:
+                                self.received_data_buffer += data  # Продолжаем накапливать данные
+
+                except serial.SerialException as e:
+                    self.log_status(f"Ошибка при чтении данных: {str(e)}")
+                    break
+
+    def update_output_text(self, text):
+        self.output_text.config(state='normal')
+
+        if text.strip():  # Если текст содержит полезные символы
+            current_text = self.output_text.get("1.0", tk.END).rstrip()  # Убираем возможные лишние переносы строк
+            if current_text.endswith('\n'):
+                self.output_text.insert(tk.END, text)  # Просто добавляем текст
+            else:
+                self.output_text.insert(tk.END, text)  # Добавляем в ту же строку
+
+        else:  # Если текст пустой, добавляем только один символ новой строки
+            self.output_text.insert(tk.END, '\n')
+
+        self.output_text.see(tk.END)
+        self.output_text.config(state='disabled')
+       
+Для контекста:
+        # Окно вывода
+        tk.Label(root, text="Окно вывода").grid(row=0, column=1, padx=10, pady=5, sticky='w')
+        self.output_frame = tk.Frame(root)
+        self.output_frame.grid(row=1, column=1, padx=10, pady=5, sticky='nsew')
+        self.output_text = tk.Text(self.output_frame, width=30, height=10, state='disabled', wrap=tk.WORD)
+        self.output_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.output_scroll = tk.Scrollbar(self.output_frame, command=self.output_text.yview)
+        self.output_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        self.output_text['yscrollcommand'] = self.output_scroll.set     
+        
+        
+        
+Моя цель:
+Каждое новое сообщение должно начинаться с новой строки.
+Кадры в рамках одного сообщения должны выводиться в одну строку (без переносов).
+Сейчас каждый кадр с новой строки идет.
+
+Сделай чтобы при отсутствии входящих данных, в течение X мс после получения последнего кадра не приходит новый кадр, то считать  добавить переход на новую строку в окне вывода
+Коллизия может применяться к каждому кадру, у меня кадр=21байт
+
+Пример:
+сообщение qweqweqweqweqweqweqwe123123123123123123123zxczxczxczxczxzxczxc
+
+3 пакета, по 21 байт, допустим коллизия произошла 0 раз к первому кадру, 1 раз ко второму пакету и 2 раза к третьему пакету. Должно быть в окне вывода:
+qweqweqweqweqweqweqwe123123123123123123123123123123123123123123zxczxczxczxczxzxczxczxczxczxczxczxzxczxczxczxczxczxczxzxczxc
+А потом сообщение: 2
+И эта двойка должна появиться на новой строке
+
+В этом и суть работы, эмулировать коллизию, то что дублирующиеся данные это нормально.
+
+Нужно отслеживать сообщение, чтобы оно начиналось выводиться с новой строки, и тем не менее если коллизия и он отправляется еще раз, то не с новой а продолжает на эту же строку.
+
+Возможно путем добавления терминатора в конец сообщения чтобы потом добавить перенос строки перед выводом следующего. 
+
+Почему бы не сделать так, чтобы отдельно от сообщения (порции) отправлять символ перехода на новую строку, к которму не будет применяться коллизия, таким образом всегда в конце сообщения будет перенос на новую строку
+
+Все понятно ? Если да - Выполняй

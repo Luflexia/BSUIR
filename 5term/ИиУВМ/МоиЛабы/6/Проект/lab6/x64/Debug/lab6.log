@@ -1,0 +1,5 @@
+﻿  main.cpp
+C:\Users\mrxop\Desktop\ИиУВМ\МоиЛабы\6\main.cpp(84,28): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
+C:\Users\mrxop\Desktop\ИиУВМ\МоиЛабы\6\main.cpp(90,22): warning C4244: инициализация: преобразование "std::streamoff" в "int", возможна потеря данных
+C:\Users\mrxop\Desktop\ИиУВМ\МоиЛабы\6\main.cpp(100,27): warning C4244: инициализация: преобразование "std::streamsize" в "int", возможна потеря данных
+  lab6.vcxproj -> C:\Users\mrxop\Desktop\ИиУВМ\МоиЛабы\6\x64\Debug\lab6.exe

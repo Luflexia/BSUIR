@@ -1,0 +1,120 @@
+MED
+D:\Quartus\labs\lab04\lab4\rom.hex
+
+	Undo Commands
+	     1.	Cells
+	     2.	Cells
+
+
+GED
+
+	Undo Commands
+	     1.	Delete
+	     2.	Delete
+	     3.	Properties
+	     4.	Move
+	     5.	Paste
+	     6.	Move
+	     7.	Move
+	     8.	Move
+	     9.	Resize
+	    10.	Move
+	    11.	Paste
+	    12.	Insert Bus
+	    13.	Insert Bus
+	    14.	Insert Bus
+	    15.	Resize
+	    16.	Resize
+	    17.	Resize
+	    18.	Move
+	    19.	Move
+	    20.	Insert Symbol
+	    21.	Properties
+	    22.	Insert Bus
+	    23.	Insert Bus
+	    24.	Move
+	    25.	Move
+	    26.	Move
+	    27.	Paste
+	    28.	Resize
+	    29.	Resize
+	    30.	Move
+	    31.	Insert Bus
+	    32.	Move
+	    33.	Resize
+	    34.	Move
+	    35.	Move
+	    36.	Move
+	    37.	Move
+	    38.	Paste
+	    39.	Move
+	    40.	Paste
+	    41.	Delete
+	    42.	Insert Symbol
+	    43.	Insert Bus
+	    44.	Insert Bus
+	    45.	Resize
+	    46.	Resize
+	    47.	Move
+	    48.	Paste
+	    49.	Insert Bus
+	    50.	Resize
+	    51.	Move
+	    52.	Insert Symbol
+
+
+GED
+
+	Undo Commands
+	     1.	Move
+	     2.	Properties
+	     3.	Resize
+	     4.	Paste
+	     5.	Resize
+	     6.	Paste
+
+
+GED
+
+	Undo Commands
+	     1.	Resize
+	     2.	Move
+	     3.	Resize
+	     4.	Move
+	     5.	Move
+	     6.	Delete
+	     7.	Insert Symbol
+	     8.	Resize
+	     9.	Move
+	    10.	Move
+	    11.	Insert Symbol
+	    12.	Properties
+	    13.	Insert Symbol
+	    14.	Delete
+	    15.	Delete
+	    16.	Paste
+
+
+WED
+
+	Undo Commands
+	     1.	Drop Node
+			 *** 
+	     2.	Clock
+	     3.	Grow or Shrink
+	     4.	Drop Node
+			 *** 
+	     5.	Drop Node
+			 *** 
+	     6.	Drop Node
+			 *** 
+	     7.	Insert Node or Bus
+	     8.	Insert Node or Bus
+
+
+RPW
+
+	Undo Commands
+	     1.	||Simulation Report||Simulator||Simulation Waveforms
+
+

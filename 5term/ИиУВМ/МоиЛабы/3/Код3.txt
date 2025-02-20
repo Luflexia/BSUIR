@@ -1,0 +1,156 @@
+#include "stdafx.h"
+#include "hexioctrl.h"
+#include "(PCI_DEVS)pci_codes.h"
+#include <stdio.h>
+#include <conio.h>
+#include <iostream>
+#include <iomanip>
+#include <string.h>
+
+const int CMD_IDENTIFY_DEVICE = 0xEC;        // Команда идентификации для ATA
+const int CMD_IDENTIFY_PACKET_DEVICE = 0xA1; // Команда идентификации для ATAPI
+
+const int DATA_REG[2] = {0x1F0, 0x170};    // Регистр данных (1/2 канал)
+const int DEV_HEAD_REG[2] = {0x1F6, 0x176}; // Регистр устройства и головки
+const int STATUS_CMD_REG[2] = {0x1F7, 0x177}; // Регистр состояния и команд
+const int ALT_STATUS_REG[2] = {0x3F6, 0x376}; // Альтернативный регистр состояния
+
+unsigned short driveData[256]; // Блок данных для устройства
+
+void WaitWhileBusy(int channel);
+bool RetrieveDriveInfo(int device, int channel);
+void DisplayDriveDetails();
+bool WaitUntilReady(int channel);
+
+int main()
+{
+    ALLOW_IO_OPERATIONS;
+    setlocale(LC_ALL, "Russian");
+
+    for (int channel = 0; channel < 2; channel++) // Проверка каждого канала
+    {
+        for (int device = 0; device < 2; device++) // Проверка каждого устройства
+        {
+            if (RetrieveDriveInfo(device, channel))
+            {
+                printf("\n Канал %d | Устройство %d\n", channel, device);
+                printf("======================================\n");
+                DisplayDriveDetails();
+            }
+        }
+    }
+
+    system("pause");
+    return 0;
+}
+
+// Проверка готовности к записи команды
+bool WaitUntilReady(int channel)
+{
+    for (int i = 0; i < 1000; i++)
+    {
+        unsigned char status = _inp(ALT_STATUS_REG[channel]);
+        if (status & (1 << 6)) return true; // Готово к записи
+    }
+    return false;
+}
+
+// Ожидание сброса бита BSY
+void WaitWhileBusy(int channel)
+{
+    unsigned char status;
+    do
+    {
+        status = _inp(ALT_STATUS_REG[channel]);
+    } while (status & (1 << 7)); // Пока устройство занято
+}
+
+// Получение информации об устройстве
+bool RetrieveDriveInfo(int device, int channel)
+{
+    const int IDENTIFY_COMMANDS[2] = {CMD_IDENTIFY_PACKET_DEVICE, CMD_IDENTIFY_DEVICE};
+
+    for (int attempt = 0; attempt < 2; attempt++)
+    {
+        WaitWhileBusy(channel);
+
+        unsigned char devHead = (device << 4) + (7 << 5);
+        _outp(DEV_HEAD_REG[channel], devHead);
+
+        if (!WaitUntilReady(channel)) return false;
+
+        _outp(STATUS_CMD_REG[channel], IDENTIFY_COMMANDS[attempt]);
+        WaitWhileBusy(channel);
+
+        unsigned char status = _inp(STATUS_CMD_REG[channel]);
+        if (!(status & (1 << 3))) // DRQ = 0
+        {
+            if (attempt == 1) return false;
+            continue;
+        }
+        else break;
+    }
+
+    for (int i = 0; i < 256; i++)
+    {
+        driveData[i] = _inpw(DATA_REG[channel]);
+    }
+
+    return true;
+}
+
+// Отображение данных об устройстве
+void DisplayDriveDetails()
+{
+    printf("   Модель устройства: ");
+    for (int i = 27; i <= 46; i++)
+        printf("%c%c", driveData[i] >> 8, driveData[i] & 0xFF);
+
+    printf("\n   Серийный номер: ");
+    for (int i = 10; i <= 19; i++)
+        printf("%c%c", driveData[i] >> 8, driveData[i] & 0xFF);
+
+    printf("\n   Версия прошивки: ");
+    for (int i = 23; i <= 26; i++)
+        printf("%c%c", driveData[i] >> 8, driveData[i] & 0xFF);
+
+    printf("\n   Тип интерфейса: ");
+    if (driveData[0] & (1 << 15))
+        printf("ATAPI\n");
+    else
+        printf("ATA\n");
+
+    if (!(driveData[0] & (1 << 15)))
+    {
+        printf("   Объем: %.2lf ГБ\n", (long double)(((unsigned long *)driveData)[30]) * 512 / (1024 * 1024 * 1024));
+    }
+
+    printf("\n   Поддерживаемые режимы:\n");
+    printf("   PIO: ");
+    if (driveData[64] & 1) printf("PIO 3, ");
+    if (driveData[64] & 2) printf("PIO 4\n");
+
+    printf("   Multiword DMA: ");
+    if (driveData[63] & 1) printf("MWDMA 0, ");
+    if (driveData[63] & 2) printf("MWDMA 1, ");
+    if (driveData[63] & 4) printf("MWDMA 2\n");
+
+    printf("   Ultra DMA: ");
+    if (driveData[88] & 1) printf("UDMA 0, ");
+    if (driveData[88] & (1 << 1)) printf("UDMA 1, ");
+    if (driveData[88] & (1 << 2)) printf("UDMA 2, ");
+    if (driveData[88] & (1 << 3)) printf("UDMA 3, ");
+    if (driveData[88] & (1 << 4)) printf("UDMA 4, ");
+    if (driveData[88] & (1 << 5)) printf("UDMA 5\n");
+
+	printf("\n - Версии ATA:" );
+	if(driveData[80] & (1 << 1)) printf("  %s", "ATA 1," );
+	if(driveData[80] & (1 << 2)) printf("  %s", "ATA 2," );
+	if(driveData[80] & (1 << 3)) printf("  %s", "ATA 3," );
+	if(driveData[80] & (1 << 4)) printf("  %s", "ATA 4," );
+	if(driveData[80] & (1 << 5)) printf("  %s", "ATA 5," );
+	if(driveData[80] & (1 << 6)) printf("  %s", "ATA 6," );
+	if(driveData[80] & (1 << 7)) printf("  %s", "ATA 7\n" );
+
+    printf("\n-----------------------------------------------------------------\n");
+}

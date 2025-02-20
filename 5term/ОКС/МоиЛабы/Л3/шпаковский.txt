@@ -1,0 +1,91 @@
+Pavel Шпаковский, [01.12.2024 02:11]
+def correct_errors(self, data_with_crc, polynomial=0x107, crc_width=8):
+    """
+    Исправление ошибок в массиве данных с использованием CRC и циклического сдвига.
+    :param data_with_crc: Байтовый массив данных, включая CRC.
+    :param polynomial: Полином CRC в стандартной форме.
+    :param crc_width: Размер CRC в битах.
+    :return: (исправленный массив данных без CRC, флаг успешности исправления)
+    """
+    max_errors = 1  # Максимальное количество ошибок, которые можно исправить
+    total_bits = len(data_with_crc) * 8  # Общее количество битов
+
+    for shift_count in range(total_bits):
+        # Копируем данные для вычисления остатка
+        remainder = data_with_crc.copy()
+
+        # Вычисление остатка от деления
+        for _ in range(total_bits - crc_width):
+            if remainder[0] & 0x80:  # Проверка старшего бита первого байта
+                remainder = xor_with_polynomial(remainder, polynomial, crc_width)
+            remainder = circular_shift_left(remainder)  # Циклический сдвиг влево
+
+        # Подсчет веса (число единичных битов)
+        weight = sum(bin(byte).count('1') for byte in remainder)
+        if weight <= max_errors:
+            # Исправление данных
+            corrected = xor_with_polynomial(data_with_crc, remainder, crc_width)
+
+            # Восстановление исходной позиции данных циклическим сдвигом вправо
+            for _ in range(shift_count):
+                corrected = circular_shift_right(corrected)
+
+            return corrected[:-1], True
+
+        # Выполняем циклический сдвиг влево
+        data_with_crc = circular_shift_left(data_with_crc)
+
+    # Восстанавливаем исходное значение данных циклическим сдвигом вправо
+    for _ in range(total_bits):
+        data_with_crc = circular_shift_right(data_with_crc)
+
+    return data_with_crc[:-1], False
+
+
+def xor_with_polynomial(data, polynomial, crc_width):
+    """
+    Выполняет XOR массива байтов с полиномом.
+    :param data: Массив байтов.
+    :param polynomial: Полином в целочисленной форме.
+    :param crc_width: Ширина CRC.
+    :return: Результат XOR в виде массива байтов.
+    """
+    poly_bytes = polynomial.to_bytes((crc_width + 7) // 8, byteorder='big')
+    result = data.copy()
+    for i in range(min(len(result), len(poly_bytes))):
+        result[i] ^= poly_bytes[i]
+    return result
+
+Pavel Шпаковский, [01.12.2024 02:11]
+def circular_shift_left(data):
+    """
+    Выполняет циклический сдвиг массива байтов влево на 1 бит.
+    :param data: Массив байтов (список целых чисел от 0 до 255).
+    :return: Новый массив с циклическим сдвигом влево.
+    """
+    carry = 0  # Переносимый бит между байтами
+    result = []
+    for byte in data:
+        new_byte = ((byte << 1) & 0xFF) | carry  # Сдвиг и добавление переноса
+        carry = (byte >> 7) & 0x01  # Старший бит текущего байта
+        result.append(new_byte)
+    # Последний перенос переносится в младший бит первого байта
+    result[0] = result[0] | carry
+    return result
+
+
+def circular_shift_right(data):
+    """
+    Выполняет циклический сдвиг массива байтов вправо на 1 бит.
+    :param data: Массив байтов (список целых чисел от 0 до 255).
+    :return: Новый массив с циклическим сдвигом вправо.
+    """
+    carry = 0  # Переносимый бит между байтами
+    result = []
+    for byte in reversed(data):
+        new_byte = ((byte >> 1) & 0xFF) | (carry << 7)  # Сдвиг и добавление переноса
+        carry = byte & 0x01  # Младший бит текущего байта
+        result.insert(0, new_byte)
+    # Последний перенос переносится в старший бит последнего байта
+    result[-1] = result[-1] | (carry << 7)
+    return result

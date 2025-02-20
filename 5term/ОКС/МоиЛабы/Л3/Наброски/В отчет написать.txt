@@ -1,0 +1,158 @@
+INITIAL_VALUE = 0x00
+POLYNOM = 0x29 - почему такое ?
+    
+    def create_frame(self, data):
+        flag = b'@u'  # '@' и 'u' (ASCII 117, что равно 'a' + 21 - 1)
+        destination_address = b'\x00'
+        source_address = bytes([int(self.ser_out.port[3:])])
+
+        if len(data) < 21:
+            # Если данные короче 21 байта, добавляем терминатор и заполняем нулями
+            padded_data = data + TERMINATOR + b'0' * (20 - len(data))
+        else:
+            # Если данные ровно 21 байт, оставляем как есть
+            padded_data = data
+
+        # Вычисляем CRC8 для padded_data
+        crc = self.compute_crc8(padded_data)
+
+        # Применяем коррекцию циклическим сдвигом
+        corrected_data = self.cyclic_shift_correction(padded_data, crc)
+
+        # Объединяем все части кадра, кроме флага
+        frame_without_flag = destination_address + source_address + corrected_data + bytes([crc])
+
+        return flag, frame_without_flag
+
+    def introduce_error(self, data, probability=0.4):
+        if random.random() <= probability:
+            byte_array = bytearray(data)
+            byte_index = random.randint(0, len(byte_array) - 1)
+            bit_index = random.randint(0, 7)
+            byte_array[byte_index] ^= (1 << bit_index)
+            data = bytes(byte_array)
+        return data
+
+    def compute_crc8(self, data: bytes) -> int:
+        remainder = INITIAL_VALUE
+        for byte in data:
+            remainder ^= byte
+            for _ in range(8):
+                remainder <<= 1
+                if (remainder & 0x100) != 0:
+                    remainder ^= (POLYNOM | 0x100)
+        return remainder & 0xFF
+
+    def cyclic_shift_correction(self, message: bytes, crc: int) -> bytes:
+        weight = bin(crc).count('1')
+        shift_message = bytearray(message)
+        if weight <= 1:
+            shift_message[-1] ^= crc
+            return bytes(shift_message)
+        count_shifts = 0
+        size_bits = len(shift_message) * 8
+        for _ in range(size_bits):
+            count_shifts += 1
+            shift_message = self.left_cycle_shift(shift_message)
+            crc = self.compute_crc8(shift_message)
+            if bin(crc).count('1') <= 1:
+                shift_message[-1] ^= crc
+                for _ in range(count_shifts):
+                    shift_message = self.right_cycle_shift(shift_message)
+                return bytes(shift_message)
+        return message
+
+    def right_cycle_shift(self, byte_message: bytearray) -> bytearray:
+        shift_byte_message = bytearray(len(byte_message))
+        lowest_bit_of_last_byte = byte_message[-1] & 1
+        for i in range(len(byte_message)):
+            shift_byte_message[i] = (byte_message[i] & 0xFF) >> 1
+            if i > 0:
+                shift_byte_message[i] |= (byte_message[i - 1] & 1) << 7
+        shift_byte_message[0] |= lowest_bit_of_last_byte << 7
+        return shift_byte_message
+
+    def left_cycle_shift(self, byte_message: bytearray) -> bytearray:
+        shift_byte_message = bytearray(len(byte_message))
+        highest_bit_of_first_byte = (byte_message[0] & 0x80) >> 7
+        for i in range(len(byte_message)):
+            shift_byte_message[i] = ((byte_message[i] & 0xFF) << 1) & 0xFF
+            if i < len(byte_message) - 1:
+                shift_byte_message[i] |= (byte_message[i + 1] & 0x80) >> 7
+        shift_byte_message[-1] |= highest_bit_of_first_byte
+        return shift_byte_message
+
+    def send_data(self, event=None):
+        if self.ser_out and self.ser_out.is_open:
+            data = self.input_text.get("1.0", tk.END).strip()
+            try:
+                if not data:  # Если данные пустые (пользователь просто нажал Enter)
+                    message = b'\n'  # Отправляем символ новой строки
+                else:
+                    message = data.encode('utf-8')
+                while message:
+                    portion = message[:21]  # Берем до 21 байта для поля данных
+                    message = message[21:]
+
+                    flag, frame_without_flag = self.create_frame(portion)
+                    stuffed_frame = self.byte_stuffing(frame_without_flag)  # Применяем байт-стаффинг к кадру без флага
+                    full_frame = flag + stuffed_frame  # Добавляем флаг к стаффированному кадру
+                    self.ser_out.write(full_frame)
+
+                    # Отображение структуры кадра с выделением модифицированных байтов
+                    highlighted_frame_hex = ""
+                    i = 0
+                    while i < len(full_frame):
+                        if full_frame[i:i + 2] == b'\x1B\x01':
+                            highlighted_frame_hex += f"[0x{full_frame[i]:02X} 0x{full_frame[i + 1]:02X}] "
+                            i += 2
+                        else:
+                            highlighted_frame_hex += f"0x{full_frame[i]:02X} "
+                            i += 1
+                    self.log_status(f"Отправлен кадр: {highlighted_frame_hex}")
+
+                self.sent_portions += 1
+                self.log_status(f"Отправлено порций: {self.sent_portions}")
+                self.input_text.delete("1.0", tk.END)
+            except serial.SerialException as e:
+                messagebox.showerror("Ошибка", f"Не удалось отправить данные: {str(e)}")
+        else:
+            messagebox.showerror("Ошибка", "Порт передачи не открыт.")
+        return 'break'
+
+    def receive_data(self):
+        buffer = b''
+        expected_frame_length = 26  # 2 (flag) + 1 (dest) + 1 (source) + 21 (data) + 1 (CRC)
+        while not self.stop_receive_thread:
+            if self.ser_in and self.ser_in.is_open:
+                try:
+                    if self.ser_in.in_waiting >= expected_frame_length:
+                        buffer = self.ser_in.read(self.ser_in.in_waiting)
+                        if buffer.startswith(b'@u'):
+                            flag = buffer[0:2]
+                            frame_without_flag = buffer[2:]  # Исключаем флаг из кадра
+
+                            # Анстаффинг без флага
+                            unstuffed_frame = self.unstuffing(frame_without_flag)
+
+                            destination_address = unstuffed_frame[0]
+                            source_address = unstuffed_frame[1]
+                            data = unstuffed_frame[2:23]  # 21 байт данных
+                            received_crc = unstuffed_frame[23]  # Последний байт - CRC
+
+                            # Вносим ошибку с вероятностью 40%
+                            data_with_error = self.introduce_error(data)
+
+                            # Проверяем CRC
+                            calculated_crc = self.compute_crc8(data_with_error)
+                            if calculated_crc == received_crc:
+                                # Ищем терминатор и обрезаем данные, если он найден
+                                if TERMINATOR in data_with_error:
+                                    actual_data = data_with_error.split(TERMINATOR)[0]
+                                else:
+                                    actual_data = data_with_error
+
+                                self.update_output_text(actual_data.decode(errors='ignore'))
+                except serial.SerialException as e:
+                    self.log_status(f"Ошибка при чтении данных: {str(e)}")
+                    break

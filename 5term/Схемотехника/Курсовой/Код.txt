@@ -1,0 +1,420 @@
+#include <Adafruit_SSD1306.h>
+#include <Adafruit_GFX.h>
+#include <Wire.h>
+#include <DHT.h>
+#include <TimeLib.h>
+#include <EEPROM.h>
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET    -1
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+#define DHTPIN 7
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+
+#define SOUND_SENSOR_PIN A0
+
+#define NOISE_THRESHOLD_LOW 30
+#define NOISE_THRESHOLD_HIGH 100
+
+#define BTN_LEFT 2
+#define BTN_SELECT 3
+#define BTN_RIGHT 4
+
+// EEPROM addresses
+#define EEPROM_TIME_ADDR 0
+#define EEPROM_TEMP_MIN_ADDR 4
+#define EEPROM_TEMP_MAX_ADDR 8
+#define EEPROM_HUM_MIN_ADDR 12
+#define EEPROM_HUM_MAX_ADDR 16
+
+#define SAMPLE_WINDOW 25
+#define DECAY_FACTOR 0.7
+#define SETTING_TIMEOUT 5000 // 5 секунд для выхода из режима настройки
+
+unsigned long lastSampleTime = 0;
+int peakToPeak = 0;
+float decayingPeak = 0;
+unsigned long lastSettingActivity = 0;
+
+float tempMin = 20.0;
+float tempMax = 30.0;
+float humMin = 30.0;
+float humMax = 60.0;
+
+int currentMenuItem = 0; // 0: TempMin, 1: TempMax, 2: HumMin, 3: HumMax, 4: Hour, 5: Minute
+bool isSettingMode = false;
+bool isAdjusting = false;
+
+unsigned long lastButtonPress = 0;
+const unsigned long BUTTON_COOLDOWN = 300;
+
+unsigned long lastScreenSwitch = 0;
+const unsigned long SCREEN_CHANGE_INTERVAL = 15000; // 15 секунд
+bool showMainScreen = true;
+
+enum Screen {
+  MAIN,
+  TIME,
+  EMOJI
+};
+Screen currentScreen = MAIN;
+
+enum TimeSettingMode { NONE, HOUR, MINUTE, DAY, MONTH, YEAR };
+TimeSettingMode timeSettingMode = NONE;
+
+void setup() {
+  Serial.begin(9600);
+  
+  dht.begin();
+  delay(2000);  // Добавлена задержка для инициализации DHT
+  
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;);
+  }
+  
+  display.clearDisplay();
+  display.display();
+
+  pinMode(BTN_LEFT, INPUT_PULLUP);
+  pinMode(BTN_SELECT, INPUT_PULLUP);
+  pinMode(BTN_RIGHT, INPUT_PULLUP);
+
+  loadSettingsFromEEPROM();
+  loadTimeFromEEPROM();
+}
+
+void loadSettingsFromEEPROM() {
+  EEPROM.get(EEPROM_TEMP_MIN_ADDR, tempMin);
+  EEPROM.get(EEPROM_TEMP_MAX_ADDR, tempMax);
+  EEPROM.get(EEPROM_HUM_MIN_ADDR, humMin);
+  EEPROM.get(EEPROM_HUM_MAX_ADDR, humMax);
+
+  // Проверка на корректность значений
+  if (isnan(tempMin) || tempMin < -50 || tempMin > 100) tempMin = 20.0;
+  if (isnan(tempMax) || tempMax < -50 || tempMax > 100) tempMax = 30.0;
+  if (isnan(humMin) || humMin < 0 || humMin > 100) humMin = 30.0;
+  if (isnan(humMax) || humMax < 0 || humMax > 100) humMax = 60.0;
+}
+
+void saveSettingsToEEPROM() {
+  EEPROM.put(EEPROM_TEMP_MIN_ADDR, tempMin);
+  EEPROM.put(EEPROM_TEMP_MAX_ADDR, tempMax);
+  EEPROM.put(EEPROM_HUM_MIN_ADDR, humMin);
+  EEPROM.put(EEPROM_HUM_MAX_ADDR, humMax);
+}
+
+void loadTimeFromEEPROM() {
+  unsigned long timeData;
+  EEPROM.get(EEPROM_TIME_ADDR, timeData);
+  setTime(timeData);
+}
+
+void saveTimeToEEPROM() {
+  unsigned long timeData = now();
+  EEPROM.put(EEPROM_TIME_ADDR, timeData);
+}
+
+void handleButtons() {
+  unsigned long currentTime = millis();
+  static unsigned long lastRepeatTime = 0;
+  const unsigned long REPEAT_DELAY = 300;
+  const unsigned long REPEAT_INTERVAL = 100;
+
+  bool leftPressed = digitalRead(BTN_LEFT) == LOW;
+  bool rightPressed = digitalRead(BTN_RIGHT) == LOW;
+  bool selectPressed = digitalRead(BTN_SELECT) == LOW;
+
+  if (leftPressed && currentTime - lastButtonPress > BUTTON_COOLDOWN) {
+    lastButtonPress = currentTime;
+    if (!isSettingMode && timeSettingMode == NONE) {
+      currentScreen = (Screen)((currentScreen - 1 + 3) % 3);
+    }
+  }
+
+  if (rightPressed && currentTime - lastButtonPress > BUTTON_COOLDOWN) {
+    lastButtonPress = currentTime;
+    if (!isSettingMode && timeSettingMode == NONE) {
+      currentScreen = (Screen)((currentScreen + 1) % 3);
+    }
+  }
+
+  if (selectPressed && currentTime - lastButtonPress > BUTTON_COOLDOWN) {
+    lastButtonPress = currentTime;
+    lastSettingActivity = currentTime;
+    if (currentScreen == MAIN) {
+      if (!isSettingMode) {
+        isSettingMode = true;
+        currentMenuItem = 0;
+      } else if (!isAdjusting) {
+        isAdjusting = true;
+      } else {
+        isSettingMode = false;
+        isAdjusting = false;
+        saveSettingsToEEPROM();
+      }
+    } else if (currentScreen == TIME) {
+      if (timeSettingMode == NONE) {
+        timeSettingMode = HOUR;
+      } else {
+        timeSettingMode = (TimeSettingMode)((int)timeSettingMode + 1);
+        if (timeSettingMode > YEAR) {
+          timeSettingMode = NONE;
+          saveTimeToEEPROM();
+        }
+      }
+    }
+    // Добавляем сохранение настроек и времени при нажатии второй кнопки (BTN_SELECT)
+    saveSettingsToEEPROM();
+    saveTimeToEEPROM();
+  }
+
+  if ((leftPressed || rightPressed) && 
+      (currentTime - lastButtonPress > BUTTON_COOLDOWN || currentTime - lastRepeatTime > REPEAT_INTERVAL)) {
+    int delta = rightPressed ? 1 : -1;
+    lastButtonPress = currentTime;
+    lastSettingActivity = currentTime;
+    lastRepeatTime = currentTime;
+
+    if (currentScreen == MAIN) {
+      if (isSettingMode) {
+        if (!isAdjusting) {
+          currentMenuItem = (currentMenuItem + delta + 4) % 4;
+        } else {
+          switch (currentMenuItem) {
+            case 0: tempMin += 0.5 * delta; break;
+            case 1: tempMax += 0.5 * delta; break;
+            case 2: humMin += 1.0 * delta; break;
+            case 3: humMax += 1.0 * delta; break;
+          }
+        }
+      }
+    } else if (currentScreen == TIME) {
+      adjustTimeValue(delta);
+    }
+  }
+}
+
+void adjustTimeValue(int delta) {
+  switch (timeSettingMode) {
+    case HOUR:
+      adjustTime(delta * 3600);
+      break;
+    case MINUTE:
+      adjustTime(delta * 60);
+      break;
+    case DAY:
+      setTime(hour(), minute(), second(), day() + delta, month(), year());
+      break;
+    case MONTH:
+      setTime(hour(), minute(), second(), day(), month() + delta, year());
+      break;
+    case YEAR:
+      setTime(hour(), minute(), second(), day(), month(), year() + delta);
+      break;
+    default:
+      break;
+  }
+}
+
+void displaySettings() {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+
+  display.setCursor(0, 0);
+  display.print("Settings:");
+
+  display.setCursor(0, 16);
+  display.print("TempMin: ");
+  display.print(tempMin, 1);
+  if (currentMenuItem == 0) display.print(isAdjusting ? " <" : " *");
+
+  display.setCursor(0, 26);
+  display.print("TempMax: ");
+  display.print(tempMax, 1);
+  if (currentMenuItem == 1) display.print(isAdjusting ? " <" : " *");
+
+  display.setCursor(0, 36);
+  display.print("HumMin: ");
+  display.print(humMin, 1);
+  if (currentMenuItem == 2) display.print(isAdjusting ? " <" : " *");
+
+  display.setCursor(0, 46);
+  display.print("HumMax: ");
+  display.print(humMax, 1);
+  if (currentMenuItem == 3) display.print(isAdjusting ? " <" : " *");
+
+  // Удалена строка с настройкой времени
+
+  display.display();
+}
+
+void displayMainScreen(float temperature, float humidity, String noiseDescription) {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+
+  // Температура
+  display.setCursor((SCREEN_WIDTH - 11 * 6) / 2, 10);  // Центрирование
+  display.print("Temp: ");
+  display.print(temperature, 1);
+  display.print("C");
+
+  // Влажность
+  display.setCursor((SCREEN_WIDTH - 11 * 6) / 2, 25);  // Центрирование
+  display.print("Hum:  ");
+  display.print(humidity, 1);
+  display.print("%");
+
+  // Уровень шума
+  display.setCursor((SCREEN_WIDTH - (6 + noiseDescription.length()) * 6) / 2, 40);  // Центрирование
+  display.print("Noise: ");
+  display.print(noiseDescription);
+
+  display.display();
+}
+
+void displayTimeScreen() {
+  display.clearDisplay();
+  display.setTextSize(2);
+  display.setTextColor(SSD1306_WHITE);
+
+  // Time
+  char timeStr[6];
+  sprintf(timeStr, "%02d:%02d", hour(), minute());
+  int16_t x1, y1;
+  uint16_t w, h;
+  display.getTextBounds(timeStr, 0, 0, &x1, &y1, &w, &h);
+  display.setCursor((SCREEN_WIDTH - w) / 2, 10);
+  if (timeSettingMode == HOUR) display.print(">");
+  display.print(timeStr);
+  if (timeSettingMode == MINUTE) display.print("<");
+
+  // Date
+  display.setTextSize(1);
+  char dateStr[11];
+  sprintf(dateStr, "%02d/%02d/%04d", day(), month(), year());
+  display.getTextBounds(dateStr, 0, 0, &x1, &y1, &w, &h);
+  display.setCursor((SCREEN_WIDTH - w) / 2, 40);
+  display.print(dateStr);
+  
+  // Уменьшенные полоски для выбора даты
+  if (timeSettingMode == DAY) display.drawLine(35, 50, 47, 50, SSD1306_WHITE);
+  else if (timeSettingMode == MONTH) display.drawLine(53, 50, 65, 50, SSD1306_WHITE);
+  else if (timeSettingMode == YEAR) display.drawLine(71, 50, 87, 50, SSD1306_WHITE);
+
+  display.display();
+}
+
+void adjustTime(int seconds) {
+   time_t t = now() + seconds;
+  setTime(t);
+}
+
+void displayEmojiScreen(float temperature, float humidity) {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  
+  // Определяем состояние на основе температуры и влажности
+  bool tempOk = (temperature >= tempMin && temperature <= tempMax);
+  bool humOk = (humidity >= humMin && humidity <= humMax);
+
+  // Рисуем основу смайлика (круг и глаза)
+  display.drawCircle(64, 32, 20, SSD1306_WHITE); // Лицо
+  display.drawPixel(58, 28, SSD1306_WHITE); // Левый глаз
+  display.drawPixel(70, 28, SSD1306_WHITE); // Правый глаз
+
+  // Определяем эмоцию смайлика
+  if (tempOk && humOk) {
+    // Веселый смайлик
+    display.drawLine(58, 38, 70, 38, SSD1306_WHITE); // Улыбка
+    display.drawLine(58, 39, 70, 39, SSD1306_WHITE); // Делаем улыбку толще
+  } else if (!tempOk && !humOk) {
+    // Грустный смайлик
+    display.drawLine(58, 44, 70, 38, SSD1306_WHITE); // Грустный рот
+    display.drawLine(58, 45, 70, 39, SSD1306_WHITE); // Делаем рот толще
+  } else {
+    // Нейтральный смайлик
+    display.drawLine(58, 38, 70, 38, SSD1306_WHITE); // Прямая линия
+  }
+
+  display.display();
+}
+
+void loop() {
+  handleButtons();
+
+  float temperature = dht.readTemperature();
+  float humidity = dht.readHumidity();
+
+  if (currentScreen == MAIN) {
+    if (isSettingMode) {
+      displaySettings();
+      // Проверка таймаута настройки
+      if (millis() - lastSettingActivity > SETTING_TIMEOUT) {
+        isSettingMode = false;
+        isAdjusting = false;
+        saveSettingsToEEPROM();
+      }
+    } else {
+      // Измерение шума
+      unsigned long startMillis = millis();
+      int signalMax = 0;
+      int signalMin = 1024;
+      while (millis() - startMillis < SAMPLE_WINDOW) {
+        int sample = analogRead(SOUND_SENSOR_PIN);
+        if (sample < 1024) {
+          if (sample > signalMax) {
+            signalMax = sample;
+          } else if (sample < signalMin) {
+            signalMin = sample;
+          }
+        }
+      }
+      
+      peakToPeak = signalMax - signalMin;
+      decayingPeak = max(peakToPeak, decayingPeak * DECAY_FACTOR);
+
+      String noiseDescription = getNoiseLevelDescription(peakToPeak, decayingPeak);
+      displayMainScreen(temperature, humidity, noiseDescription);
+    }
+  } else if (currentScreen == TIME) {
+    displayTimeScreen();
+  } else if (currentScreen == EMOJI) {
+    displayEmojiScreen(temperature, humidity);
+  }
+
+  // Переключение экранов только если не в режиме настройки и не в режиме регулировки
+  if (!isSettingMode && !isAdjusting && timeSettingMode == NONE) {
+    unsigned long currentTime = millis();
+    if (currentTime - lastScreenSwitch > SCREEN_CHANGE_INTERVAL) {
+      currentScreen = (Screen)((currentScreen + 1) % 3);
+      lastScreenSwitch = currentTime;
+    }
+  }
+
+  // Обновляем время каждую секунду
+  static unsigned long lastSecond = 0;
+  if (millis() - lastSecond >= 1000) {
+    lastSecond = millis();
+    adjustTime(1);
+  }
+
+  delay(50);
+}
+
+String getNoiseLevelDescription(int peakToPeak, float decayingPeak) {
+  if (peakToPeak > NOISE_THRESHOLD_HIGH || decayingPeak > NOISE_THRESHOLD_HIGH) {
+    return "Loud";
+  } else if (peakToPeak > NOISE_THRESHOLD_LOW || decayingPeak > NOISE_THRESHOLD_LOW) {
+    return "Moderate";
+  } else {
+    return "Quiet";
+  }
+}

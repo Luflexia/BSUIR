@@ -1,0 +1,11 @@
+Fitter Status : Successful - Fri Sep 27 12:58:01 2024
+Quartus II Version : 9.1 Build 222 10/21/2009 SJ Web Edition
+Revision Name : lab2
+Top-level Entity Name : lab2
+Family : MAX II
+Device : EPM570ZM256I8
+Timing Models : Final
+Total logic elements : 40 / 570 ( 7 % )
+Total pins : 19 / 160 ( 12 % )
+Total virtual pins : 0
+UFM blocks : 0 / 1 ( 0 % )

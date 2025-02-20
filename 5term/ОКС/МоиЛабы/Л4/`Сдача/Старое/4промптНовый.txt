@@ -1,0 +1,135 @@
+    def send_data(self, event=None):
+        if self.ser_out and self.ser_out.is_open:
+            data = self.input_text.get("1.0", tk.END).strip()
+            try:
+                if not data:  # Если данные пустые (пользователь просто нажал Enter)
+                    message = b'\n'  # Отправляем символ новой строки
+                else:
+                    message = data.encode('utf-8')
+
+                while message:
+                    portion = message[:21]  # Берем до 21 байта для поля данных
+                    message = message[21:]
+
+                    collision_count = 0  # Счетчик коллизий для текущего кадра
+                    frame_logged = False  # Флаг для отслеживания, был ли кадр уже записан в лог
+
+                    while True:
+                        # Прослушивание канала (CSMA/CD)
+                        while self.collision.listen_channel():
+                            time.sleep(0.1)  # Задержка перед повторной попыткой
+
+                        flag, frame_without_flag = self.create_frame(portion)
+                        stuffed_frame = self.byte_stuffing(frame_without_flag)
+                        full_frame = flag + stuffed_frame
+
+                        # Отправка данных
+                        self.ser_out.write(full_frame)
+
+                        # Окно коллизии
+                        time.sleep(1)
+
+                        # Логируем кадр только при первой отправке
+                        if not frame_logged:
+                            highlighted_frame_hex = ""
+                            for byte in full_frame:
+                                highlighted_frame_hex += f"0x{byte:02X} "
+                            self.log_status(f"Отправлен кадр: {highlighted_frame_hex}")
+                            frame_logged = True  # Устанавливаем флаг, чтобы больше не логировать этот кадр
+
+                        # Проверка на коллизию
+                        if self.collision.detect_collision():
+                            collision_count += 1
+                            if collision_count >= 16:
+                                break
+
+                            # Добавляем решётку за каждую коллизию
+                            self.log_status(" #")
+                            self.root.update_idletasks()  # Принудительно обновляем интерфейс
+
+                            # Розыгрыш случайной задержки
+                            self.collision.delay(collision_count)
+
+                            # Продолжаем передачу с того же места
+                            continue
+
+                        # Окно коллизии
+                        time.sleep(1)
+                        
+                        break  # Выход из цикла, если коллизии нет
+
+                    self.sent_portions += 1
+                    self.log_status(f"Отправлено порций: {self.sent_portions}")
+
+                # Очищаем поле ввода только после успешной отправки всех порций
+                self.input_text.delete("1.0", tk.END)
+
+            except serial.SerialException as e:
+                messagebox.showerror("Ошибка", f"Не удалось отправить данные: {str(e)}")
+        else:
+            messagebox.showerror("Ошибка", "Порт передачи не открыт.")
+        return 'break'
+
+    def receive_data(self):
+        buffer = b''
+        expected_frame_length = 26  # 2 (flag) + 1 (dest) + 1 (source) + 21 (data) + 1 (CRC)
+
+        while not self.stop_receive_thread:
+            if self.ser_in and self.ser_in.is_open:
+                try:
+                    if self.ser_in.in_waiting >= expected_frame_length:
+                        buffer = self.ser_in.read(self.ser_in.in_waiting)
+                        if buffer.startswith(b'@u'):
+                            flag = buffer[0:2]
+                            frame_without_flag = buffer[2:]
+
+                            unstuffed_frame = self.unstuffing(frame_without_flag)
+
+                            destination_address = unstuffed_frame[0]
+                            source_address = unstuffed_frame[1]
+                            data = unstuffed_frame[2:23]
+                            received_crc = unstuffed_frame[23]
+
+                            if TERMINATOR in data:
+                                parts = data.split(TERMINATOR)
+                                actual_data = parts[0]
+                                self.received_data_buffer += actual_data
+
+                                # Сброс таймера и вывод данных
+                                self.reset_newline_timer()
+                                self.update_output_text(self.received_data_buffer.decode(errors='ignore'))
+                                self.received_data_buffer = b''
+                            else:
+                                self.received_data_buffer += data
+                                self.reset_newline_timer()
+
+                except serial.SerialException as e:
+                    self.log_status(f"Ошибка при чтении данных: {str(e)}")
+                    break
+
+    def update_output_text(self, text):
+        self.output_text.config(state='normal')
+
+        current_text = self.output_text.get("1.0", tk.END).rstrip()
+        if current_text and not current_text.endswith('\n'):
+            self.output_text.insert(tk.END, text)  # Добавляем в текущую строку
+        else:
+            self.output_text.insert(tk.END, text)  # Все равно добавляем, но без \n
+
+        self.output_text.see(tk.END)
+        self.output_text.config(state='disabled')
+
+    def reset_newline_timer(self):
+        if self.newline_timer:
+            self.newline_timer.cancel()
+
+        self.newline_timer = threading.Timer(self.newline_timeout / 1000, self.add_newline)
+        self.newline_timer.start()
+
+    def add_newline(self):
+        self.output_text.config(state='normal')
+        self.output_text.insert(tk.END, '\n')  # Добавляем новую строку только при паузе в данных
+        self.output_text.config(state='disabled')
+        self.output_text.see(tk.END)
+
+Мне не нравится, что когда в сообщении больше одного кадра, первый кадр не отображается в окне вывода в реальном времени, а другие кадры отображаются. То есть когда коллизия происходит, в окне не отображается первый кадр, а только перед тем как переходит к выводу второго кадра, выводится первый, но со всеми последующими такой проблемы нет и они выводятся сразу и постепенно

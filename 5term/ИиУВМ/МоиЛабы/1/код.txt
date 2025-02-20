@@ -1,0 +1,218 @@
+#include <iostream>
+#include <Windows.h>
+#include <powrprof.h>
+#include <setupapi.h>
+#include <devguid.h>
+#include <thread>
+#include <chrono>
+#include <batclass.h>
+#include <locale>
+
+#pragma comment(lib, "powrprof.lib")
+#pragma comment(lib, "setupapi.lib")
+
+using namespace std;
+
+class PowerInfo {
+public:
+    // Получение типа батареи через прямой запрос к устройству
+    static void displayBatteryType() {
+        // Получение дескриптора для набора сведений об устройствах батареи
+        HDEVINFO deviceInfoSet;
+        deviceInfoSet = SetupDiGetClassDevs(&GUID_DEVCLASS_BATTERY, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+
+        if (deviceInfoSet == INVALID_HANDLE_VALUE) {
+            cout << "Ошибка: невозможно получить информацию о батарее." << endl;
+            return;
+        }
+
+        // Информация об интерфейсе устройства
+        SP_DEVICE_INTERFACE_DATA deviceInterfaceData;
+        deviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
+
+        // Перебор интерфейс устройств батареи
+        if (!SetupDiEnumDeviceInterfaces(deviceInfoSet, NULL, &GUID_DEVCLASS_BATTERY, 0, &deviceInterfaceData)) {
+            cout << "Ошибка: не удалось найти батарею." << endl;
+            SetupDiDestroyDeviceInfoList(deviceInfoSet);
+            return;
+        }
+
+        DWORD requiredSize = 0;
+        SetupDiGetDeviceInterfaceDetail(deviceInfoSet, &deviceInterfaceData, NULL, 0, &requiredSize, NULL);
+
+        // Выделение памяти для получения информации об устройстве
+        PSP_DEVICE_INTERFACE_DETAIL_DATA deviceInterfaceDetailData = (PSP_DEVICE_INTERFACE_DETAIL_DATA)LocalAlloc(LPTR, requiredSize);
+        deviceInterfaceDetailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+
+        if (!SetupDiGetDeviceInterfaceDetail(deviceInfoSet, &deviceInterfaceData, deviceInterfaceDetailData, requiredSize, NULL, NULL)) {
+            cout << "Ошибка: не удалось получить детализированную информацию о батарее." << endl;
+            LocalFree(deviceInterfaceDetailData);
+            SetupDiDestroyDeviceInfoList(deviceInfoSet);
+            return;
+        }
+
+        // Открытие файла устройства батареи
+        HANDLE batteryHandle = CreateFile(deviceInterfaceDetailData->DevicePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+        if (batteryHandle == INVALID_HANDLE_VALUE) {
+            cout << "Ошибка: не удалось открыть батарею." << endl;
+            LocalFree(deviceInterfaceDetailData);
+            SetupDiDestroyDeviceInfoList(deviceInfoSet);
+            return;
+        }
+
+        // Запрос метки батареи
+        BATTERY_QUERY_INFORMATION batteryQueryInformation = { 0 };
+        DWORD bytesReturned = 0;
+        DeviceIoControl(batteryHandle, IOCTL_BATTERY_QUERY_TAG, NULL, 0, &batteryQueryInformation.BatteryTag, sizeof(batteryQueryInformation.BatteryTag), &bytesReturned, NULL);
+
+        if (batteryQueryInformation.BatteryTag == 0) {
+            cout << "Ошибка: не удалось получить тег батареи." << endl;
+            CloseHandle(batteryHandle);
+            LocalFree(deviceInterfaceDetailData);
+            SetupDiDestroyDeviceInfoList(deviceInfoSet);
+            return;
+        }
+
+        // Запрос информации о батарее
+        BATTERY_INFORMATION batteryInfo = { 0 };
+        batteryQueryInformation.InformationLevel = BatteryInformation;
+        DeviceIoControl(batteryHandle, IOCTL_BATTERY_QUERY_INFORMATION, &batteryQueryInformation, sizeof(batteryQueryInformation), &batteryInfo, sizeof(batteryInfo), &bytesReturned, NULL);
+
+        // Определение химического состава батареи
+        cout << "Тип батареи: ";
+        for (int i = 0; i < 4; i++) {
+            cout << batteryInfo.Chemistry[i];
+        }
+        cout << endl;
+
+        // Закрытие дескрипторов и освобождение памяти
+        CloseHandle(batteryHandle);
+        LocalFree(deviceInterfaceDetailData);
+        SetupDiDestroyDeviceInfoList(deviceInfoSet);
+    }
+    // Получить информацию о типе энергопитания, уровне заряда, оставшемся времени работы и времени работы от батареи
+    static void displayRealTimeInfo() {
+        SYSTEM_POWER_STATUS powerStatus;
+        if (GetSystemPowerStatus(&powerStatus)) {
+            system("cls"); // Очищаем консоль
+
+
+            // Тип энергопитания
+            cout << "Тип энергопитания: ";
+            if (powerStatus.ACLineStatus == 1)
+                cout << "Питание от сети" << endl;
+            else if (powerStatus.ACLineStatus == 0)
+                cout << "Питание от батареи" << endl;
+            else
+                cout << "Неизвестно" << endl;
+
+            // Уровень заряда батареи
+            if (powerStatus.BatteryLifePercent != 255)
+                cout << "Уровень заряда батареи: " << (int)powerStatus.BatteryLifePercent << "%" << endl;
+            else
+                cout << "Батарея не обнаружена." << endl;
+
+            // Оставшееся время работы батареи при текущем %
+            if (powerStatus.ACLineStatus == 0)
+                cout << "Оставшееся время работы аккумулятора: " << powerStatus.BatteryLifeTime / 60 << " минут" << endl;
+            else if (powerStatus.ACLineStatus == 1)
+            {
+                if (powerStatus.BatteryFullLifeTime != -1) {
+                    cout << "Оставшееся время не определено." << endl;
+                }
+                else
+                {
+                    cout << "Оставшееся время работы аккумулятора после отключения от сети: " <<
+                        powerStatus.BatteryFullLifeTime * powerStatus.BatteryLifePercent /100 / 60 << " минут" << endl;
+                }
+            }
+           
+ 
+
+            // Общее время работы от батареи
+            if (powerStatus.BatteryFullLifeTime != -1 && powerStatus.ACLineStatus == 0)
+                cout << "Общее время работы от батареи: " << powerStatus.BatteryFullLifeTime / 60 << " минут" << endl;
+            else
+                cout << "Общее время работы от батареи не определено." << endl;
+
+            // Энергосберегающий режим
+            cout << "Режим энергосбережения: " << (powerStatus.SystemStatusFlag ? "Включен" : "Отключен") << endl;
+        }
+        else {
+            cout << "Ошибка: невозможно получить информацию о состоянии энергопитания." << endl;
+        }
+        cout << "\nМеню:" << endl;
+        cout << "1. Показать тип батареи" << endl;
+        cout << "2. Перейти в спящий режим" << endl;
+        cout << "3. Перейти в режим гибернации" << endl;
+        cout << "4. Выход" << endl;
+        cout << "Выберите опцию: ";
+    }
+
+    // Переход в спящий режим с проверкой гибернации
+    static void enterSleepMode() {
+        if (IsPwrSuspendAllowed()) {
+            SetSuspendState(FALSE, FALSE, FALSE);
+        }
+        else
+            cout << "Ошибка: невозможно перевести в режим сна." << endl;
+    }
+
+    // Переход в режим гибернации
+    static void enterHibernateMode() {
+        cout << "Перевод компьютера в режим гибернации..." << endl;
+        if (!SetSuspendState(TRUE, FALSE, FALSE)) {
+            cout << "Ошибка: невозможно перевести в режим гибернации." << endl;
+        }
+    }
+};
+
+void displayMenu() {
+    char choice;
+    while (true) {
+        /*cout << "\nМеню:" << endl;
+        cout << "1. Показать статус питания" << endl;
+        cout << "3. Перейти в спящий режим" << endl;
+        cout << "4. Перейти в режим гибернации" << endl;
+        cout << "5. Выход" << endl;
+        cout << "Выберите опцию: ";*/
+        cin >> choice;
+
+        switch (choice) {
+        case '1':
+            PowerInfo::displayBatteryType();
+            break;
+        case '2':
+            PowerInfo::enterSleepMode();
+            break;
+        case '3':
+            PowerInfo::enterHibernateMode();
+            break;
+        case '4':
+            exit(0);
+        default:
+            cout << "Неверная опция, попробуйте снова." << endl;
+        }
+    }
+}
+
+void updatePowerStatus() {
+    while (true) {
+        PowerInfo::displayRealTimeInfo();
+        this_thread::sleep_for(chrono::seconds(5));
+    }
+}
+int main() {
+    setlocale(LC_ALL, "ru");
+
+    // Запуск потока для обновления информации о питании
+    thread powerStatusThread(updatePowerStatus);
+
+    // Запуск меню для взаимодействия с пользователем
+    displayMenu();
+    // Ждем завершения потока (теоретически не произойдет)
+    powerStatusThread.join();
+
+    return 0;
+}
