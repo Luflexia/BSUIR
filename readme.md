@@ -1,3 +1,5 @@
+# БГУИР. КСиС. ВМСиС. 2021-2026
+
 ## Полезные ресурсы
 
 
@@ -8,3 +10,5 @@
 - [KissLinkA-205](https://github.com/KissLinkA-205/BSUIR-Labs)
 - [daryaak](https://github.com/daryaak/BSUIR/tree/main)
 - [BSUIR google drive](https://drive.google.com/drive/folders/1IkIDiQutKePNT9rS4mbSL7rOzv2luEki)
+
+###### Все авторские права на предоставленные условия лабораторных работ принадлежат [Белорусскому Государственному Университету Информатики и Радиоэлектроники](https://www.bsuir.by)
