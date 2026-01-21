@@ -1,0 +1,116 @@
+--------------------------------------------------------------------------------------
+Timing Analyzer Summary
+--------------------------------------------------------------------------------------
+
+Type           : Worst-case tsu
+Slack          : N/A
+Required Time  : None
+Actual Time    : 3.461 ns
+From           : REQ[1]
+To             : arbitr:inst|inst
+From Clock     : --
+To Clock       : cllk
+Failed Paths   : 0
+
+Type           : Worst-case tco
+Slack          : N/A
+Required Time  : None
+Actual Time    : 14.842 ns
+From           : slave_device:inst14|lpm_dff1:inst|lpm_ff:lpm_ff_component|dffs[0]
+To             : Data_slave4[0]
+From Clock     : cllk
+To Clock       : --
+Failed Paths   : 0
+
+Type           : Worst-case tpd
+Slack          : N/A
+Required Time  : None
+Actual Time    : 8.800 ns
+From           : REQ[1]
+To             : bus_req
+From Clock     : --
+To Clock       : --
+Failed Paths   : 0
+
+Type           : Worst-case th
+Slack          : N/A
+Required Time  : None
+Actual Time    : 3.327 ns
+From           : cllk
+To             : master_device:inst2|inst14
+From Clock     : --
+To Clock       : cllk
+Failed Paths   : 0
+
+Type           : Clock Setup: 'cllk'
+Slack          : N/A
+Required Time  : None
+Actual Time    : 146.33 MHz ( period = 6.834 ns )
+From           : master_device:inst5|inst22
+To             : arbitr:inst|inst
+From Clock     : cllk
+To Clock       : cllk
+Failed Paths   : 0
+
+Type           : Clock Setup: 'REQ[0]'
+Slack          : N/A
+Required Time  : None
+Actual Time    : 360.23 MHz ( period = 2.776 ns )
+From           : master_device:inst2|inst22
+To             : master_device:inst2|inst14
+From Clock     : REQ[0]
+To Clock       : REQ[0]
+Failed Paths   : 0
+
+Type           : Clock Setup: 'REQ[2]'
+Slack          : N/A
+Required Time  : None
+Actual Time    : 443.07 MHz ( period = 2.257 ns )
+From           : master_device:inst5|inst22
+To             : master_device:inst5|inst14
+From Clock     : REQ[2]
+To Clock       : REQ[2]
+Failed Paths   : 0
+
+Type           : Clock Hold: 'cllk'
+Slack          : Not operational: Clock Skew > Data Delay
+Required Time  : None
+Actual Time    : N/A
+From           : master_device:inst2|lpm_counter0:inst13|lpm_counter:lpm_counter_component|cntr_coi:auto_generated|safe_q[5]
+To             : slave_device:inst14|lpm_dff1:inst|lpm_ff:lpm_ff_component|dffs[1]
+From Clock     : cllk
+To Clock       : cllk
+Failed Paths   : 917
+
+Type           : Clock Hold: 'REQ[1]'
+Slack          : Not operational: Clock Skew > Data Delay
+Required Time  : None
+Actual Time    : N/A
+From           : master_device:inst4|inst22
+To             : master_device:inst4|inst14
+From Clock     : REQ[1]
+To Clock       : REQ[1]
+Failed Paths   : 1
+
+Type           : Clock Hold: 'REQ[0]'
+Slack          : Not operational: Clock Skew > Data Delay
+Required Time  : None
+Actual Time    : N/A
+From           : master_device:inst2|inst22
+To             : master_device:inst2|inst14
+From Clock     : REQ[0]
+To Clock       : REQ[0]
+Failed Paths   : 1
+
+Type           : Total number of failed paths
+Slack          : 
+Required Time  : 
+Actual Time    : 
+From           : 
+To             : 
+From Clock     : 
+To Clock       : 
+Failed Paths   : 919
+
+--------------------------------------------------------------------------------------
+

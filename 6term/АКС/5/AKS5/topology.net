@@ -1,0 +1,280 @@
+autostart = False
+version = 0.8.7
+[127.0.0.1:7202]
+    workingdir = C:\Users\dw800\AppData\Local\Temp
+    udp = 10201
+    [[7200]]
+        image = C:\Users\dw800\YandexDisk\6TERM\AKS\GNS\c7200-adventerprisek9-mz.152-4.M11.image
+        sparsemem = True
+    [[ROUTER R5]]
+        console = 2118
+        aux = 2518
+        cnfg = configs\R5.cfg
+        slot0 = C7200-IO-2FE
+        f0/0 = R8 f0/0
+        f0/1 = R1 f0/1
+        slot1 = PA-FE-TX
+        f1/0 = R7 f0/0
+        x = -185.544155877
+        y = -33.6324676319
+        z = 1.0
+        hx = 29.5
+        hy = -29.0
+    [[ROUTER R6]]
+        console = 2119
+        aux = 2519
+        cnfg = configs\R6.cfg
+        slot0 = C7200-IO-2FE
+        f0/0 = R4 f0/1
+        f0/1 = R3 f0/0
+        slot1 = PA-FE-TX
+        x = 135.943217538
+        y = -400.077597742
+        z = 1.0
+[127.0.0.1:7203]
+    workingdir = C:\Users\dw800\AppData\Local\Temp
+    udp = 10301
+    [[7200]]
+        image = C:\Users\dw800\YandexDisk\6TERM\AKS\GNS\c7200-adventerprisek9-mz.152-4.M11.image
+        sparsemem = True
+    [[ROUTER R7]]
+        console = 2120
+        aux = 2520
+        cnfg = configs\R7.cfg
+        slot0 = C7200-IO-2FE
+        f0/0 = R5 f1/0
+        f0/1 = R4 f0/0
+        slot1 = PA-FE-TX
+        f1/0 = R3 f1/0
+        x = -286.95836944
+        y = -207.632467632
+        z = 1.0
+    [[ROUTER R8]]
+        console = 2121
+        aux = 2521
+        cnfg = configs\R8.cfg
+        slot0 = C7200-IO-2FE
+        f0/0 = R5 f0/0
+        f0/1 = R2 f0/0
+        x = -286.948268172
+        y = 104.3574311
+        z = 1.0
+        hx = 20.5
+        hy = -32.0
+[127.0.0.1:7200]
+    workingdir = C:\Users\dw800\AppData\Local\Temp
+    udp = 10001
+    [[7200]]
+        image = C:\Users\dw800\YandexDisk\6TERM\AKS\GNS\c7200-adventerprisek9-mz.152-4.M11.image
+        sparsemem = True
+    [[ROUTER R1]]
+        console = 2114
+        aux = 2514
+        cnfg = configs\R1.cfg
+        slot0 = C7200-IO-2FE
+        f0/0 = R3 f0/1
+        f0/1 = R5 f0/1
+        slot1 = PA-FE-TX
+        f1/0 = R4 f1/0
+        x = 8.04163056034
+        y = -101.632467632
+        z = 1.0
+        hx = 25.5
+        hy = -32.0
+    [[ROUTER R2]]
+        console = 2115
+        aux = 2515
+        cnfg = configs\R2.cfg
+        slot0 = C7200-IO-2FE
+        f0/0 = R8 f0/1
+        x = -352.948268172
+        y = 251.377633636
+        z = 1.0
+        hx = 11.5
+        hy = -32.0
+[127.0.0.1:7201]
+    workingdir = C:\Users\dw800\AppData\Local\Temp
+    udp = 10101
+    [[7200]]
+        image = C:\Users\dw800\YandexDisk\6TERM\AKS\GNS\c7200-adventerprisek9-mz.152-4.M11.image
+        sparsemem = True
+    [[ROUTER R4]]
+        console = 2117
+        aux = 2517
+        cnfg = configs\R4.cfg
+        slot0 = C7200-IO-2FE
+        f0/0 = R7 f0/1
+        f0/1 = R6 f0/0
+        slot1 = PA-FE-TX
+        f1/0 = R1 f1/0
+        x = -123.968470708
+        y = -351.622366364
+        z = 1.0
+    [[ROUTER R3]]
+        console = 2116
+        aux = 2516
+        cnfg = configs\R3.cfg
+        slot0 = C7200-IO-2FE
+        f0/0 = R6 f0/1
+        f0/1 = R1 f0/0
+        slot1 = PA-FE-TX
+        f1/0 = R7 f1/0
+        x = 216.308657865
+        y = -250.117749006
+        z = 1.0
+        hx = 29.5
+        hy = -29.0
+[GNS3-DATA]
+    configs = configs
+    [[NOTE 1]]
+        text = "fd00:0:0:4::/64"
+        x = -304.05591591
+        y = -302.999566725
+    [[NOTE 2]]
+        text = "fd00:0:0:3::/64"
+        x = -356.745166004
+        y = -96.132467632
+    [[NOTE 3]]
+        text = "fd00:0:0:1::/64"
+        x = -438.443650814
+        y = 164.767027305
+    [[NOTE 4]]
+        text = "fd00:0:0:2::/64"
+        x = -344.330952442
+        y = 11.311183182
+    [[NOTE 5]]
+        text = "fd00:0:0:6::/64"
+        x = 225.688383542
+        y = -318.476226127
+    [[NOTE 6]]
+        text = "fd00:0:0:9::/64"
+        x = -164.698484809
+        y = -189.298989873
+    [[NOTE 7]]
+        text = "149.132.8.0/21"
+        x = -193.747258045
+        y = 59.0391052434
+    [[NOTE 8]]
+        text = "fd00:0:0:10::/64"
+        x = -46.1543289326
+        y = -274.706673506
+    [[NOTE 9]]
+        text = "fd00:0:0:5::/64"
+        x = -49.3969696197
+        y = -398.30822459
+    [[NOTE 10]]
+        text = "fd00:0:0:8::/64"
+        x = -54.0954544295
+        y = -15.3284271247
+    [[NOTE 11]]
+        text = "2A00:6440:0:1::/32"
+        x = 193.060966544
+        y = -431.835136523
+    [[NOTE 12]]
+        text = "fd00:0:0:7::/64"
+        x = 129.551298552
+        y = -134.808657865
+    [[NOTE 13]]
+        text = "2A00:6440:0:2::/32"
+        x = -311.126983722
+        y = 292.384343035
+    [[NOTE 14]]
+        text = "f0/1"
+        x = 16.6182575864
+        y = 58.4916225385
+        interface = R8 f0/1
+    [[NOTE 15]]
+        text = "f0/0"
+        x = 65.686664459
+        y = -15.2326220902
+        interface = R8 f0/0
+    [[NOTE 16]]
+        text = "f0/1"
+        x = 0.430194055117
+        y = 45.2208471145
+        interface = R3 f0/1
+    [[NOTE 17]]
+        text = "f1/0"
+        x = -81.8582260902
+        y = -3.63520982176
+        interface = R3 f1/0
+    [[NOTE 18]]
+        text = "f0/0"
+        x = -41.8943013743
+        y = -41.2562813634
+        interface = R3 f0/0
+    [[NOTE 19]]
+        text = "f0/0"
+        x = 61.3817424136
+        y = -25.4916225385
+        interface = R2 f0/0
+    [[NOTE 20]]
+        text = "f0/0"
+        x = 65.5698059449
+        y = -1.22084711445
+        interface = R1 f0/0
+    [[NOTE 21]]
+        text = "f0/1"
+        x = -4.73941925128
+        y = 35.2565544006
+        interface = R1 f0/1
+    [[NOTE 22]]
+        text = "f1/0"
+        x = -47.6782002156
+        y = -29.3712430755
+        interface = R1 f1/0
+    [[NOTE 23]]
+        text = "f1/0"
+        x = 75.8582260902
+        y = 25.6352098218
+        interface = R7 f1/0
+    [[NOTE 24]]
+        text = "f0/0"
+        x = -0.857872824363
+        y = 58.5585693112
+        interface = R7 f0/0
+    [[NOTE 25]]
+        text = "f0/1"
+        x = 32.977515005
+        y = -49.4829868807
+        interface = R7 f0/1
+    [[NOTE 26]]
+        text = "f0/1"
+        x = 68.8943013743
+        y = 42.2562813634
+        interface = R6 f0/1
+    [[NOTE 27]]
+        text = "f0/0"
+        x = -38.3224904623
+        y = 39.3308760624
+        interface = R6 f0/0
+    [[NOTE 28]]
+        text = "f1/0"
+        x = -44.1421271756
+        y = -22.5585693112
+        interface = R5 f1/0
+    [[NOTE 29]]
+        text = "f0/1"
+        x = 70.7394192513
+        y = 8.74344559939
+        interface = R5 f0/1
+    [[NOTE 30]]
+        text = "f0/0"
+        x = 9.31333554101
+        y = 54.2326220902
+        interface = R5 f0/0
+    [[NOTE 31]]
+        text = "f1/0"
+        x = 12.6782002156
+        y = 67.3712430755
+        interface = R4 f1/0
+    [[NOTE 32]]
+        text = "f0/1"
+        x = 72.3224904623
+        y = 14.6691239376
+        interface = R4 f0/1
+    [[NOTE 33]]
+        text = "f0/0"
+        x = -53.977515005
+        y = 18.4829868807
+        interface = R4 f0/0
