@@ -1,0 +1,43 @@
+#-----------------------------------------------------------
+# Vivado v2018.2 (64-bit)
+# SW Build 2258646 on Thu Jun 14 20:03:12 MDT 2018
+# IP Build 2256618 on Thu Jun 14 22:10:49 MDT 2018
+# Start of session at: Thu Oct 16 20:52:05 2025
+# Process ID: 11416
+# Current directory: D:/APCU/lab4
+# Command line: vivado.exe -gui_launcher_event rodinguilauncherevent8568 D:\APCU\lab4\lab4.xpr
+# Log file: D:/APCU/lab4/vivado.log
+# Journal file: D:/APCU/lab4\vivado.jou
+#-----------------------------------------------------------
+start_gui
+open_project D:/APCU/lab4/lab4.xpr
+Scanning sources...
+Finished scanning sources
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository 'D:/Xilinx/Vivado/2018.2/data/ip'.
+open_project: Time (s): cpu = 00:00:14 ; elapsed = 00:00:08 . Memory (MB): peak = 902.312 ; gain = 145.770
+update_compile_order -fileset sources_1
+reset_run synth_1
+launch_runs synth_1 -jobs 8
+[Thu Oct 16 21:11:58 2025] Launched synth_1...
+Run output will be captured here: D:/APCU/lab4/lab4.runs/synth_1/runme.log
+launch_runs impl_1 -jobs 8
+[Thu Oct 16 21:13:04 2025] Launched impl_1...
+Run output will be captured here: D:/APCU/lab4/lab4.runs/impl_1/runme.log
+launch_runs impl_1 -to_step write_bitstream -jobs 8
+[Thu Oct 16 21:16:15 2025] Launched impl_1...
+Run output will be captured here: D:/APCU/lab4/lab4.runs/impl_1/runme.log
+reset_run synth_1
+launch_runs synth_1 -jobs 8
+[Thu Oct 16 21:23:20 2025] Launched synth_1...
+Run output will be captured here: D:/APCU/lab4/lab4.runs/synth_1/runme.log
+launch_runs impl_1 -jobs 8
+[Thu Oct 16 21:24:21 2025] Launched impl_1...
+Run output will be captured here: D:/APCU/lab4/lab4.runs/impl_1/runme.log
+launch_runs impl_1 -to_step write_bitstream -jobs 8
+[Thu Oct 16 21:27:34 2025] Launched impl_1...
+Run output will be captured here: D:/APCU/lab4/lab4.runs/impl_1/runme.log
+open_hw
+exit
+INFO: [Common 17-206] Exiting Vivado at Thu Oct 16 21:34:54 2025...

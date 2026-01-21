@@ -1,0 +1,113 @@
+
+SWITCH 1_1
+Switch>enable
+Switch#configure terminal
+Switch(config)#vtp mode client
+Switch(config)#vtp domain MAIN_SERVER
+Switch(config)#vtp password onion_509_4
+Switch(config)#interface FastEthernet0/1
+Switch(config-if)#switchport mode trunk
+Switch(config-if)#switchport trunk allowed vlan 100,200,11,21
+Switch(config)#interface FastEthernet0/2
+Switch(config-if)#switchport mode access
+Switch(config-if)#switchport access vlan 100
+Switch(config)#interface FastEthernet0/3
+Switch(config-if)#switchport mode access
+Switch(config-if)#switchport access vlan 100
+Switch(config)#interface FastEthernet0/4
+Switch(config-if)#switchport mode access
+Switch(config-if)#switchport access vlan 100
+Switch(config)#interface FastEthernet0/5
+Switch(config-if)#switchport mode access
+Switch(config-if)#switchport access vlan 100
+Switch(config)#interface FastEthernet0/6
+Switch(config-if)#switchport mode access
+Switch(config-if)#switchport access vlan 100
+Switch(config)#interface Vlan 11
+Switch(config-if)#ip address 192.168.11.1 255.255.255.0
+Switch(config-if)#exit
+Switch(config)#hostname Switch1_1
+Switch1_1(config)#ip domain-name Switch1_1
+Switch1_1(config)#enable password Chereshnya
+Switch1_1(config)#crypto key generate rsa 
+Switch1_1(config)#username Switch1_1 password Chereshnya
+Switch1_1(config)#line vty 0 15
+Switch1_1(config-line)#transport input ssh 
+Switch1_1(config-line)#login local 
+
+SWITCH 2_1
+Switch>enable
+Switch#configure terminal
+Switch(config)#vtp mode client
+Switch(config)#vtp domain MAIN_SERVER
+Switch(config)#vtp password onion_509_4
+Switch(config)#interface FastEthernet0/1
+Switch(config-if)#switchport mode trunk
+Switch(config-if)#switchport trunk allowed vlan 100,200,11,21
+Switch(config)#interface FastEthernet0/2
+Switch(config-if)#switchport mode access
+Switch(config-if)#switchport access vlan 100
+Switch(config)#interface FastEthernet0/3
+Switch(config-if)#switchport mode access
+Switch(config-if)#switchport access vlan 100
+Switch(config)#interface FastEthernet0/4
+Switch(config-if)#switchport mode access
+Switch(config-if)#switchport access vlan 100
+Switch(config)#interface FastEthernet0/5
+Switch(config-if)#switchport mode access
+Switch(config-if)#switchport access vlan 100
+Switch(config)#interface FastEthernet0/6
+Switch(config-if)#switchport mode access
+Switch(config-if)#switchport access vlan 100
+Switch(config)#interface Vlan 11
+Switch(config-if)#ip address 192.168.11.2 255.255.255.0
+Switch(config-if)#exit
+Switch(config)#hostname Switch2_1
+Switch2_1(config)#ip domain-name Switch2_1
+Switch2_1(config)#enable password Chereshnya
+Switch2_1(config)#crypto key generate rsa 
+Switch2_1(config)#username Switch2_1 password Chereshnya
+Switch2_1(config)#line vty 0 15
+Switch2_1(config-line)#transport input ssh 
+Switch2_1(config-line)#login local 
+
+
+
+ROUTER 1
+Router>enable
+Router#vlan database
+Router(vlan)#vtp server
+Router(vlan)#vtp domain MAIN_SERVER
+Router(vlan)#vtp password onion_509_4
+Router(vlan)#vlan 100 name STATIONARY_VLAN
+Router(vlan)#vlan 200 name WIRELESS_VLAN
+Router(vlan)#vlan 11 name ADMINISTRATIVE_VLAN
+Router(vlan)#vlan 21 name MANAGER_VLAN
+Router(vlan)#exit
+Router#configure terminal
+Router(config)#interface GigabitEthernet0/1/0
+Router(config-if)#switchport mode trunk
+Router(config-if)#switchport trunk allowed vlan 100,200,11,21
+Router(config)#interface GigabitEthernet0/1/1
+Router(config-if)#switchport mode trunk
+Router(config-if)#switchport trunk allowed vlan 100,200,11,21
+Router(config-if)#exit
+Router(config)#spanning-tree vlan 11,21,100,200 root primary
+Router(config)#interface Vlan 100
+Router(config-if)#ip address 192.168.100.50 255.255.255.0
+Router(config)#interface Vlan 200
+Router(config-if)#ip address 192.168.200.50 255.255.255.0
+Router(config)#interface Vlan 11
+Router(config-if)#ip address 192.168.11.50 255.255.255.0
+Router(config)#interface Vlan 21
+Router(config-if)#ip address 192.168.21.50 255.255.255.0
+Router(config-if)#exit
+Router(config)#hostname Router1_1
+Router1_1(config)#ip domain-name Router1_1
+Router1_1(config)#enable password Chereshnya
+Router1_1(config)#crypto key generate rsa 
+Router1_1(config)#username Router1_1 password Chereshnya
+Router1_1(config)#line vty 0 15
+Router1_1(config-line)#transport input ssh 
+Router1_1(config-line)#login local 
+

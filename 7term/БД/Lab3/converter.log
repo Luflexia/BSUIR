@@ -1,0 +1,13 @@
+[PgToBerkeley] Conversion start...
+[PgToBerkeley] Connecting to jdbc:postgresql://localhost:5432/Railway
+[PgToBerkeley] Table Билет -> rows: 31
+[PgToBerkeley] Table Маршрут -> rows: 31
+[PgToBerkeley] Table Маршрут_Станция -> rows: 31
+[PgToBerkeley] Table Пассажир -> rows: 31
+[PgToBerkeley] Table Поезд -> rows: 31
+[PgToBerkeley] Table Поезд_Сотрудник -> rows: 31
+[PgToBerkeley] Table Расписание -> rows: 31
+[PgToBerkeley] Table Сотрудник -> rows: 31
+[PgToBerkeley] Table Сотрудник_Маршрут -> rows: 31
+[PgToBerkeley] Table Станция -> rows: 31
+[PgToBerkeley] Conversion finished successfully.

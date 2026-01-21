@@ -1,0 +1,13 @@
+INFO: [VRFC 10-163] Analyzing VHDL file "C:/Users/dw800/YandexDisk/7TERM/老钟/shcerbakov/lab4/JK_trigger.vhd" into library xil_defaultlib
+INFO: [VRFC 10-307] analyzing entity JK_trigger
+INFO: [VRFC 10-163] Analyzing VHDL file "C:/Users/dw800/YandexDisk/7TERM/老钟/shcerbakov/lab4/lab4.srcs/sources_1/new/clk_debounce_1hz.vhd" into library xil_defaultlib
+INFO: [VRFC 10-307] analyzing entity clk_debounce_1hz
+INFO: [VRFC 10-163] Analyzing VHDL file "C:/Users/dw800/YandexDisk/7TERM/老钟/shcerbakov/lab4/shift_reg.vhd" into library xil_defaultlib
+INFO: [VRFC 10-307] analyzing entity ParallelShiftRegister
+INFO: [VRFC 10-163] Analyzing VHDL file "C:/Users/dw800/YandexDisk/7TERM/老钟/shcerbakov/lab4/lab4.srcs/sources_1/new/top_shift_register.vhd" into library xil_defaultlib
+INFO: [VRFC 10-307] analyzing entity my_top
+ERROR: [VRFC 10-91] ibufgds is not declared [C:/Users/dw800/YandexDisk/7TERM/老钟/shcerbakov/lab4/lab4.srcs/sources_1/new/top_shift_register.vhd:43]
+WARNING: [VRFC 10-280] actual for formal port mr_n is neither a static name nor a globally static expression [C:/Users/dw800/YandexDisk/7TERM/老钟/shcerbakov/lab4/lab4.srcs/sources_1/new/top_shift_register.vhd:67]
+WARNING: [VRFC 10-280] actual for formal port j is neither a static name nor a globally static expression [C:/Users/dw800/YandexDisk/7TERM/老钟/shcerbakov/lab4/lab4.srcs/sources_1/new/top_shift_register.vhd:70]
+ERROR: [VRFC 10-1504] unit rtl ignored due to previous errors [C:/Users/dw800/YandexDisk/7TERM/老钟/shcerbakov/lab4/lab4.srcs/sources_1/new/top_shift_register.vhd:30]
+INFO: [VRFC 10-240] VHDL file C:/Users/dw800/YandexDisk/7TERM/老钟/shcerbakov/lab4/lab4.srcs/sources_1/new/top_shift_register.vhd ignored due to errors

@@ -1,0 +1,308 @@
+
+*** Running vivado
+    with args -log ShiftRegister_1Hz_Top.vds -m64 -product Vivado -mode batch -messageDb vivado.pb -notrace -source ShiftRegister_1Hz_Top.tcl
+
+
+****** Vivado v2018.2 (64-bit)
+  **** SW Build 2258646 on Thu Jun 14 20:03:12 MDT 2018
+  **** IP Build 2256618 on Thu Jun 14 22:10:49 MDT 2018
+    ** Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
+
+source ShiftRegister_1Hz_Top.tcl -notrace
+Command: synth_design -top ShiftRegister_1Hz_Top -part xc7a200tfbg676-2
+Starting synth_design
+Attempting to get a license for feature 'Synthesis' and/or device 'xc7a200t'
+INFO: [Common 17-349] Got license for feature 'Synthesis' and/or device 'xc7a200t'
+INFO: Launching helper process for spawning children vivado processes
+INFO: Helper process launched with PID 18808 
+---------------------------------------------------------------------------------
+Starting RTL Elaboration : Time (s): cpu = 00:00:03 ; elapsed = 00:00:03 . Memory (MB): peak = 409.332 ; gain = 96.250
+---------------------------------------------------------------------------------
+INFO: [Synth 8-638] synthesizing module 'ShiftRegister_1Hz_Top' [C:/Users/dw800/Desktop/3 lab4/lab4.srcs/sources_1/new/top_shift_register.vhd:27]
+	Parameter DIFF_TERM bound to: 0 - type: bool 
+	Parameter IBUF_LOW_PWR bound to: 1 - type: bool 
+	Parameter IOSTANDARD bound to: LVDS_25 - type: string 
+INFO: [Synth 8-3491] module 'IBUFDS' declared at 'C:/Programs/Xilinx/Vivado/2018.2/scripts/rt/data/unisim_comp.v:19488' bound to instance 'IBUFDS_inst' of component 'IBUFDS' [C:/Users/dw800/Desktop/3 lab4/lab4.srcs/sources_1/new/top_shift_register.vhd:69]
+INFO: [Synth 8-6157] synthesizing module 'IBUFDS' [C:/Programs/Xilinx/Vivado/2018.2/scripts/rt/data/unisim_comp.v:19488]
+	Parameter CAPACITANCE bound to: DONT_CARE - type: string 
+	Parameter DIFF_TERM bound to: 0 - type: bool 
+	Parameter DQS_BIAS bound to: FALSE - type: string 
+	Parameter IBUF_DELAY_VALUE bound to: 0 - type: string 
+	Parameter IBUF_LOW_PWR bound to: 1 - type: bool 
+	Parameter IFD_DELAY_VALUE bound to: AUTO - type: string 
+	Parameter IOSTANDARD bound to: LVDS_25 - type: string 
+INFO: [Synth 8-6155] done synthesizing module 'IBUFDS' (1#1) [C:/Programs/Xilinx/Vivado/2018.2/scripts/rt/data/unisim_comp.v:19488]
+INFO: [Synth 8-3491] module 'ParallelShiftRegister' declared at 'C:/Users/dw800/Desktop/3 lab4/shift_reg.vhd:13' bound to instance 'ShiftReg_inst' of component 'ParallelShiftRegister' [C:/Users/dw800/Desktop/3 lab4/lab4.srcs/sources_1/new/top_shift_register.vhd:99]
+INFO: [Synth 8-638] synthesizing module 'ParallelShiftRegister' [C:/Users/dw800/Desktop/3 lab4/shift_reg.vhd:26]
+INFO: [Synth 8-3491] module 'JK_trigger' declared at 'C:/Users/dw800/Desktop/3 lab4/JK_trigger.vhd:34' bound to instance 'JK0' of component 'JK_trigger' [C:/Users/dw800/Desktop/3 lab4/shift_reg.vhd:43]
+INFO: [Synth 8-638] synthesizing module 'JK_trigger' [C:/Users/dw800/Desktop/3 lab4/JK_trigger.vhd:44]
+INFO: [Synth 8-5837] Detected dual asynchronous set and preset for register q_temp_reg in module JK_trigger. This is not a recommended register style for Xilinx devices  [C:/Users/dw800/Desktop/3 lab4/JK_trigger.vhd:50]
+INFO: [Synth 8-256] done synthesizing module 'JK_trigger' (2#1) [C:/Users/dw800/Desktop/3 lab4/JK_trigger.vhd:44]
+INFO: [Synth 8-3491] module 'JK_trigger' declared at 'C:/Users/dw800/Desktop/3 lab4/JK_trigger.vhd:34' bound to instance 'JK1' of component 'JK_trigger' [C:/Users/dw800/Desktop/3 lab4/shift_reg.vhd:58]
+INFO: [Synth 8-3491] module 'JK_trigger' declared at 'C:/Users/dw800/Desktop/3 lab4/JK_trigger.vhd:34' bound to instance 'JK2' of component 'JK_trigger' [C:/Users/dw800/Desktop/3 lab4/shift_reg.vhd:74]
+INFO: [Synth 8-3491] module 'JK_trigger' declared at 'C:/Users/dw800/Desktop/3 lab4/JK_trigger.vhd:34' bound to instance 'JK3' of component 'JK_trigger' [C:/Users/dw800/Desktop/3 lab4/shift_reg.vhd:90]
+INFO: [Synth 8-256] done synthesizing module 'ParallelShiftRegister' (3#1) [C:/Users/dw800/Desktop/3 lab4/shift_reg.vhd:26]
+INFO: [Synth 8-256] done synthesizing module 'ShiftRegister_1Hz_Top' (4#1) [C:/Users/dw800/Desktop/3 lab4/lab4.srcs/sources_1/new/top_shift_register.vhd:27]
+---------------------------------------------------------------------------------
+Finished RTL Elaboration : Time (s): cpu = 00:00:04 ; elapsed = 00:00:04 . Memory (MB): peak = 463.566 ; gain = 150.484
+---------------------------------------------------------------------------------
+
+Report Check Netlist: 
++------+------------------+-------+---------+-------+------------------+
+|      |Item              |Errors |Warnings |Status |Description       |
++------+------------------+-------+---------+-------+------------------+
+|1     |multi_driven_nets |      0|        0|Passed |Multi driven nets |
++------+------------------+-------+---------+-------+------------------+
+---------------------------------------------------------------------------------
+Start Handling Custom Attributes
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:04 ; elapsed = 00:00:05 . Memory (MB): peak = 463.566 ; gain = 150.484
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:04 ; elapsed = 00:00:05 . Memory (MB): peak = 463.566 ; gain = 150.484
+---------------------------------------------------------------------------------
+INFO: [Netlist 29-17] Analyzing 1 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
+INFO: [Device 21-403] Loading part xc7a200tfbg676-2
+INFO: [Project 1-570] Preparing netlist for logic optimization
+
+Processing XDC Constraints
+Initializing timing engine
+Parsing XDC File [C:/Users/dw800/Desktop/3 lab4/top.xdc]
+Finished Parsing XDC File [C:/Users/dw800/Desktop/3 lab4/top.xdc]
+INFO: [Project 1-236] Implementation specific constraints were found while reading constraint file [C:/Users/dw800/Desktop/3 lab4/top.xdc]. These constraints will be ignored for synthesis but will be used in implementation. Impacted constraints are listed in the file [.Xil/ShiftRegister_1Hz_Top_propImpl.xdc].
+Resolution: To avoid this warning, move constraints listed in [.Xil/ShiftRegister_1Hz_Top_propImpl.xdc] to another XDC file and exclude this new file from synthesis with the used_in_synthesis property (File Properties dialog in GUI) and re-run elaboration/synthesis.
+Completed Processing XDC Constraints
+
+INFO: [Project 1-111] Unisim Transformation Summary:
+No Unisim elements were transformed.
+
+Constraint Validation Runtime : Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.003 . Memory (MB): peak = 832.457 ; gain = 0.000
+---------------------------------------------------------------------------------
+Finished Constraint Validation : Time (s): cpu = 00:00:17 ; elapsed = 00:00:20 . Memory (MB): peak = 832.457 ; gain = 519.375
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Loading Part and Timing Information
+---------------------------------------------------------------------------------
+Loading part: xc7a200tfbg676-2
+---------------------------------------------------------------------------------
+Finished Loading Part and Timing Information : Time (s): cpu = 00:00:17 ; elapsed = 00:00:20 . Memory (MB): peak = 832.457 ; gain = 519.375
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Applying 'set_property' XDC Constraints
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:17 ; elapsed = 00:00:20 . Memory (MB): peak = 832.457 ; gain = 519.375
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:17 ; elapsed = 00:00:20 . Memory (MB): peak = 832.457 ; gain = 519.375
+---------------------------------------------------------------------------------
+
+Report RTL Partitions: 
++-+--------------+------------+----------+
+| |RTL Partition |Replication |Instances |
++-+--------------+------------+----------+
++-+--------------+------------+----------+
+---------------------------------------------------------------------------------
+Start RTL Component Statistics 
+---------------------------------------------------------------------------------
+Detailed RTL Component Info : 
++---Registers : 
+	                1 Bit    Registers := 5     
++---Muxes : 
+	   2 Input      1 Bit        Muxes := 4     
+---------------------------------------------------------------------------------
+Finished RTL Component Statistics 
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start RTL Hierarchical Component Statistics 
+---------------------------------------------------------------------------------
+Hierarchical RTL Component report 
+Module ShiftRegister_1Hz_Top 
+Detailed RTL Component Info : 
++---Registers : 
+	                1 Bit    Registers := 1     
+Module JK_trigger 
+Detailed RTL Component Info : 
++---Registers : 
+	                1 Bit    Registers := 1     
++---Muxes : 
+	   2 Input      1 Bit        Muxes := 1     
+---------------------------------------------------------------------------------
+Finished RTL Hierarchical Component Statistics
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Part Resource Summary
+---------------------------------------------------------------------------------
+Part Resources:
+DSPs: 740 (col length:100)
+BRAMs: 730 (col length: RAMB18 100 RAMB36 50)
+---------------------------------------------------------------------------------
+Finished Part Resource Summary
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Cross Boundary and Area Optimization
+---------------------------------------------------------------------------------
+Warning: Parallel synthesis criteria is not met 
+---------------------------------------------------------------------------------
+Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:00:18 ; elapsed = 00:00:21 . Memory (MB): peak = 832.457 ; gain = 519.375
+---------------------------------------------------------------------------------
+
+Report RTL Partitions: 
++-+--------------+------------+----------+
+| |RTL Partition |Replication |Instances |
++-+--------------+------------+----------+
++-+--------------+------------+----------+
+---------------------------------------------------------------------------------
+Start Applying XDC Timing Constraints
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Applying XDC Timing Constraints : Time (s): cpu = 00:00:30 ; elapsed = 00:00:35 . Memory (MB): peak = 835.074 ; gain = 521.992
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Timing Optimization
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Timing Optimization : Time (s): cpu = 00:00:30 ; elapsed = 00:00:35 . Memory (MB): peak = 858.105 ; gain = 545.023
+---------------------------------------------------------------------------------
+
+Report RTL Partitions: 
++-+--------------+------------+----------+
+| |RTL Partition |Replication |Instances |
++-+--------------+------------+----------+
++-+--------------+------------+----------+
+---------------------------------------------------------------------------------
+Start Technology Mapping
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Technology Mapping : Time (s): cpu = 00:00:30 ; elapsed = 00:00:35 . Memory (MB): peak = 858.105 ; gain = 545.023
+---------------------------------------------------------------------------------
+
+Report RTL Partitions: 
++-+--------------+------------+----------+
+| |RTL Partition |Replication |Instances |
++-+--------------+------------+----------+
++-+--------------+------------+----------+
+---------------------------------------------------------------------------------
+Start IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Flattening Before IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Flattening Before IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Final Netlist Cleanup
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Final Netlist Cleanup
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished IO Insertion : Time (s): cpu = 00:00:31 ; elapsed = 00:00:36 . Memory (MB): peak = 858.105 ; gain = 545.023
+---------------------------------------------------------------------------------
+
+Report Check Netlist: 
++------+------------------+-------+---------+-------+------------------+
+|      |Item              |Errors |Warnings |Status |Description       |
++------+------------------+-------+---------+-------+------------------+
+|1     |multi_driven_nets |      0|        0|Passed |Multi driven nets |
++------+------------------+-------+---------+-------+------------------+
+---------------------------------------------------------------------------------
+Start Renaming Generated Instances
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Instances : Time (s): cpu = 00:00:31 ; elapsed = 00:00:36 . Memory (MB): peak = 858.105 ; gain = 545.023
+---------------------------------------------------------------------------------
+
+Report RTL Partitions: 
++-+--------------+------------+----------+
+| |RTL Partition |Replication |Instances |
++-+--------------+------------+----------+
++-+--------------+------------+----------+
+---------------------------------------------------------------------------------
+Start Rebuilding User Hierarchy
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Rebuilding User Hierarchy : Time (s): cpu = 00:00:31 ; elapsed = 00:00:36 . Memory (MB): peak = 858.105 ; gain = 545.023
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Ports
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Ports : Time (s): cpu = 00:00:31 ; elapsed = 00:00:36 . Memory (MB): peak = 858.105 ; gain = 545.023
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Handling Custom Attributes
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:31 ; elapsed = 00:00:36 . Memory (MB): peak = 858.105 ; gain = 545.023
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Nets
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Nets : Time (s): cpu = 00:00:31 ; elapsed = 00:00:36 . Memory (MB): peak = 858.105 ; gain = 545.023
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Writing Synthesis Report
+---------------------------------------------------------------------------------
+
+Report BlackBoxes: 
++-+--------------+----------+
+| |BlackBox name |Instances |
++-+--------------+----------+
++-+--------------+----------+
+
+Report Cell Usage: 
++------+-------+------+
+|      |Cell   |Count |
++------+-------+------+
+|1     |BUFG   |     1|
+|2     |CARRY4 |     7|
+|3     |LUT1   |     2|
+|4     |LUT3   |     3|
+|5     |LUT4   |     2|
+|6     |LUT5   |     4|
+|7     |LUT6   |    31|
+|8     |FDCE   |    33|
+|9     |IBUF   |     8|
+|10    |IBUFDS |     1|
+|11    |OBUF   |     5|
++------+-------+------+
+
+Report Instance Areas: 
++------+----------------+----------------------+------+
+|      |Instance        |Module                |Cells |
++------+----------------+----------------------+------+
+|1     |top             |                      |    97|
+|2     |  ShiftReg_inst |ParallelShiftRegister |    10|
+|3     |    JK0         |JK_trigger            |     3|
+|4     |    JK1         |JK_trigger_0          |     3|
+|5     |    JK2         |JK_trigger_1          |     2|
+|6     |    JK3         |JK_trigger_2          |     2|
++------+----------------+----------------------+------+
+---------------------------------------------------------------------------------
+Finished Writing Synthesis Report : Time (s): cpu = 00:00:31 ; elapsed = 00:00:36 . Memory (MB): peak = 858.105 ; gain = 545.023
+---------------------------------------------------------------------------------
+Synthesis finished with 0 errors, 0 critical warnings and 0 warnings.
+Synthesis Optimization Runtime : Time (s): cpu = 00:00:17 ; elapsed = 00:00:24 . Memory (MB): peak = 858.105 ; gain = 176.133
+Synthesis Optimization Complete : Time (s): cpu = 00:00:31 ; elapsed = 00:00:36 . Memory (MB): peak = 858.105 ; gain = 545.023
+INFO: [Project 1-571] Translating synthesized netlist
+INFO: [Netlist 29-17] Analyzing 16 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
+INFO: [Project 1-570] Preparing netlist for logic optimization
+INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
+INFO: [Project 1-111] Unisim Transformation Summary:
+No Unisim elements were transformed.
+
+INFO: [Common 17-83] Releasing license: Synthesis
+29 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.
+synth_design completed successfully
+synth_design: Time (s): cpu = 00:00:34 ; elapsed = 00:00:39 . Memory (MB): peak = 863.262 ; gain = 563.055
+WARNING: [Constraints 18-5210] No constraint will be written out.
+INFO: [Common 17-1381] The checkpoint 'C:/Users/dw800/Desktop/3 lab4/lab4.runs/synth_1/ShiftRegister_1Hz_Top.dcp' has been generated.
+INFO: [runtcl-4] Executing : report_utilization -file ShiftRegister_1Hz_Top_utilization_synth.rpt -pb ShiftRegister_1Hz_Top_utilization_synth.pb
+report_utilization: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.127 . Memory (MB): peak = 863.262 ; gain = 0.000
+INFO: [Common 17-206] Exiting Vivado at Thu Dec 11 17:15:01 2025...

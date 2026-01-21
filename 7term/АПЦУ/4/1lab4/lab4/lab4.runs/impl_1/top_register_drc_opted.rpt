@@ -1,0 +1,49 @@
+Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2018.2 (win64) Build 2258646 Thu Jun 14 20:03:12 MDT 2018
+| Date         : Fri Oct 17 11:57:20 2025
+| Host         : DESKTOP-540G01R running 64-bit major release  (build 9200)
+| Command      : report_drc -file top_register_drc_opted.rpt -pb top_register_drc_opted.pb -rpx top_register_drc_opted.rpx
+| Design       : top_register
+| Device       : xc7a200tfbg676-2
+| Speed File   : -2
+| Design State : Synthesized
+---------------------------------------------------------------------------------------------------------------------------
+
+Report DRC
+
+Table of Contents
+-----------------
+1. REPORT SUMMARY
+2. REPORT DETAILS
+
+1. REPORT SUMMARY
+-----------------
+            Netlist: netlist
+          Floorplan: design_1
+      Design limits: <entire design considered>
+           Ruledeck: default
+             Max violations: <unlimited>
+             Violations found: 1
++-------------+----------+-------------------------------------------------------------+------------+
+| Rule        | Severity | Description                                                 | Violations |
++-------------+----------+-------------------------------------------------------------+------------+
+| PLHOLDVIO-2 | Warning  | Non-Optimal connections which could lead to hold violations | 1          |
++-------------+----------+-------------------------------------------------------------+------------+
+
+2. REPORT DETAILS
+-----------------
+PLHOLDVIO-2#1 Warning
+Non-Optimal connections which could lead to hold violations  
+A LUT reg_inst/JK3/q_temp_i_2 is driving clock pin of 7 cells. This could lead to large hold time violations. First few involved cells are:
+    reg_inst/JK0/q_temp_reg {FDCE}
+    reg_inst/JK1/q_temp_reg {FDCE}
+    reg_inst/JK1/q_temp_reg_lopt_replica {FDCE}
+    reg_inst/JK2/q_temp_reg {FDCE}
+    reg_inst/JK2/q_temp_reg_lopt_replica {FDCE}
+    reg_inst/JK3/q_temp_reg {FDCE}
+    reg_inst/JK3/q_temp_reg_lopt_replica {FDCE}
+
+Related violations: <none>
+
+

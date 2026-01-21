@@ -1,0 +1,22 @@
+Cisco SG110-24HP коммутатор с поддержкой PoE
+http://raid.by/servers/server-rb-supermicro/microserver-e2236.html - сервер Xeon E-2236
+16GB 2x480GB SSD 265W
+https://sila.by/catalog/monobloki/TESLA/z24b_2416500 - моноблок
+https://www.amazon.com/Netgear-CM1100-100NAS-Nighthawk-DOCSIS-Cable/dp/B08GWNZ9VF?th=1 - кабельный модем
+https://www.21vek.by/mfp/p2500w_pantum.html?utm_source=google&utm_medium=cpc&utm_campaign=18255007097&utm_content=|&utm_term=&gad_source=1&gclid=CjwKCAiAvJarBhA1EiwAGgZl0JT-YFZJfJZTQhuTT3yudXdIL3hCb2NF06WObFtXiCNNn_g3rWMWbRoC81wQAvD_BwE
+- принтер
+https://www.21vek.by/mfp/lasermfp135wprinter_hp.html?utm_source=google&utm_medium=cpc&utm_campaign=18299350273&utm_content=|&utm_term=&gad_source=1&gclid=CjwKCAiAvJarBhA1EiwAGgZl0LKGXMLMcIFLYj1Ku4rLcwkOmatHh-_z-W9uj6oonX3v88UIv-yGuBoCR58QAvD_BwE
+- МФУ
+
+https://deal.by/p147901036-marshrutizator-cisco-3945.html?&primelead=OTAw - старый роутер
+https://deal.by/p162880922-marshrutizator-cisco-isr4331.html?&primelead=OTAw - новый роутер
+
+https://network.msk.ru/products/modul_cisco_nimes24 - NIM
+
+https://server-x.by/cisco-slm224gt-eu.html - коммутатор
+https://server-x.by/kommutator-cisco-sf200-24p-12-poe-smart-26-ports-slm224pt-eu.html - коммутатор PoE
+
+
+https://server-x.by/cisco-wap150-2.4-5-ggc-867mb-s-wap150-r-k9-ru.html - точка доступа
+https://ozon.by/product/telekommunikatsionnyy-shkaf-nastennyy-5bites-tc6401-06g-6u-600x450-seryy-491555675/?asb=Rsos9OND2XyLwk%252FuBwbkfFuYyBXrvqTkuxthfYk7GkY%253D&asb2=r6GVkzL3ik9GkRi6-1cKAYAIQCO7m2pGb4s-yI8M2bDyGx93t_1Uiadcbaao7Srz&avtc=1&avte=2&avts=1702232635&keywords=TC6401-06G
+- шкаф

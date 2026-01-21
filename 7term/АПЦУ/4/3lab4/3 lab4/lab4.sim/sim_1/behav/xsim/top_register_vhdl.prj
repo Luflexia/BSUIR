@@ -1,0 +1,9 @@
+# compile vhdl design source files
+vhdl xil_defaultlib  \
+"../../../../JK_trigger.vhd" \
+"../../../../lab4.srcs/sources_1/new/clk_debounce_1hz.vhd" \
+"../../../../shift_reg.vhd" \
+"../../../../lab4.srcs/sources_1/new/top_shift_register.vhd" \
+
+# Do not sort compile order
+nosort
