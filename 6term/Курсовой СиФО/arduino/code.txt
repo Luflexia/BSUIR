@@ -1,0 +1,569 @@
+#include <SSD1306Ascii.h>
+#include <SSD1306AsciiWire.h>
+#include <Wire.h>
+#include <EEPROM.h>
+#include <Servo.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET    -1
+#define JOY_X A0       // Джойстик ось X
+#define JOY_Y A1       // Джойстик ось Y
+#define JOY_BTN 5      // Кнопка джойстика
+#define BTN1 2         // Кнопка 1 (не используется)
+#define BTN2 3         // Кнопка 2 (Назад/Выбор)
+#define BTN3 4         // Кнопка 3 (не используется)
+#define HALL_PIN 7     // Датчик Холла (финиш)
+#define SERVO_X_PIN 10   // Серво внешняя (ось X)
+#define SERVO_Y_PIN 8    // Серво внутренняя (ось Y)
+// SCL A5, SDA A4 используются для I2C (экран, акселерометр)
+
+#define MENU_ITEMS 3
+#define MAX_NAME_LEN 8
+#define KEYBOARD_LEN 36
+#define LEADERBOARD_SIZE 5
+#define EEPROM_LEADERBOARD_ADDR 0
+#define EEPROM_BRIGHTNESS_ADDR (EEPROM_LEADERBOARD_ADDR + sizeof(leaderboard))
+
+SSD1306AsciiWire display;
+Servo servoX;
+Servo servoY;
+
+// Глобальные переменные
+struct LeaderboardEntry {
+  char name[MAX_NAME_LEN+1];
+  unsigned long time;
+};
+LeaderboardEntry leaderboard[LEADERBOARD_SIZE];
+
+char menuItems[MENU_ITEMS][12] = {"Start", "Records", "Settings"};
+int menuIndex = 0;
+int leaderboardScroll = 0;
+int namePos = 0;
+bool nameInputBlink = false;
+char playerName[MAX_NAME_LEN+1] = {0};
+char keyboard[KEYBOARD_LEN+1] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+int nameCharIndex = 0;
+unsigned long countdownStart = 0;
+unsigned long lastJoyMove = 0;
+unsigned long lastBlink = 0;
+unsigned long gameStartTime = 0;
+unsigned long gameEndTime = 0;
+bool inCountdown = false;
+bool gameStarted = false;
+bool isNewRecord = false;
+int brightness = 128;
+bool confirmReset = false;
+
+// Экраны
+#define SCREEN_MAIN_MENU 0
+#define SCREEN_GAME_MODE 1
+#define SCREEN_LEADERBOARD 2
+#define SCREEN_NAME_INPUT 3
+#define SCREEN_SETTINGS 4
+int currentScreen = SCREEN_MAIN_MENU;
+
+void setup() {
+  Serial.begin(9600);
+  delay(2000);
+  Wire.begin();
+  
+  // Настройка регистров дисплея для плавного управления яркостью
+  Wire.beginTransmission(0x3C);
+  Wire.write(0x00); // Command mode
+  Wire.write(0xD9);  // Precharge Period
+  Wire.write(0xF1);  // Default: 0xF1 (Phase 1: 1 DCLK, Phase 2: 15 DCLK)
+  Wire.write(0xDB);  // VCOMH Deselect Level
+  Wire.write(0x40);  // Default: 0x40 (~0.83*VCC)
+  Wire.endTransmission();
+  
+  display.begin(&Adafruit128x64, 0x3C);
+  display.setFont(System5x7);
+  display.clear();
+  display.setCursor(0,0);
+  display.print("TEST");
+  delay(1000);
+  display.clear();
+  pinMode(JOY_X, INPUT);
+  pinMode(JOY_Y, INPUT);
+  pinMode(JOY_BTN, INPUT_PULLUP); // D5
+  pinMode(BTN1, INPUT_PULLUP);    // D2
+  pinMode(BTN2, INPUT_PULLUP);    // D3
+  pinMode(BTN3, INPUT_PULLUP);    // D4
+  pinMode(HALL_PIN, INPUT);     // D7
+  loadLeaderboard();
+  // Загрузка яркости из EEPROM
+  EEPROM.get(EEPROM_BRIGHTNESS_ADDR, brightness);
+  // Проверка на валидность (если EEPROM пуст, будет 255 или 0)
+  if (brightness < 0 || brightness > 255) {
+      brightness = 128; // Значение по умолчанию
+  }
+  analogWrite(9, brightness); // Установить загруженную яркость
+}
+// EEPROM
+void saveLeaderboard() {
+  EEPROM.put(EEPROM_LEADERBOARD_ADDR, leaderboard);
+}
+void loadLeaderboard() {
+  EEPROM.get(EEPROM_LEADERBOARD_ADDR, leaderboard);
+  // Проверка на пустую EEPROM
+  if (leaderboard[0].time == 0xFFFFFFFF) {
+    for (int i=0; i<LEADERBOARD_SIZE; i++) {
+      leaderboard[i].name[0] = '\0';
+      leaderboard[i].time = 0xFFFFFFFF;
+    }
+  }
+}
+void resetLeaderboard() {
+  for (int i=0; i<LEADERBOARD_SIZE; i++) {
+    leaderboard[i].name[0] = '\0';
+    leaderboard[i].time = 0xFFFFFFFF;
+  }
+  saveLeaderboard();
+}
+// Меню 
+void drawMainMenu() {
+  display.clear();
+  display.setFont(System5x7);
+  display.setCursor(0, 0);
+  display.print("LABYRINTH");
+  for (int i=0; i<MENU_ITEMS; i++) {
+    display.setCursor(0, 2 + i*2);
+    if (i == menuIndex) display.print("> "); else display.print("  ");
+    display.print(menuItems[i]);
+  }
+}
+void drawCountdown() {
+  display.clear();
+  display.setFont(System5x7);
+  display.setCursor(5, 3);
+  int sec = 3 - (millis() - countdownStart)/1000;
+  display.print("START: ");
+  display.print(sec);
+}
+void drawGameMode(unsigned long elapsed) {
+  display.setFont(fixed_bold10x15); 
+  char timeStr[10];
+  dtostrf(elapsed / 1000.0, 5, 2, timeStr);
+  int textWidth = display.strWidth(timeStr);
+  int textHeight = 15; 
+  int x = (SCREEN_WIDTH - textWidth) / 2;
+  int y = (SCREEN_HEIGHT / 2) - (textHeight / 2);
+  if (y < 0) y = 0; 
+  int clearWidth = display.strWidth("999.99");
+  int clearX = (SCREEN_WIDTH - clearWidth) / 2;
+  if (clearX < 0) clearX = 0;
+  display.setCursor(clearX, y);
+  int spaceWidth = display.strWidth(" ");
+  int numSpaces = (spaceWidth > 0) ? (clearWidth / spaceWidth) + 1 : 10; 
+  char clearStr[15]; // Ensure buffer is large enough
+  memset(clearStr, ' ', sizeof(clearStr) - 1);
+  if (numSpaces >= sizeof(clearStr)) {
+      numSpaces = sizeof(clearStr) - 1;   }
+  clearStr[numSpaces] = '\0'; 
+  display.print(clearStr);
+
+  display.setCursor(x, y);
+  // display.setTextColor(WHITE); 
+  display.print(timeStr);
+  display.setFont(System5x7);
+}
+void drawLeaderboard() {
+  display.clear();
+  display.setFont(System5x7);
+  display.setCursor(0,0);
+  display.print("LEADERBOARD");
+  for (int i=0; i<3; i++) {
+    int idx = leaderboardScroll + i;
+    if (idx >= LEADERBOARD_SIZE) break;
+    display.setCursor(0, 2+i*2);
+    display.print(idx+1);
+    display.print(". ");
+    display.print(leaderboard[idx].name);
+    display.print(" ");
+    if (leaderboard[idx].time != 0xFFFFFFFF) {
+      display.print(leaderboard[idx].time/1000.0,2);
+    } else {
+      display.print("--");
+    }
+  }
+}
+void drawNameInput() {
+  display.clear();
+  // Обновляем текст ввода имени с временем
+  char timeStr[20];
+  dtostrf(gameEndTime / 1000.0, 5, 2, timeStr);
+  String title = "Time: ";
+  title += timeStr;
+  title += ", enter name:";
+  int titleWidth = display.strWidth(title.c_str());
+  int titleX = (SCREEN_WIDTH - titleWidth) / 2;
+  display.setCursor(titleX, 0);
+  display.print(title.c_str());
+  // Центрируем поле ввода имени
+  int nameFieldWidth = MAX_NAME_LEN * 6;
+  int nameFieldX = (SCREEN_WIDTH - nameFieldWidth) / 2;
+  for (int i=0; i<MAX_NAME_LEN; i++) {
+    display.setCursor(nameFieldX + i*6, 2);
+    char c = playerName[i] ? playerName[i] : '_';
+    if (i == namePos && nameInputBlink && menuIndex == 0) {
+       c = ' ';
+    }
+    display.print(c);
+  }
+  // Центрируем клавиатуру (буква)
+  int keyWidth = display.strWidth("< X >");
+  int keyX = (SCREEN_WIDTH - keyWidth) / 2;
+  display.setCursor(keyX, 4);
+  if (menuIndex == 0) display.print("< "); else display.print("  ");
+  display.print(keyboard[nameCharIndex]);
+  if (menuIndex == 0) display.print(" >"); else display.print("  ");
+  // Центрируем кнопку OK
+  int okWidth = display.strWidth("> OK");
+  int okX = (SCREEN_WIDTH - okWidth) / 2;
+  display.setCursor(okX, 6);
+  if (menuIndex == 1) display.print("> "); else display.print("  ");
+  display.print("OK");
+}
+void drawSettings() {
+  display.clear();
+  display.setCursor(0,0);
+  display.print("SETTINGS");
+  display.setCursor(0,2);
+  if (menuIndex == 0) display.print("> "); else display.print("  ");
+  display.print("Brightness: ");
+  display.print(brightness);
+  display.setCursor(0,4);
+  if (menuIndex == 1) display.print("> "); else display.print("  ");
+  display.print("Reset Leaderboard");
+  if (confirmReset) {
+    display.setCursor(0,6);
+    display.print("Confirm? BTN2 or joyBtn");
+  }
+}
+// Управление 
+void loop() {
+  // Чтение входов 
+  int joyX = analogRead(JOY_X);
+  int joyY = analogRead(JOY_Y);
+  bool joyBtn = digitalRead(JOY_BTN) == LOW;
+  bool btn1 = digitalRead(BTN1) == LOW; // Не используется пока
+  bool btn2 = digitalRead(BTN2) == LOW; // Кнопка Назад/ОК
+  bool btn3 = digitalRead(BTN3) == LOW; // Не используется пока
+  bool hall = digitalRead(HALL_PIN) == LOW; // Датчик Холла (финиш)
+
+  unsigned long currentTime = millis();
+  static unsigned long lastInputTime = 0;
+  static int prevScreen = -1; // Для отслеживания смены экрана
+  bool screenNeedsUpdate = (currentScreen != prevScreen);
+  prevScreen = currentScreen;
+
+  // Логика состояний
+  switch (currentScreen) {
+    case SCREEN_MAIN_MENU:
+      static bool joyXReleased = true;
+      if (abs(joyX - 512) < 150) joyXReleased = true;
+      if (joyX < 200 && joyXReleased) { // Влево
+        menuIndex = (menuIndex - 1 + MENU_ITEMS) % MENU_ITEMS;
+        lastInputTime = currentTime;
+        screenNeedsUpdate = true;
+        joyXReleased = false;
+      } else if (joyX > 800 && joyXReleased) { // Вправо
+        menuIndex = (menuIndex + 1) % MENU_ITEMS;
+        lastInputTime = currentTime;
+        screenNeedsUpdate = true;
+        joyXReleased = false;
+      }
+      if (joyBtn || btn2) { // Выбор
+        if (menuIndex == 0) { // Start
+          currentScreen = SCREEN_GAME_MODE;
+          inCountdown = true;
+          countdownStart = currentTime;
+          gameStarted = false;
+          // servoX.attach(SERVO_X_PIN); // Подключаем сервы ПОСЛЕ отсчета
+          // servoY.attach(SERVO_Y_PIN);
+        } else if (menuIndex == 1) { // Records
+          currentScreen = SCREEN_LEADERBOARD;
+          leaderboardScroll = 0;
+        } else if (menuIndex == 2) { // Settings
+          currentScreen = SCREEN_SETTINGS;
+          menuIndex = 0; // Сброс индекса для меню настроек
+          confirmReset = false;
+        }
+        screenNeedsUpdate = true;
+        delay(300); // Антидребезг кнопки
+      }
+      if (screenNeedsUpdate) drawMainMenu();
+      break;
+
+    case SCREEN_GAME_MODE:
+      if (inCountdown) {
+        if (currentTime - countdownStart >= 3000) {
+          inCountdown = false;
+          gameStarted = true;
+          gameStartTime = currentTime;
+          servoX.attach(SERVO_X_PIN); // Подключаем сервы здесь
+          servoY.attach(SERVO_Y_PIN);
+          servoX.write(90); // Устанавливаем начальное положение X
+          servoY.write(90); // Устанавливаем начальное положение Y
+          display.clear(); // Очищаем экран от надписи "START"
+          screenNeedsUpdate = true;
+        } else {
+          // Обновляем экран каждую секунду во время отсчета
+          static unsigned long lastCountdownDraw = 0;
+          if (currentTime - lastCountdownDraw > 1000) {
+             drawCountdown();
+             lastCountdownDraw = currentTime;
+          }
+        }
+      } else if (gameStarted) {
+        unsigned long elapsedTime = currentTime - gameStartTime;
+        // Y управляет D10 (SERVO_X_PIN), X управляет D8 (SERVO_Y_PIN)
+        const int DEAD_ZONE_LOW = 400;
+        const int DEAD_ZONE_HIGH = 600;
+        int servoAngleX = 90; // Нейтральное положение
+        int servoAngleY = 90; // Нейтральное положение
+
+        // Управление Servo X (ось Y джойстика -> SERVO_X_PIN/D10)
+static float smoothServoX = 90;
+static float smoothServoY = 90;
+const float SMOOTH_STEP = 0.1; // более плавного отклика
+if (joyY < DEAD_ZONE_LOW) {
+  servoAngleX = map(joyY, 0, DEAD_ZONE_LOW - 1, 105, 90);
+} else if (joyY > DEAD_ZONE_HIGH) {
+  servoAngleX = map(joyY, DEAD_ZONE_HIGH + 1, 1023, 90, 75);
+}
+// Инвертированное управление Servo Y (ось X джойстика -> SERVO_Y_PIN/D8)
+if (joyX < DEAD_ZONE_LOW) {
+  servoAngleY = map(joyX, 0, DEAD_ZONE_LOW - 1, 75, 90);
+} else if (joyX > DEAD_ZONE_HIGH) {
+  servoAngleY = map(joyX, DEAD_ZONE_HIGH + 1, 1023, 90, 105);
+}
+// Плавное движение серв
+// Плавное изменение угла с учетом предыдущего значения
+smoothServoX = smoothServoX + (servoAngleX - smoothServoX) * SMOOTH_STEP;
+smoothServoY = smoothServoY + (servoAngleY - smoothServoY) * SMOOTH_STEP;
+servoX.write(constrain((int)(smoothServoX + 0.5), 60, 120));
+servoY.write(constrain((int)(smoothServoY + 0.5), 60, 120));
+        if (hall) { // Финиш
+          gameEndTime = elapsedTime;
+          gameStarted = false;
+          servoX.detach(); // Отключаем сервы после игры
+          servoY.detach();
+          // Проверка на новый рекорд
+          isNewRecord = false;
+          for(int i=0; i<LEADERBOARD_SIZE; i++) {
+            if (gameEndTime < leaderboard[i].time) {
+              isNewRecord = true;
+              break;
+            }
+          }
+          if (isNewRecord) {
+            currentScreen = SCREEN_NAME_INPUT;
+            memset(playerName, 0, sizeof(playerName));
+            namePos = 0;
+            nameCharIndex = 0;
+          } else {
+            currentScreen = SCREEN_MAIN_MENU; // Возврат в меню, если не рекорд
+          }
+          screenNeedsUpdate = true;
+        }
+        // Обновляем время на экране раз в 100мс
+        static unsigned long lastGameDraw = 0;
+        if (currentTime - lastGameDraw > 100) {
+           drawGameMode(elapsedTime);
+           lastGameDraw = currentTime;
+        }
+
+      } else { // Если игра закончилась (не через датчик Холла, например, по кнопке)
+         // Пока не реализовано
+      }
+      if (btn2) { // Выход из игры (добавить подтверждение?) 
+          gameStarted = false;
+          inCountdown = false;
+          servoX.detach();
+          servoY.detach();
+          currentScreen = SCREEN_MAIN_MENU;
+          screenNeedsUpdate = true;
+          delay(300);
+      }
+      break;
+
+    case SCREEN_LEADERBOARD:
+       if (currentTime - lastInputTime > 200) { // Задержка для джойстика
+         if (joyX < 200 && leaderboardScroll > 0) { // Влево
+           leaderboardScroll--;
+           lastInputTime = currentTime;
+           screenNeedsUpdate = true;
+         } else if (joyX > 800 && leaderboardScroll < LEADERBOARD_SIZE - 3) { // Вправо (теперь X)
+           leaderboardScroll++;
+           lastInputTime = currentTime;
+           screenNeedsUpdate = true;
+         }
+       }
+       if (btn2 || joyBtn) { // Назад
+         currentScreen = SCREEN_MAIN_MENU;
+         screenNeedsUpdate = true;
+         delay(300);
+       }
+       if (screenNeedsUpdate) drawLeaderboard();
+       break;
+
+    case SCREEN_NAME_INPUT:
+      // Логика ввода имени
+      static bool nameInputJoyYReleased = true;
+      static bool nameInputJoyXReleased = true;
+      static unsigned long lastRepeat = 0;
+      if (currentTime - lastInputTime > 60) {
+        // Переключение между полем ввода и кнопкой OK по X
+        if (abs(joyX - 512) < 150) nameInputJoyXReleased = true;
+        if (joyX < 200 && nameInputJoyXReleased) { // Влево
+          menuIndex = 0;
+          nameInputJoyXReleased = false;
+          lastInputTime = currentTime;
+          screenNeedsUpdate = true;
+        } else if (joyX > 800 && nameInputJoyXReleased) { // Вправо
+          menuIndex = 1;
+          nameInputJoyXReleased = false;
+          lastInputTime = currentTime;
+          screenNeedsUpdate = true;
+        }
+        // Прокрутка букв по Y (теперь Y)
+        if (menuIndex == 0) {
+          if (joyY < 200) { // Вверх
+            if (currentTime - lastRepeat > 80) {
+              nameCharIndex = (nameCharIndex - 1 + KEYBOARD_LEN) % KEYBOARD_LEN;
+              lastRepeat = currentTime;
+              screenNeedsUpdate = true;
+            }
+          } else if (joyY > 800) { // Вниз
+            if (currentTime - lastRepeat > 80) {
+              nameCharIndex = (nameCharIndex + 1) % KEYBOARD_LEN;
+              lastRepeat = currentTime;
+              screenNeedsUpdate = true;
+            }
+          } else {
+            lastRepeat = 0;
+          }
+        }
+      }
+      // Мигание курсора
+      if (currentTime - lastBlink > 400) {
+        nameInputBlink = !nameInputBlink;
+        lastBlink = currentTime;
+        screenNeedsUpdate = true;
+      }
+      // Подтверждение выбора
+      if ((joyBtn || btn2) && menuIndex == 0 && namePos < MAX_NAME_LEN) {
+        playerName[namePos] = keyboard[nameCharIndex];
+        namePos++;
+        screenNeedsUpdate = true;
+        delay(120);
+      } else if ((joyBtn || btn2) && menuIndex == 1) {
+        if (namePos > 0) {
+          int insertPos = -1;
+          for (int i = 0; i < LEADERBOARD_SIZE; i++) {
+              if (gameEndTime < leaderboard[i].time) {
+                  insertPos = i;
+                  break;
+              }
+          }
+          if (insertPos != -1) {
+              for (int i = LEADERBOARD_SIZE - 1; i > insertPos; i--) {
+                  leaderboard[i] = leaderboard[i - 1];
+              }
+              strncpy(leaderboard[insertPos].name, playerName, MAX_NAME_LEN);
+              leaderboard[insertPos].name[MAX_NAME_LEN] = '\0';
+              leaderboard[insertPos].time = gameEndTime;
+              saveLeaderboard();
+          }
+        }
+        currentScreen = SCREEN_LEADERBOARD;
+        leaderboardScroll = 0;
+        screenNeedsUpdate = true;
+        delay(300);
+      }
+      if (screenNeedsUpdate) drawNameInput();
+      break;
+
+    case SCREEN_SETTINGS:
+      if (currentTime - lastInputTime > 200) {
+        if (joyX < 200) { // Влево (теперь по X)
+          menuIndex = (menuIndex - 1 + 2) % 2; // 2 пункта в настройках
+          lastInputTime = currentTime;
+          confirmReset = false; // Сброс подтверждения при смене пункта
+          screenNeedsUpdate = true;
+        } else if (joyX > 800) { // Вправо 
+          menuIndex = (menuIndex + 1) % 2;
+          lastInputTime = currentTime;
+          confirmReset = false;
+          screenNeedsUpdate = true;
+        }
+
+        if (menuIndex == 0) { // Яркость
+          if (joyY < 200 && brightness > 0) { // Вверх 
+            brightness -= 8;
+            if (brightness < 0) brightness = 0;
+            analogWrite(9, brightness);
+            
+            Wire.beginTransmission(0x3C);
+            Wire.write(0x00); // Command mode
+            Wire.write(0x81); // Set Contrast Control
+            Wire.write(brightness);
+            Wire.write(0xD9);  // Precharge Period
+            Wire.write(0xF1 - (brightness/4));
+            Wire.endTransmission();
+            
+            lastInputTime = currentTime;
+            screenNeedsUpdate = true;
+          } else if (joyY > 800 && brightness < 255) { // Вниз
+            brightness += 8;
+            if (brightness > 255) brightness = 255;
+            analogWrite(9, brightness);
+            
+            Wire.beginTransmission(0x3C);
+            Wire.write(0x00); // Command mode
+            Wire.write(0x81); // Set Contrast Control
+            Wire.write(brightness);
+            Wire.write(0xD9);  // Precharge Period
+            Wire.write(0xF1 - (brightness/4));
+            Wire.endTransmission();
+            
+            lastInputTime = currentTime;
+            screenNeedsUpdate = true;
+          }
+        } else if (menuIndex == 1) { // Сброс рекордов
+          if ((joyBtn || btn2) && !confirmReset) { 
+            confirmReset = true;
+            lastInputTime = currentTime;
+            screenNeedsUpdate = true;
+            delay(300);
+          }
+        }
+      }
+
+      // Обработка действий после навигации/изменений
+      if (confirmReset) {
+          if (joyBtn || btn2) {
+              resetLeaderboard();
+              confirmReset = false;
+              screenNeedsUpdate = true;
+              delay(300);
+          }
+      } else {
+          // Выход по BTN2 или кнопке джойстика
+          if (btn2 || (menuIndex == 0 && joyBtn)) {
+              EEPROM.put(EEPROM_BRIGHTNESS_ADDR, brightness);
+              currentScreen = SCREEN_MAIN_MENU;
+              screenNeedsUpdate = true;
+              delay(300);
+          }
+      }
+      if (screenNeedsUpdate) drawSettings();
+      break;
+  }
+
+  delay(10);
+}
