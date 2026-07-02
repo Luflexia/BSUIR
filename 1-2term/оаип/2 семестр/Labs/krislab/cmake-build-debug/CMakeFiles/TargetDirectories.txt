@@ -1,3 +1,0 @@
-E:/Downloads/Labs/krislab/cmake-build-debug/CMakeFiles/krislab.dir
-E:/Downloads/Labs/krislab/cmake-build-debug/CMakeFiles/edit_cache.dir
-E:/Downloads/Labs/krislab/cmake-build-debug/CMakeFiles/rebuild_cache.dir

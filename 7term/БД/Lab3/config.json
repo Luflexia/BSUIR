@@ -1,8 +1,0 @@
-{
-  "java_tool_options": "-Dfile.encoding=UTF-8",
-  "logs_mode": "utf8",
-  "berkeley_env": "./berkeley_data",
-  "jdk_bin": "./lib/jdk-17.0.17+10/bin",
-  "je_jar": "./lib/je-18.3.12.jar",
-  "postgres_jar": "./lib/postgresql-42.7.3.jar"
-}

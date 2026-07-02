@@ -1,3 +1,0 @@
-void manage_process(int pid) {
-    // ...
-}
