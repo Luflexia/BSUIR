@@ -1,5 +1,0 @@
-Auth
-http://localhost:8085/swagger-ui/index.html
-
-User
-http://localhost:8081/swagger-ui/index.html
