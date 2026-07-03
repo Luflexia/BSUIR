@@ -1,0 +1,5 @@
+﻿  Source.c
+E:\Прочее\Проекты VisualStudio\Lab1\Lab1\Source.c(5,7): warning C4013: srand: нет определения; предполагается "extern" с возвратом типа "int"
+E:\Прочее\Проекты VisualStudio\Lab1\Lab1\Source.c(16,25): warning C4013: rand: нет определения; предполагается "extern" с возвратом типа "int"
+E:\Прочее\Проекты VisualStudio\Lab1\Lab1\Source.c(45,8): warning C4013: system: нет определения; предполагается "extern" с возвратом типа "int"
+  Lab1.vcxproj -> E:\Прочее\Проекты VisualStudio\Lab1\Debug\Lab1.exe

@@ -1,0 +1,4 @@
+﻿  Lab4.c
+E:\Прочее\Проекты VisualStudio\Lab4\Lab4\Lab4.c(16,10): warning C4013: srand: нет определения; предполагается "extern" с возвратом типа "int"
+E:\Прочее\Проекты VisualStudio\Lab4\Lab4\Lab4.c(24,28): warning C4013: rand: нет определения; предполагается "extern" с возвратом типа "int"
+  Lab4.vcxproj -> E:\Прочее\Проекты VisualStudio\Lab4\x64\Debug\Lab4.exe

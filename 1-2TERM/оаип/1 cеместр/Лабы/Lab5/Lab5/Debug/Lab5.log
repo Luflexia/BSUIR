@@ -1,0 +1,4 @@
+﻿  Lab5.c
+E:\Прочее\Проекты VisualStudio\Lab5\Lab5\Lab5.c(11,10): warning C4013: srand: нет определения; предполагается "extern" с возвратом типа "int"
+E:\Прочее\Проекты VisualStudio\Lab5\Lab5\Lab5.c(19,34): warning C4013: rand: нет определения; предполагается "extern" с возвратом типа "int"
+  Lab5.vcxproj -> E:\Прочее\Проекты VisualStudio\Lab5\Debug\Lab5.exe
