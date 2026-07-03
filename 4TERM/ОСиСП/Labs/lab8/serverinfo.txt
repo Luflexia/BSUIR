@@ -1,0 +1,7 @@
+I`m a Server [TEST_SERVER].
+List of commands [INFO, ECHO, CD, LIST, QUIT].
+1. INFO : Get info about the server.
+2. ECHO : Echo request to the server.
+3. CD: Change current server directory.
+4. LIST : Get a list of all files in the current server directory.
+5. QUIT: Disconnect.

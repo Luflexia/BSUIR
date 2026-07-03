@@ -1,0 +1,440 @@
+package com.app.weather.controller;
+
+import com.app.weather.dto.ConditionDTO;
+import com.app.weather.model.Condition;
+import com.app.weather.service.ConditionService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+@RestController
+@RequestMapping("/conditions")
+public class ConditionController {
+
+    private final ConditionService conditionService;
+
+    public ConditionController(ConditionService conditionService) {
+        this.conditionService = conditionService;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ConditionDTO>> getAllConditions() {
+        List<Condition> conditions = conditionService.getAllConditions();
+        List<ConditionDTO> conditionDTOs = conditions.stream()
+                .map(conditionService::convertToDTO)
+                .toList();
+        return ResponseEntity.ok(conditionDTOs);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ConditionDTO> getConditionById(@PathVariable Long id) {
+        Condition condition = conditionService.getConditionById(id);
+        if (condition == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(conditionService.convertToDTO(condition));
+    }
+
+
+
+    @PostMapping
+    public ResponseEntity<ConditionDTO> createCondition(@RequestBody ConditionDTO conditionDTO) {
+        Condition condition = conditionService.convertToEntity(conditionDTO);
+        Condition savedCondition = conditionService.createCondition(condition);
+        return ResponseEntity.ok(conditionService.convertToDTO(savedCondition));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ConditionDTO> updateCondition(@PathVariable Long id, @RequestBody ConditionDTO conditionDTO) {
+        Condition updatedCondition = conditionService.updateCondition(id, conditionDTO);
+        if (updatedCondition == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(conditionService.convertToDTO(updatedCondition));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCondition(@PathVariable Long id) {
+        if (!conditionService.deleteCondition(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.noContent().build();
+    }
+}
+package com.app.weather.controller;
+
+import com.app.weather.dto.WeatherDTO;
+import com.app.weather.model.Weather;
+import com.app.weather.service.WeatherService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+@RestController
+@RequestMapping("/weather")
+public class WeatherController {
+
+    private final WeatherService weatherService;
+
+    public WeatherController(WeatherService weatherService) {
+        this.weatherService = weatherService;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<WeatherDTO>> getAllWeathers() {
+        List<Weather> weathers = weatherService.getAllWeathers();
+        List<WeatherDTO> weatherDTOs = weathers.stream()
+                .map(weatherService::convertToDTO)
+                .toList();
+        return ResponseEntity.ok(weatherDTOs);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<WeatherDTO> getWeatherById(@PathVariable Long id) {
+        Weather weather = weatherService.getWeatherById(id);
+        if (weather == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(weatherService.convertToDTO(weather));
+    }
+    //Query
+    @GetMapping("/cities/{temperature}")
+    public ResponseEntity<List<WeatherDTO>> getWeatherByTemperature(@PathVariable double temperature) {
+        List<WeatherDTO> weatherDTOs = weatherService.findByTemperature(temperature);
+        return ResponseEntity.ok(weatherDTOs);
+    }
+
+
+    @PostMapping
+    public ResponseEntity<WeatherDTO> createWeatherWithConditionText(@RequestBody WeatherDTO weatherDTO) {
+        Weather createdWeather = weatherService.createWeatherWithCondition(weatherDTO);
+        return ResponseEntity.ok(weatherService.convertToDTO(createdWeather));
+    }
+
+
+    @PutMapping("/{id}")
+    public ResponseEntity<WeatherDTO> updateWeather(@PathVariable Long id, @RequestBody WeatherDTO weatherDTO) {
+        Weather weather = weatherService.updateWeather(id, weatherDTO);
+        if (weather == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(weatherService.convertToDTO(weather));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteWeather(@PathVariable Long id) {
+        weatherService.deleteWeather(id);
+        return ResponseEntity.noContent().build();
+    }
+
+}
+package com.app.weather.dto;
+
+import lombok.*;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class ConditionDTO {
+    private Long id;
+    private String text;
+
+}
+package com.app.weather.dto;
+
+import lombok.*;
+import java.sql.Timestamp;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class WeatherDTO {
+    private Long id;
+    private String city;
+    private Timestamp date;
+    private double temperature;
+    private ConditionDTO condition;
+
+}
+package com.app.weather.model;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.util.ArrayList;
+import java.util.List;
+
+
+@Entity
+@Table(name = "condition")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class Condition {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "text")
+    private String text;
+
+    // Двунаправленная связь One-to-Many
+    @OneToMany(mappedBy = "condition", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Weather> weathers = new ArrayList<>();
+
+    public void addWeather(Weather weather) {
+        weathers.add(weather);
+        weather.setCondition(this);
+    }
+
+}
+package com.app.weather.model;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.sql.Timestamp;
+
+@Entity
+@Table(name = "weather")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class Weather {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "date")
+    private Timestamp date;
+
+    @Column(name = "city")
+    private String city;
+
+    @Column(name = "temperature")
+    private double temperature;
+
+    // Двунаправленная связь Many-to-One
+    @ManyToOne
+    @JoinColumn(name = "condition_id")
+    private Condition condition;
+}
+package com.app.weather.repository;
+
+import com.app.weather.model.Condition;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface ConditionRepository extends JpaRepository<Condition, Long> {
+    Condition findByText(String text);
+}
+package com.app.weather.repository;
+import com.app.weather.model.Weather;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface WeatherRepository extends JpaRepository<Weather, Long> {
+    Weather findByCity(String city);
+    //JPQL
+    @Query("SELECT w FROM Weather w WHERE w.temperature = :temperature")
+    List<Weather> findByTemperature(@Param("temperature") double temperature);
+
+    //nativeQuery _ @Query(value = "SELECT * FROM Weather w WHERE w.temperature = :temperature", nativeQuery = true)
+    //              List<Weather> findByTemperature(@Param("temperature") double temperature);
+}
+
+
+package com.app.weather.service;
+
+import com.app.weather.dto.ConditionDTO;
+import com.app.weather.model.Condition;
+import com.app.weather.repository.ConditionRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class ConditionService {
+
+    private final ConditionRepository conditionRepository;
+
+    public ConditionService(ConditionRepository conditionRepository) {
+        this.conditionRepository = conditionRepository;
+    }
+
+    public Condition createCondition(Condition condition) {
+        Condition existingCondition = conditionRepository.findByText(condition.getText());
+        if (existingCondition != null) {
+            return existingCondition;
+        }
+        return conditionRepository.save(condition);
+    }
+
+    public Condition updateCondition(Long id, ConditionDTO conditionDTO) {
+        Condition existingCondition = getConditionById(id);
+        if (existingCondition == null) {
+            return null;
+        }
+        Condition condition = conditionRepository.findByText(conditionDTO.getText());
+        if (condition != null && !condition.getId().equals(id)) {
+            return condition;
+        }
+        existingCondition.setText(conditionDTO.getText());
+        return conditionRepository.save(existingCondition);
+    }
+
+    public boolean deleteCondition(Long id) {
+        if (!conditionRepository.existsById(id)) {
+            return false;
+        }
+        conditionRepository.deleteById(id);
+        return true;
+    }
+
+    public Condition getConditionById(Long id) {
+        return conditionRepository.findById(id).orElse(null);
+    }
+
+    public List<Condition> getAllConditions() {
+        return conditionRepository.findAll();
+    }
+
+    public Condition convertToEntity(ConditionDTO conditionDTO) {
+        Condition condition = new Condition();
+        condition.setText(conditionDTO.getText());
+        return condition;
+    }
+
+    public ConditionDTO convertToDTO(Condition condition) {
+        if (condition == null) {
+            return null;
+        }
+        return new ConditionDTO(condition.getId(), condition.getText());
+    }
+    public Condition getConditionByText(String text) {
+        return conditionRepository.findByText(text);
+    }
+}
+package com.app.weather.service;
+import com.app.weather.dto.ConditionDTO;
+import com.app.weather.dto.WeatherDTO;
+import com.app.weather.model.Condition;
+import com.app.weather.model.Weather;
+import com.app.weather.repository.WeatherRepository;
+import org.springframework.stereotype.Service;
+import java.sql.Timestamp;
+import java.util.List;
+
+@Service
+public class WeatherService {
+
+    private final WeatherRepository weatherRepository;
+    private final ConditionService conditionService;
+
+    public WeatherService(WeatherRepository weatherRepository, ConditionService conditionService) {
+        this.weatherRepository = weatherRepository;
+        this.conditionService = conditionService;
+    }
+
+    public Weather createWeatherWithCondition(WeatherDTO weatherDTO) {
+        Weather weather = convertToEntity(weatherDTO);
+        weather.setDate(new Timestamp(System.currentTimeMillis()));
+
+        // Проверяем, существует ли уже погода для этого города
+        Weather existingWeather = weatherRepository.findByCity(weather.getCity());
+        if (existingWeather != null) {
+            return existingWeather;
+        }
+        // Проверяем, существует ли условие, если нет, то создаем его
+        Condition condition = conditionService.getConditionByText(weatherDTO.getCondition().getText());
+        if (condition == null) {
+            condition = conditionService.convertToEntity(weatherDTO.getCondition());
+            condition = conditionService.createCondition(condition); // сохраняем объект Condition в базе данных
+        }
+
+        // Устанавливаем связь между погодой и условием
+        weather.setCondition(condition);
+        condition.addWeather(weather);
+
+        // Создаем новую погоду
+        return weatherRepository.save(weather);
+    }
+
+    public Weather updateWeather(Long id, WeatherDTO weatherDTO) {
+        Weather existingWeather = weatherRepository.findById(id).orElse(null);
+        if (existingWeather == null) {
+            return null;
+        }
+        existingWeather.setDate(new Timestamp(System.currentTimeMillis()));
+        existingWeather.setTemperature(weatherDTO.getTemperature());
+
+        // Проверяем, существует ли уже погода для этого города
+        Weather weatherByCity = weatherRepository.findByCity(weatherDTO.getCity());
+        if (weatherByCity != null && !weatherByCity.getId().equals(id)) {
+            return weatherByCity;
+        }
+
+        // Проверяем, существует ли условие, если нет, то создаем его
+        Condition condition = conditionService.getConditionByText(weatherDTO.getCondition().getText());
+        if (condition == null) {
+            condition = conditionService.convertToEntity(weatherDTO.getCondition());
+        }
+        existingWeather.setCondition(condition);
+
+        return weatherRepository.save(existingWeather);
+    }
+
+    public void deleteWeather(Long id) {
+        weatherRepository.deleteById(id);
+    }
+
+    public Weather getWeatherById(Long id) {
+        return weatherRepository.findById(id).orElse(null);
+    }
+
+    public List<Weather> getAllWeathers() {
+        return weatherRepository.findAll();
+    }
+
+    public WeatherDTO convertToDTO(Weather weather) {
+        WeatherDTO dto = new WeatherDTO();
+        dto.setId(weather.getId());
+        dto.setCity(weather.getCity());
+        dto.setDate(weather.getDate());
+        dto.setTemperature(weather.getTemperature());
+
+        ConditionDTO conditionDTO = conditionService.convertToDTO(weather.getCondition());
+        dto.setCondition(conditionDTO);
+        return dto;
+    }
+
+    private Weather convertToEntity(WeatherDTO weatherDTO) {
+        Weather weather = new Weather();
+        weather.setCity(weatherDTO.getCity());
+        weather.setDate(weatherDTO.getDate());
+        weather.setTemperature(weatherDTO.getTemperature());
+        // Создаем объект Condition на основе conditionText
+        Condition condition = new Condition();
+        condition.setText(weatherDTO.getCondition().getText());
+        weather.setCondition(condition);
+        return weather;
+    }
+
+    public List<WeatherDTO> findByTemperature(double temperature) {
+        List<Weather> weathers = weatherRepository.findByTemperature(temperature);
+        return weathers.stream()
+                .map(this::convertToDTO)
+                .toList();
+    }
+
+}

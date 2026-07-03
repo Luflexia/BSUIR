@@ -1,0 +1,3 @@
+/home/luflexia/CLionProjects/untitled3/cmake-build-debug/CMakeFiles/MyCourseWork.dir
+/home/luflexia/CLionProjects/untitled3/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/luflexia/CLionProjects/untitled3/cmake-build-debug/CMakeFiles/rebuild_cache.dir

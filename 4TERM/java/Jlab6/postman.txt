@@ -1,0 +1,38 @@
+http://localhost:8080/weather/bulk
+
+[
+  {
+    "city": "New York",
+    "temperature": 25,
+    "condition": {
+      "text": "Sunny"
+    }
+  },
+  {
+    "city": "Los Angeles",
+    "temperature": 285,
+    "condition": {
+      "text": "Cloudy"
+    }
+  },
+  {
+    "city": "Chicago",
+    "temperature": 20,
+    "condition": {
+      "text": "Rainy"
+    }
+  }
+]
+
+
+[
+  {
+    "text": "Sunny1"
+  },
+  {
+    "text": "Cloudy1"
+  },
+  {
+    "text": "Rainy1"
+  }
+]
