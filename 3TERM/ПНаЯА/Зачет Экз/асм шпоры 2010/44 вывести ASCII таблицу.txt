@@ -1,0 +1,38 @@
+44. Вывести на экран ASCII символы по 16 символов с строке. Использовать прямой доступ к видеопамяти.
+
+.model tiny
+.code
+.386 ;команды для 386 процессора
+org 100h
+start:
+ 	mov	ax,003 			;установка 3 видео режима
+		int 	10h 			;очистка экрана
+		cld 				; обработка строк в прямом порядке
+		mov eax,1F201F00h	;первый символ
+		mov bx, 0F20h ;
+		mov cx,255		;количество символов
+		mov di, offset ctable 	; буфер для записи кодов
+cloop: 
+stosd
+		inc al
+		test cx, 0Fh		; кратно ли cx 16
+		jnz continue loop 	; продолжение цикла
+		
+		push cx 
+		mov cx, 80-32 		; осталось мест в строке
+		xchg ax,bx
+		rep stows
+		xchg	bx,ax
+		pop cx
+continue_loop:
+		loop cloop
+stosd 				; регистров в адрес приёмника si,di
+mov ax,0B800h		; вывод на экран
+mov ex,ax			;устанавливаем на текст буфер
+xor	di,di				;es	:di- буфер приёмника
+
+mov si,offset ctable 		; ds:si буфер
+mov	cx,15*80*32	;количество выводимых слов
+rep movsw 			;пересылка
+ret
+ctable: end start

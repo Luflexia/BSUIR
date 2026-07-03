@@ -1,0 +1,14 @@
+class house
+id 2
+phone +375232332323
+email 
+cost 1.23322e+06
+sqr 123321
+addr y
+actual 1
+pond 1
+plant 1
+commun 1
+parking 1
+rooms 1
+floor 2

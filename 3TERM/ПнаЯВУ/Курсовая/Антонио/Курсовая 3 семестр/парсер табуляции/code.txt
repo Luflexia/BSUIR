@@ -1,0 +1,24 @@
+template <class T>
+void Interface::delete_ring(Ring<T>& test)
+{
+    Ring<T> show_obj;
+    T information;
+    Ring<T> temp_obj;
+    Algorithm alg;
+    show_obj.past(test);
+    do
+    {
+        system("CLS");
+        show_obj.loop();
+        if (!information.set_something())
+            break;
+        alg.find(show_obj, information);
+        cout << "Нажмите ENTER чтобы применить удаление, или любую другую клавишу для продолжения\n";
+        rewind(stdin);
+        if (getchar() == '\n')
+        {
+            test.del(show_obj);
+            break;
+        }
+    } while (true);
+}

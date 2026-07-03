@@ -1,0 +1,9 @@
+class parking
+id 8
+phone +375264561123
+email 
+cost 55.4568
+sqr 25.1111
+addr 
+actual 1
+type 1

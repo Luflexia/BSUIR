@@ -1,0 +1,134 @@
+#include "Array.h"
+#include <iostream>
+#include <iomanip>
+
+#include "Array.h"
+#include <iostream>
+using namespace std;
+
+class Array
+{
+	int n;
+	int m;
+	int** mas;
+
+public:
+	Array(int = 0, int = 0); // Параметры по умолчанию
+	Array(const Array&);
+	~Array();
+	void input();
+	void output();
+	void multiply(const Array&, const Array&);
+};
+
+Array::Array(int n1, int m1) // Инициализация значений
+{
+	this->n = n1;
+	this->m = m1;
+	mas = new int* [n];
+	for (int i = 0; i < n; i++)
+		mas[i] = new int[m];
+}
+
+Array::~Array() // Деструктор, очищаем память
+{
+	for (int i = 0; i < n; i++)
+		delete[] mas[i];
+	delete[] mas;
+}
+
+Array::Array(const Array& x) // Контруктор копирования 
+{
+	this->n = x.n;
+	this->m = x.m;
+	mas = new int* [n];
+	for (int i = 0; i < n; i++)
+		mas[i] = new int[m];
+	for (int i = 0; i < n; i++)
+		for (int j = 0; j < m; j++)
+			mas[i][j] = x.mas[i][j];
+}
+
+void Array::input() // Ввод
+{
+	for (int i = 0; i < n; i++)
+		for (int j = 0; j < m; j++)
+			cin >> mas[i][j];
+}
+
+void Array::output() // Вывод
+{
+	for (int i = 0; i < n; i++)
+	{
+		cout << endl;
+		for (int j = 0; j < m; j++)
+			cout << setw(3) << mas[i][j];
+	}
+	cout << endl;
+}
+
+void Array::multiply(const Array& a, const Array& b)
+{
+	if (a.m != b.n)
+	{
+		cout << "Невозможно умножить матрицы. Количество столбцов матрицы A не совпадает с количеством строк матрицы B." << endl;
+		return;
+	}
+
+	// Создаем временную копию матрицы a с использованием конструктора копирования
+	Array temp(a);
+
+	n = temp.n;
+	m = b.m;
+
+	// Освобождаем старое выделение памяти
+	for (int i = 0; i < n; i++)
+		delete[] mas[i];
+	delete[] mas;
+
+	// Выделяем новую память
+	mas = new int* [n];
+	for (int i = 0; i < n; i++)
+		mas[i] = new int[m];
+
+	// Выполняем умножение матриц (исп. копия матрицы a)
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = 0; j < m; j++)
+		{
+			mas[i][j] = 0;
+			for (int k = 0; k < temp.m; k++)
+			{
+				mas[i][j] += temp.mas[i][k] * b.mas[k][j];
+			}
+		}
+	}
+}
+
+int main()
+{
+	int quit = 1;
+	while (quit)
+	{
+		int m = 0, n = 0;
+		cout << "Размер матрицы a:" << endl;
+		cin >> m >> n;
+		Array a(m, n);
+		cout << "Заполнение матрицы a:" << m << "x" << n << endl;
+		a.input();
+		a.output();
+		cout << "Размер матрицы b:" << endl;
+		cin >> m >> n;
+		Array b(m, n);
+		cout << "Заполнение матрицы b:" << m << "x" << n << endl;
+		b.input();
+		b.output();
+		Array c;
+		cout << "Произведение матриц:" << endl;
+		c.multiply(a, b);
+		c.output();
+		cout << "Продолжить - введите 1, выйти - введите 0" << endl;
+		cin >> quit;
+	}
+	return 0;
+}

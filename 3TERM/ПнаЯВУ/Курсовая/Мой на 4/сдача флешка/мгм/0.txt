@@ -1,0 +1,13 @@
+class empty
+id 0
+phone +375264564455
+email 
+cost 344
+sqr 23
+addr 
+actual 1
+pond 1
+plant 0
+commun 0
+suifcons 0
+suiffarm 0

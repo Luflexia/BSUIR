@@ -1,0 +1,77 @@
+47. ввести 2 строки и сравнить их
+
+.model small
+.stack 100h
+.data
+msg1 db 0Ah,0Dh,"Enter first string",0Ah,0Dh,'$'
+msg2 db 0Ah,0Dh,"Enter second string",0Ah,0Dh,'$'
+msg4 db 0Ah,0Dh,"equal strings",0Ah,0Dh,'$'
+msg5 db 0Ah,0Dh,"str1>str2",0Ah,0Dh,'$'
+msg6 db 0Ah,0Dh,"str1<str2",0Ah,0Dh,'$'
+str1 db 80 dup(0)
+str2 db 80 dup(0)
+.code
+start:
+	push @data
+	pop ds
+	mov ah , 09h
+	mov dx,offset msg1
+	int 21h
+	xor si,si
+	xor di,di
+	mov cx,80
+enter_str1:
+	mov ah,01h
+	int 21h
+	cmp al,0Dh
+	je continue_str2
+	mov str1[si],al
+	inc si
+	loop enter_str1
+continue_str2:
+	mov cx,80
+	mov str1[si],'$'
+	mov ah,09h
+	lea dx,msg2
+	int 21h
+	xor di,di
+enter_str2:
+	mov ah,01h
+	int 21h
+	cmp al,0Dh
+	je continue
+	mov str2[di],al
+	inc di
+	loop enter_str2
+continue:
+	mov cx,80
+	mov str2[di],'$'
+	xor di,di
+
+	call my_proc 
+
+	mov ah,09h
+	int 21h
+	mov ax,04C00h
+	int 21h
+	
+my_proc proc
+	xor di,di	
+comparable:
+	mov al,str1[di]
+	cmp al,str2[di]
+	jl large_str2
+	jg large_str1
+	inc di
+	loop comparable
+	lea dx,msg4
+	ret
+large_str1:
+	lea dx,msg5
+	ret
+large_str2:
+	mov ah,09h
+	lea dx,msg6
+	ret
+my_proc endp
+end start

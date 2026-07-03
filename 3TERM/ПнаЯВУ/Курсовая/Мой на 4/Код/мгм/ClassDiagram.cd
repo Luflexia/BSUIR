@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="Commercial">
+    <Position X="8.25" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAIAAQAAAAAAAAAAAARABAAACAAAAAAAAAAA=</HashCode>
+      <FileName>Commercial.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Empty">
+    <Position X="14.25" Y="4.5" Width="2" />
+    <InheritanceLine Type="Piece" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="14.5" Y="3.188" />
+        <Point X="14.915" Y="3.188" />
+        <Point X="14.915" Y="4.425" />
+        <Point X="14.938" Y="4.425" />
+        <Point X="14.938" Y="4.5" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAABgCAAASAIAAAIAAAQEAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Empty.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Exception">
+    <Position X="6.25" Y="0.75" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAAAAAAAAAAAABAAARAAAAAAAA=</HashCode>
+      <FileName>Exception.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Flat">
+    <Position X="12.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAQIAAAAoIEAAAAAAAAAAAIgQgAAAACAA=</HashCode>
+      <FileName>Flat.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="House">
+    <Position X="15.25" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAABAAAQIAAAAqIEAAAAAAAAAAAAgIgEAAAAAA=</HashCode>
+      <FileName>House.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Immovable">
+    <Position X="10.25" Y="0.75" Width="1.75" />
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Class Name="Immovable::ContactDetails" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Immovable.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AhAAgIEIEAAgQAiAIAIAAAgACAKQAAACAAAAAiAAIgA=</HashCode>
+      <FileName>Immovable.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Input">
+    <Position X="4.5" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAABAQCAAAAAAAAAAAABAAAABAAAIAAACBIAAA=</HashCode>
+      <FileName>Input.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Interfaces">
+    <Position X="2.25" Y="0.75" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAABKiCUUAABBRACAAIgAAAAQAAIAAgAAjQCAAAAAAA=</HashCode>
+      <FileName>Interfaces.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ObjectManager">
+    <Position X="4.25" Y="0.75" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAKAAAABAAEAAAAQAAgFABQAAAAAAAASAAAIAIBAA=</HashCode>
+      <FileName>ObjectManager.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Parking">
+    <Position X="8.25" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAIAAQAAAQAAAAAAAARARAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Parking.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Piece">
+    <Position X="12.25" Y="0.75" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AABAAQAAAAAAAAAAABCAAAAAAACBAAAACAAAIAAgEAQ=</HashCode>
+      <FileName>Piece.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Storage">
+    <Position X="6.25" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAICBIAAAEQAAAEAQBAAgAAoAAIQAIAEQQAkQkA=</HashCode>
+      <FileName>Storage.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

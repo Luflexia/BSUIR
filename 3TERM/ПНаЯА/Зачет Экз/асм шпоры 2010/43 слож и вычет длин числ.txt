@@ -1,0 +1,40 @@
+43.Сложение и вычитание длинных чисел.
+
+.model small
+.stack 100h
+.data
+	num1 dw 1234h, 5678h
+	num2 dw 8765h, 4321h
+	res1 dw 0,0
+	res2 dw 0,0
+.code
+start:
+	mov ax, @data
+	mov ds, ax
+	
+	; сложение
+	
+	mov ax, num1[0]
+	add ax, num2[0]
+
+	mov res1[0], ax
+	mov ax, num1[2]
+	adc ax, num2[2]
+	
+	mov res1[2], ax
+
+	; вычитание
+
+	mov ax, num1[0]
+	sub ax, num2[0]
+
+	mov res2[0], ax
+	mov ax, num1[2]
+	sbb ax, num2[2]
+	
+	mov res2[2], ax
+
+	mov ax, 4C00h
+	int 21h
+	
+end start

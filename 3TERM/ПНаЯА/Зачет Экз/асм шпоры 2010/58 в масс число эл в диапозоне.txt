@@ -1,0 +1,205 @@
+58. В массиве подсчитать число элементов, лежащих в заданном диапазоне.
+
+.model small    
+.stack 100h
+
+.data
+    left db 0h
+    right db 0h
+    count db 0h
+    mas_num = 5; number of element in mass
+    mass db mas_num dup(?)
+                                          
+	outbuf db 4 dup(?),'$' 
+    inbuf  db 3,0,3 dup(?),'$'
+	ent    db 0ah,0dh,'$'                              
+                                          
+    massInput db "Input 30 elements if array - ", 0dh, 0ah, '$'
+    limInput db "Input limints - ", 0dh, 0ah, '$'
+    doneMess db "Done! Count - ", 0dh, 0ah, '$'
+	mesError db 0ah,0dh,'Number transormation error!',0ah,0dh,'$'    
+	
+	
+.code
+
+
+printNum proc                ;Вывод числа, размер числа байт
+    push ax        ;поместить используемые регистры в стек
+    push bx
+    push si
+    push cx
+
+;заполнить буфер пробелами        
+    mov cx,4            ;количество элементов в буфере
+    mov si,offset outbuf;адрес буфера
+space:    
+    mov byte ptr [si],' '    ;записать пробел
+    inc si            ;перейти к следующему элементу 
+    loop space
+    
+    mov si, offset outbuf[3];адрес буфера для вывода
+    mov bx, 10                ;коэффициент для деления   
+    
+make_str:
+    xor ah,ah        ;ah=0
+    div bl            ;al=ax/bl
+    or ah,30h        ;преобразовать цифру в символ
+    dec si            ;перейти к следующему символу
+    mov [si],ah        ;сохранить в строке    
+    test al, al        ;проверить ax=0
+    jnz make_str    ;если не равен, то далее    
+    mov ax, 0900h            ;вывести число
+    mov dx, offset outbuf    
+    int 21h                        
+    pop cx            ;извлечь используемые регистры из стека
+    pop si
+    pop bx
+    pop ax    
+    ret                    
+printNum endp   
+ 
+ 
+readNum proc
+	push bx
+	push cx
+	push dx
+	push si
+	push di
+	push bp    
+
+	mov si, offset inbuf
+	mov ax,0a00h        
+	mov dx,si           
+	int 21h
+
+	xor cx,cx            
+	inc si              
+	mov cl,byte ptr [si]
+	jcxz convert_word_err
+	add si,cx            
+	mov ax,1
+	mov bp,10
+	xor bx,bx            
+	mov di,ax            
+
+	make_word:    
+		mov dl,byte ptr [si]
+		cmp dl,'0'
+		jb convert_word_err 
+		cmp dl,'9'
+		ja convert_word_err 
+		and dx,000fh        
+		mul dx              
+
+		test dx,dx          
+		jnz convert_word_err
+
+		add bx, ax          
+		jc convert_word_err 
+
+		mov ax, di
+		mul bp    
+		mov di,ax 
+		dec si    
+		loop make_word
+		mov ax,bx 
+		pop bp 
+		pop di
+		pop si
+		pop dx
+		pop cx
+		pop bx
+		ret            
+		
+	convert_word_err:
+		mov ax,0900h
+		mov dx,offset mesError
+		int 21h                        
+		mov ax,0700h            
+		int 21h                    
+		mov ax,4c00h          
+		int 21h               
+readNum endp       
+ 
+
+inputLim proc
+	mov ax,0900h            
+    mov dx, offset limInput
+    int 21h     
+    
+    call readNum
+    mov left,al
+    
+    call readNum
+    mov right,al
+ 
+    ret
+inputLim endp
+
+
+inputMas proc
+    mov ax,0900h            
+    mov dx, offset massInput
+    int 21h                    
+    
+    mov cx,mas_num
+    mov bx,0 
+    next_el:
+        call readNum    
+        mov mass[bx],al  
+        mov ax,0900h    
+        mov dx, offset ent
+        int 21h                    
+        add bx,1          
+    loop next_el          
+    ret
+inputMas endp
+    
+               
+               
+counting proc     
+	mov cx, mas_num
+	mov bx, 0
+	mov al, 0
+	cmp_lim:
+		mov dl, left
+		cmp mass[bx], dl
+		jge test2
+		add bx, 1 
+		mov count, al
+		loop cmp_lim
+		jmp end
+		test2:    
+			mov dl, right
+			cmp mass[bx], dl
+			jle plus 
+			add bx, 1  
+			mov count, al 
+			loop cmp_lim
+		plus:
+			add al, 1   
+			add bx, 1    
+			mov count, al
+			loop cmp_lim 
+	end:
+		ret
+counting endp
+
+
+start:
+	mov ax,@data
+	mov ds,ax 
+	
+	call inputMas
+	call inputLim     
+	call counting
+		               
+	mov ax,0900h            
+    mov dx, offset doneMess
+    int 21h                  
+    
+	mov al,count
+	call printNum
+ 
+	
+end start

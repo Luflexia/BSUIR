@@ -1,0 +1,72 @@
+25.¬вод с клавиатуры и умножение длинных чисел
+
+.model small
+.stack 100h
+.data
+	num1	dd	0
+	num2	dd	0
+	proizv	dd	0,0
+	msg1	db	0ah,0dh,"Vvedite pervoe chislo:",0ah,0dh,"$"
+	msg2	db	0ah,0dh,"Vvedite vtoroe chislo:",0ah,0dh,"$"
+	c10	dw	10
+.code
+start:
+	mov ax,@data
+	mov ds,ax
+	lea dx,msg1				; вывод на экран msg1
+	mov ah,09h
+	int 21h
+	call input					; ввод первого числа
+	lea bx,num1				; записываем введенное длинное число в num1:
+	mov word ptr[bx],si			; младшее слово
+	mov word ptr[bx+2],di		; старшее слово
+	lea dx,msg2				; вывод на экран msg2
+	mov ah,09h	
+	int 21h
+	call input					; ввод второго числа
+	lea bx,num2				; записываем введенное длинное число
+	mov word ptr[bx],si
+	mov word ptr[bx+2],di
+	mov ax,word ptr num1		; перемножение чисел (смотри конспект)
+	mul word ptr num2
+	mov word ptr proizv,ax
+	mov word ptr proizv+2,dx
+	mov ax,word ptr num1
+	mul word ptr num2+2
+	add word ptr proizv+2,ax
+	adc word ptr proizv+4,dx
+	mov ax,word ptr num1+2
+	mul word ptr num2
+	add word ptr proizv+2,ax
+	adc word ptr proizv+4,dx
+	mov ax,word ptr num1+2
+	mul word ptr num2+2
+	add word ptr proizv+4,ax
+	adc word ptr proizv+6,dx
+	mov ah,4ch
+	int 21h
+input proc						; процедура ввода длинного числа
+	xor si,si					; возвращает число в di:si
+	xor di,di
+loop1:
+	mov ah,01h
+	int 21h
+	cmp al,13
+	je end_input
+	sub al,30h
+	xor bx,bx
+	mov bl,al
+	mov ax,di
+	mul c10
+	mov di,ax
+	mov ax,si
+	mul c10
+	add ax,bx
+	adc dx,di
+	mov di,dx
+	mov si,ax
+	jmp loop1
+end_input:	
+	ret
+input endp
+end start

@@ -1,0 +1,5 @@
+id 103450
+dimensionX 600
+dimensionY 400
+scale 0.87
+licenseID E4LO9UR2

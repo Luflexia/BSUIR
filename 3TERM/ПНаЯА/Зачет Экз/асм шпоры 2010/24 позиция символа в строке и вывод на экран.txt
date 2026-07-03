@@ -1,0 +1,77 @@
+22. Ввод символа. Определить его позицию в строке и вывести на экран
+
+.model small
+.stack 100h
+.data
+	stroka	db	80 dup(?),'$'
+	symb	db	?,' ','$'		; можно и не выделять память для символа
+	msg_in	db	0ah,0dh,"Vvedite simvol:",0ah,0dh,"$"
+	msg	db	0ah,0dh,"Simvol ","$"
+	msg1	db	"nayden! Ego index - ","$"
+	msg_err	db	"ne nayden.","$"
+	c10	dw	10
+.code
+start:
+	mov ax,@data
+	mov ds,ax
+	xor bx,bx				; в bx - индекс вводимого символа
+input_loop:
+	mov ah,01h			; считываем символ
+	int 21h
+	cmp al,13				; если это enter
+	je for_find				; то конец ввода
+	mov stroka[bx],al		; иначе записываем символ в строку
+	cmp bx,80				; если ввели 80 символов
+	je for_find				; то конец ввода
+	inc bx				; увеличиваем bx
+	jmp input_loop
+for_find:
+	lea dx,msg_in			; вывод msg_in
+	mov ah,09h
+	int 21h
+	mov ah,01h			; ввод нужного символа
+	int 21h
+	mov byte ptr symb,al		; сохраняем его в symb ( можно использовать любой из свободных регистров, если хошь)
+	mov cx,bx				; в cx - длина строки
+	xor bx,bx				; bx - индекс элемента
+	mov ah,byte ptr symb		; в ah - нужный символ
+find:
+	cmp ah,stroka[bx]		; сравниваем текущий элемент с нужным симв
+	je found				; если совпадают, то jmp на found
+	inc bx				; переход к следующему элементу
+	loop find				; цикл повторяется cx раз
+	lea dx,msg				; если символ не найден, то
+	mov ah,09h			; вывод msg
+	int 21h
+	lea dx,symb			; вывод самого символа
+	int 21h
+	lea dx,msg_err			; вывод msg_err
+	int 21h
+	jmp end_program		; завершить программу
+found:					; если найден символ
+	lea dx,msg				; вывод msg
+	mov ah,09h
+	int 21h
+	lea dx,symb			; вывод самого символа
+	int 21h
+	lea dx,msg1			; вывод msg1
+	int 21h
+	mov ax,bx				; сохраняем индекс в ax
+	xor cx,cx				; cx - счетчик цифр
+number_to_string:
+	xor dx,dx				; подготовка к делению
+	div c10				; деление
+	add dx,30h			; в dx - ASCII-код остатка от деления
+	push dx				; сохраняем его в стеке
+	inc cx				; инкремент счетчика цифр
+	cmp ax,0				; цикл, пока частное ненулевое
+	jne number_to_string
+out_index_loop:				; цикл вывода индекса
+	pop dx				; извелекаем очередную цифру
+	mov ah,02h			; выводим ее на экран
+	int 21h
+	loop out_index_loop
+end_program:
+	mov ah,4ch
+	int 21h
+end start

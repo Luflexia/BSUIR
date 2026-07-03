@@ -1,0 +1,130 @@
+41.Вводится матрица чисел. Найти сумму элементов по каждой диагонали и вывести на экран.
+
+.model small
+.stack 300h
+.code
+endl	macro
+	push	ax dx
+	mov	ah, 02h
+	mov	dl, 0Ah
+	int	21h
+	mov	dl, 0Dh
+	int	21h
+	pop	dx ax
+	endm
+outint	macro	value
+	local	outint_l1, outint_l2
+	push	ax bx cx dx
+	mov	ax, value
+	mov	bx, 10
+	xor	cx, cx
+outint_l1:	
+	xor	dx, dx
+	div	bx
+	push	dx
+	inc	cx
+	cmp	ax, 0
+	jne	outint_l1
+	mov	ah, 02h
+outint_l2:
+	pop	dx
+	add	dl, '0'
+	int	21h
+	loop	outint_l2	
+	pop	dx cx bx ax
+	endm
+proc	readint
+	push	cx si bx dx
+	mov	[buf_str], 8
+	mov	ah, 0Ah
+	lea	dx, buf_str
+	int	21h
+	xor	cx, cx
+	mov	si, 2
+	xor	ax, ax
+	mov	bx, 10
+in_loop:
+	mul	bx
+	mov	dl, [buf_str+si]
+	sub	dl, '0'
+	add	ax, dx
+	inc	si
+	inc	cl
+	cmp	cl, [buf_str+1]
+	jl	in_loop
+	pop	dx bx si cx
+	endl
+	ret
+endp
+start:
+	mov	ax, @data
+	mov	ds, ax
+
+	xor	cx, cx
+	xor	dx, dx
+	xor	di, di
+input_loop:	
+	push	dx
+	mov	ah, 09h
+	lea	dx, str_1
+	int	21h
+	outint	cx
+	lea	dx, str_2
+	int	21h
+	mov	si, sp
+	mov	dx, [ss:si]
+	outint	dx
+	lea	dx, str_3
+	int	21h
+	
+	call	readint
+	mov	word ptr matrix[di], ax
+	add	di, 2
+	pop	dx
+	inc	cx
+	cmp	cx, N
+	jl	input_loop
+	xor	cx, cx
+	inc	dx
+	cmp	dx, N
+	jl	input_loop
+	xor	si, si
+	xor	ax, ax
+count_sum1:
+	add	ax, word ptr matrix[si]
+	add	si, N*2+2
+	cmp	si, N*N*2
+	jl	count_sum1
+	mov	sum1, ax
+	mov	si, N*2-2
+	xor	ax, ax
+count_sum2:
+	add	ax, word ptr matrix[si]
+	add	si, N*2-2
+	cmp	si, N*(N-1)*2+2
+	jl	count_sum2
+	mov	sum2, ax
+	mov	ah, 09h
+	lea	dx, str_4
+	int	21h
+	outint	sum1
+	lea	dx, str_5
+	int	21h
+	outint	sum2
+	lea	dx, str_6
+	int	21h
+	mov	ax, 4C00h
+	int	21h
+.data
+N	equ	3
+matrix	db N*N*2 dup(?)
+buf_str	db 10 dup(?)
+str_1	db "Input matrix[$"
+str_2	db "][$"
+str_3	db "]:",10,13,"$"
+str_4	db "Sum1=$"
+str_5	db 10,13,"Sum2=$"
+str_6	db 10,13,"$"
+sum1	dw 0
+sum2	dw 0
+end start

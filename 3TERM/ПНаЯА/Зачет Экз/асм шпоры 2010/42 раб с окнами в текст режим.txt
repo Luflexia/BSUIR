@@ -1,0 +1,40 @@
+﻿42. Работа с окнами в текстовом режиме.
+Работа с окнами в текстовом режиме. (результат работы проги: синее окно,
+;в нем - зеленое окно, в зеленом окне - текст :))
+
+.MODEL small
+.STACK 100h
+.DATA
+str_ db 'TEXT'
+len equ $-str_
+.CODE
+main:
+     mov ax, @data
+     mov ds, ax
+     mov es, ax
+     mov ah, 06h   ;очистка окна
+     mov al, 00h   ;режим окна
+     mov bh, 17h   ;видео-атрибут для пустых строк
+     mov cx, 0000h ;очистка экрана от (00;00) до (24;79)
+     mov dx, 1b4fh
+     int 10h
+     
+     mov ax, 0600h ;в ah - 06h в al - 00h
+     mov bh, 20h
+     mov cx, 0a1ch
+     mov dx, 0c31h
+     int 10h
+     
+     mov ah, 13h  ;вывод на экран в позиции курсора
+     mov al, 0    ;не менять положение курсора
+     mov bh, 0    ;номер страницы
+     mov bl, 07h  ;цвет выводимого текста
+     mov cx, len
+     mov dx, 0b25h ;координаты на экране (dh - y, dl - x)
+
+     lea bp, str_ ;адрес выводимой строки
+     int 10h
+     
+mov ah, 4ch
+int 21h
+end main

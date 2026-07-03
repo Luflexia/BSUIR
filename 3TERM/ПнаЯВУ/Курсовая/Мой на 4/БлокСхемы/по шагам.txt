@@ -1,0 +1,38 @@
+string Storage::identifyObject(unsigned int id) {
+    const string path = to_string(id) + ".txt";
+    ifstream in;
+    in.open(path);
+    if (!in.is_open())
+        throw Exception("Невозможно открыть файл для чтения.", 0);
+
+    string str;
+    string value;
+    while (getline(in, str)) {
+        string name = str.substr(0, str.find(' '));
+        value = str.substr(str.find(' ') + 1, str.find('\n'));
+
+        if (name == "class")
+            break;
+    }
+
+    in.close();
+    return value;
+}
+
+string Input::inputMobile() {
+    const string msg = "Введите ваш номер:\n+375";
+    unsigned long maxValue = 999999999;
+    unsigned long value;
+
+    while (true) {
+        cout << msg;
+        try {
+            value = input<unsigned long>(100000000, maxValue);
+            break;
+        }
+        catch (Exception ex) {
+            ex.what();
+        }
+    }
+    return ("+375" + to_string(value));
+}

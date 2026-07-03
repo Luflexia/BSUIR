@@ -1,0 +1,9 @@
+class commercial
+id 1
+phone +375296431125
+email 
+cost 13445
+sqr 125
+addr 
+actual 1
+type 1

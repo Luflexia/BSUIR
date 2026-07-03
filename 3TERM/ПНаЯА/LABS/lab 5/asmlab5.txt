@@ -1,0 +1,103 @@
+.model small
+org 100h
+.data
+errorMsg db 'Error', 0Dh, 0Ah, '$'
+fileName db 'file.txt',0
+buffer db ?
+Msg db 0Dh, 0Ah, '----------------$'
+numberOfStringsMsg db 0Dh, 0Ah, 'Amount of strings is $'
+.code
+
+start:
+ mov ax,@data
+ mov ds,ax
+
+ xor ax,ax ; помещаем 0 в стек(число строк)
+ push ax
+
+ mov dx,offset fileName
+ mov ah,3dh ; открытие файла
+ mov al,00h ; только чтение
+ int 21h
+ jc Error ; ошибка
+
+ mov bx,ax
+ mov di,01
+ jmp CheckFileSize
+
+ReadFile: ; читаем файл
+ mov cx,1 ; кол-во считываемых байт
+ mov dx,offset buffer ; buffer - считываемый элемент
+ mov ah,3Fh ; считываем байт
+ int 21h
+ jc CloseFile ; ошибка
+ mov cx,ax ; в ax число прочитанных байт
+
+ jcxz CloseFile ; cx = 0 - закрываем файл
+
+ cmp buffer,0Ah ; конец строки ?
+ je Stack
+
+Next:
+ jcxz CloseFile ; cx = 0 - закрываем файл
+ mov ah,40h ; DOS 40h
+ xchg bx,di ; bx = 1 - поток STDOUT
+ int 21h ; вывод
+ xchg di,bx ; bx = идентификатор файла
+ jc CloseFile ; ошибка
+ jmp short ReadFile
+
+CloseFile: ; закрываем файл
+
+ mov ah,3Eh
+ int 21h
+ mov dx,offset Msg
+ mov ah,09h
+ int 21h
+ mov dx,offset numberOfStringsMsg
+ mov ah,09h
+ int 21h
+ pop bx ; bx - кол-во строк
+Con: ; вывод кол-ва строк
+ add bx,'0'
+ mov dx,bx
+ mov ah,02h
+ int 21h
+ jmp Exit
+Error:
+
+ mov ah,09h
+ mov dx,offset errorMsg
+ int 21h
+
+Exit:
+
+ mov ax,4C00h
+ int 21h
+
+Stack:
+ mov bp,sp ; указатель стека в bp
+ inc [bp] ; + 1
+ jmp Next
+
+CheckFileSize: ;проверка на пустой файл
+
+ mov ax,4202h
+ xor cx,cx
+ xor dx,dx
+ int 21h
+
+ or ax,dx ; логическое или
+ jz CloseFile
+ jmp PlusString
+PlusString: ; +1 к кол-ву строк
+ pop ax
+ inc ax
+ push ax
+ mov ax,4200h
+ xor cx,cx
+ xor dx,dx
+ int 21h
+ jmp ReadFile
+
+end start

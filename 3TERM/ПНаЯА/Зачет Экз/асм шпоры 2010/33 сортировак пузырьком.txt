@@ -1,0 +1,69 @@
+33. Ввести массив чисел и отсортировать методом пузырька
+
+.model small
+.stack 100h
+.data
+	massiv	dw	80 dup(?)
+	msg	db	"Vvodite chisla cherez probel, okonchanie vvoda - ENTER",0ah,0dh,'$'
+	c10	dw	10
+.code
+start:
+	mov ax,@data
+	mov ds,ax
+	mov ah,09h			; вывод msg
+	lea dx,msg
+	int 21h
+	xor bx,bx				; bx - смещение в массиве вводимого числа
+	xor dx,dx				; dx - вводимое число
+input_loop:
+	mov ah,01h			; считваем очередной символ
+	int 21h
+	cmp al,0dh			; если это enter
+	je chislo
+	cmp al,20h			; или пробел
+	je chislo
+	sub al,30h				; иначе - получаем цифру
+	mov cl,al				; сохраняем ее в cl
+	mov ax,dx				; в ax - вводимое число
+	mul c10					; умножаем на 10
+	xor ch,ch
+	add ax,cx				; добавляем к результату последнюю цифру
+	mov dx,ax				; в dx - полученное число
+	jmp input_loop
+chislo:					; если окончен ввод числа
+	mov massiv[bx],dx		; запись этого числа в массив
+	add bx,2				; смещаемся к следующему элементу
+	cmp bx,160			; если массив заполнен
+	je end_input			; 
+	cmp al,0dh			; или последнее число
+	je end_input			; то конец ввода
+	xor dx,dx				; обнуляем dx для ввода следующего числа
+	jmp input_loop
+end_input:
+	mov cx,bx				; в cx - (количество введенных чисел + 1) * 2
+	shr cx,1				; cx = cx \ 2
+	dec cx				; теперь в cx - количество введенных чисел
+	call sort				; сортировка
+	mov ah,4ch
+	int 21h
+sort proc
+loop1:
+	xor bx,bx				; bx - смещение в массиве
+	push cx				; сохраняем cx в стеке
+loop2:
+	mov ax,massiv[bx]
+	cmp ax,massiv[bx][2]		; сравниваем два соседних элемента 
+	jl cont_loop2			; если правый больше левого, то продолжить цикл
+	mov dx,massiv[bx][2]	; иначе - перестановка
+	push massiv[bx][2]
+	push massiv[bx]
+	pop massiv[bx][2]
+	pop massiv[bx]
+cont_loop2:
+	add bx,2				; смещаемся к следующему элементу в массиве
+	loop loop2
+	pop cx				; восстанавливаем cx
+	loop loop1
+	ret
+sort endp
+end start
