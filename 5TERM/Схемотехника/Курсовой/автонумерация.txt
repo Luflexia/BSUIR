@@ -1,0 +1,39 @@
+Средствами ворда я не разобрался как делать нумерацию строк рядом с текстом, а не за полями, поэтому вот
+
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <string>
+
+int main() {
+    // Открываем исходный файл
+    std::ifstream inputFile("file.txt");
+    if (!inputFile.is_open()) {
+        std::cerr << "Не удалось открыть файл file.txt" << std::endl;
+        return 1;
+    }
+
+    // Открываем выходной файл
+    std::ofstream outputFile("output.txt");
+    if (!outputFile.is_open()) {
+        std::cerr << "Не удалось открыть файл output.txt" << std::endl;
+        return 1;
+    }
+
+    std::string line;
+    int lineNumber = 1;
+
+    // Читаем строки из входного файла
+    while (std::getline(inputFile, line)) {
+        // Форматируем номер строки с ведущими нулями
+        outputFile << std::setw(3) << std::setfill('0') << lineNumber << " " << line << std::endl;
+        lineNumber++;
+    }
+
+    // Закрываем файлы
+    inputFile.close();
+    outputFile.close();
+
+    std::cout << "Нумерация строк завершена. Результат записан в output.txt" << std::endl;
+    return 0;
+}

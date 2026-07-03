@@ -1,0 +1,31 @@
+    def csma_cd(self, frame):
+        collision_count = 0
+
+        while collision_count < self.collision_window:
+            if random.random() < self.channel_busy_probability:
+                time.sleep(self.slot_time)
+                continue
+            self.ser_out.write(frame)
+            #сюда добавить окно коллизии - задержку 
+            #time.sleep(collision_window), значение сам выберешь, чтобы было заметно (то что паша назвал self.collision_window - это 
+            # максимальное количество попыток отправки, а не окно коллизии)
+            
+            if random.random() < self.collision_probability:
+                collision_count += 1
+                self.status_text.config(state='normal')
+                self.status_text.insert(tk.END, f" #")
+                self.status_text.see(tk.END)
+                self.status_text.config(state='disabled')
+                # эта формула не правильная, нужно такую :
+                # k = min(10, collision_count)
+                # delay = random(0, (2**k))* self.slot_time
+                r = random.randint(0, collision_count)
+                delay = (2 ** r - 1) * self.slot_time
+                
+                time.sleep(delay)
+                continue 
+            else:
+                
+                return True
+
+        return False

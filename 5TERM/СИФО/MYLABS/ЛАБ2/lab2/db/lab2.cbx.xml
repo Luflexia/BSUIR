@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<LOG_ROOT>
+	<PROJECT NAME="lab2">
+		<CBX_INST_ENTRY INSTANCE_NAME="|lab2|Block1:inst|lpm_compare0:inst2|lpm_compare:lpm_compare_component" CBX_FILE_NAME="cmpr_9qi.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|lab2|Block2:inst1|lpm_compare3:inst5|lpm_compare:lpm_compare_component" CBX_FILE_NAME="cmpr_9qi.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|lab2|Block2:inst1|lpm_counter1:inst4|lpm_counter:lpm_counter_component" CBX_FILE_NAME="cntr_74i.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component" CBX_FILE_NAME="decode_cff.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|lab2|Block1:inst|lpm_compare1:inst6|lpm_compare:lpm_compare_component" CBX_FILE_NAME="cmpr_9qi.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|lab2|Block1:inst|lpm_counter0:inst|lpm_counter:lpm_counter_component" CBX_FILE_NAME="cntr_74i.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|lab2|Block3:inst4|lpm_counter2:inst|lpm_counter:lpm_counter_component" CBX_FILE_NAME="cntr_h7h.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|lab2|Block2:inst1|lpm_compare2:inst|lpm_compare:lpm_compare_component" CBX_FILE_NAME="cmpr_9qi.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|lab2|Block2:inst1|lpm_counter1:inst2|lpm_counter:lpm_counter_component" CBX_FILE_NAME="cntr_74i.tdf"/>
+	</PROJECT>
+</LOG_ROOT>

@@ -1,0 +1,50 @@
+#include "stdafx.h"
+#include "hexioctrl.h"
+#include <stdio.h>
+#include <conio.h>
+#include <stdlib.h>
+#include "(PCI_DEVS)pci_codes.h"
+
+int main() {
+    ALLOW_IO_OPERATIONS;
+    int reg = 0x00;
+    printf("Bus Dev Fn  VenID DevID  Description\n");
+    printf("-------------------------------------\n");
+
+    for (int bus = 0; bus < 256; bus++) {
+        for (int device = 0; device < 32; device++) {
+            for (int function = 0; function < 8; function++) {
+                unsigned long configAddress = (reg << 2) + (function << 8) + (device << 11) + (bus << 16) + (1 << 31);
+                _outpd(0x0CF8, configAddress);
+                unsigned long ConfigData = _inpd(0x0CFC);
+
+                if (ConfigData == 0xFFFFFFFF)
+                    break;
+
+                unsigned long DeviceID = ConfigData >> 16;
+                unsigned long VendorID = ConfigData & 0xFFFF;
+
+                printf("%3d %3d %2d  %04x  %04x  ", bus, device, function, VendorID, DeviceID);
+
+                bool found = false;
+                for (int i = 0; i < PCI_DEVTABLE_LEN; i++) {
+                    if (PciDevTable[i].VenId == VendorID && PciDevTable[i].DevId == DeviceID) {
+                        printf("%s", PciDevTable[i].Chip);
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    printf("Unknown");
+                }
+
+                printf("\n");
+            }
+        }
+    }
+
+    printf("-------------------------------------\n");
+    system("pause");
+    return 0;
+}

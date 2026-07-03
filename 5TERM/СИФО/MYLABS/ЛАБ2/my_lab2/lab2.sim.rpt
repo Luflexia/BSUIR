@@ -1,0 +1,256 @@
+Simulator report for lab2
+Thu Oct 10 20:32:32 2024
+Quartus II Version 9.1 Build 222 10/21/2009 SJ Web Edition
+
+
+---------------------
+; Table of Contents ;
+---------------------
+  1. Legal Notice
+  2. Simulator Summary
+  3. Simulator Settings
+  4. Simulation Waveforms
+  5. Coverage Summary
+  6. Complete 1/0-Value Coverage
+  7. Missing 1-Value Coverage
+  8. Missing 0-Value Coverage
+  9. Simulator INI Usage
+ 10. Simulator Messages
+
+
+
+----------------
+; Legal Notice ;
+----------------
+Copyright (C) 1991-2009 Altera Corporation
+Your use of Altera Corporation's design tools, logic functions 
+and other software and tools, and its AMPP partner logic 
+functions, and any output files from any of the foregoing 
+(including device programming or simulation files), and any 
+associated documentation or information are expressly subject 
+to the terms and conditions of the Altera Program License 
+Subscription Agreement, Altera MegaCore Function License 
+Agreement, or other applicable license agreement, including, 
+without limitation, that your use is for the sole purpose of 
+programming logic devices manufactured by Altera and sold by 
+Altera or its authorized distributors.  Please refer to the 
+applicable agreement for further details.
+
+
+
++--------------------------------------------+
+; Simulator Summary                          ;
++-----------------------------+--------------+
+; Type                        ; Value        ;
++-----------------------------+--------------+
+; Simulation Start Time       ; 0 ps         ;
+; Simulation End Time         ; 100.0 us     ;
+; Simulation Netlist Size     ; 97 nodes     ;
+; Simulation Coverage         ;     100.00 % ;
+; Total Number of Transitions ; 53768        ;
+; Simulation Breakpoints      ; 0            ;
+; Family                      ; MAX II       ;
++-----------------------------+--------------+
+
+
++-------------------------------------------------------------------------------------------------------------------------------+
+; Simulator Settings                                                                                                            ;
++--------------------------------------------------------------------------------------------+------------------+---------------+
+; Option                                                                                     ; Setting          ; Default Value ;
++--------------------------------------------------------------------------------------------+------------------+---------------+
+; Simulation mode                                                                            ; Functional       ; Timing        ;
+; Start time                                                                                 ; 0 ns             ; 0 ns          ;
+; Simulation results format                                                                  ; CVWF             ;               ;
+; Vector input source                                                                        ; ../lab2/lab2.vwf ;               ;
+; Add pins automatically to simulation output waveforms                                      ; On               ; On            ;
+; Check outputs                                                                              ; Off              ; Off           ;
+; Report simulation coverage                                                                 ; On               ; On            ;
+; Display complete 1/0 value coverage report                                                 ; On               ; On            ;
+; Display missing 1-value coverage report                                                    ; On               ; On            ;
+; Display missing 0-value coverage report                                                    ; On               ; On            ;
+; Detect setup and hold time violations                                                      ; Off              ; Off           ;
+; Detect glitches                                                                            ; Off              ; Off           ;
+; Disable timing delays in Timing Simulation                                                 ; Off              ; Off           ;
+; Generate Signal Activity File                                                              ; Off              ; Off           ;
+; Generate VCD File for PowerPlay Power Analyzer                                             ; Off              ; Off           ;
+; Group bus channels in simulation results                                                   ; Off              ; Off           ;
+; Preserve fewer signal transitions to reduce memory requirements                            ; On               ; On            ;
+; Trigger vector comparison with the specified mode                                          ; INPUT_EDGE       ; INPUT_EDGE    ;
+; Disable setup and hold time violations detection in input registers of bi-directional pins ; Off              ; Off           ;
+; Overwrite Waveform Inputs With Simulation Outputs                                          ; Off              ;               ;
+; Perform Glitch Filtering in Timing Simulation                                              ; Auto             ; Auto          ;
++--------------------------------------------------------------------------------------------+------------------+---------------+
+
+
++----------------------+
+; Simulation Waveforms ;
++----------------------+
+Waveform report data cannot be output to ASCII.
+Please use Quartus II to view the waveform report data.
+
+
++--------------------------------------------------------------------+
+; Coverage Summary                                                   ;
++-----------------------------------------------------+--------------+
+; Type                                                ; Value        ;
++-----------------------------------------------------+--------------+
+; Total coverage as a percentage                      ;     100.00 % ;
+; Total nodes checked                                 ; 97           ;
+; Total output ports checked                          ; 97           ;
+; Total output ports with complete 1/0-value coverage ; 97           ;
+; Total output ports with no 1/0-value coverage       ; 0            ;
+; Total output ports with no 1-value coverage         ; 0            ;
+; Total output ports with no 0-value coverage         ; 0            ;
++-----------------------------------------------------+--------------+
+
+
+The following table displays output ports that toggle between 1 and 0 during simulation.
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+; Complete 1/0-Value Coverage                                                                                                                                                                                                                                  ;
++---------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+------------------+
+; Node Name                                                                                                           ; Output Port Name                                                                                                    ; Output Port Type ;
++---------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+------------------+
+; |lab2|clk_in                                                                                                        ; |lab2|clk_in                                                                                                        ; pin_out          ;
+; |lab2|clk                                                                                                           ; |lab2|clk                                                                                                           ; out              ;
+; |lab2|clk_D                                                                                                         ; |lab2|clk_D                                                                                                         ; pin_out          ;
+; |lab2|DCa[15]                                                                                                       ; |lab2|DCa[15]                                                                                                       ; pin_out          ;
+; |lab2|DCa[14]                                                                                                       ; |lab2|DCa[14]                                                                                                       ; pin_out          ;
+; |lab2|DCa[13]                                                                                                       ; |lab2|DCa[13]                                                                                                       ; pin_out          ;
+; |lab2|DCa[12]                                                                                                       ; |lab2|DCa[12]                                                                                                       ; pin_out          ;
+; |lab2|DCa[11]                                                                                                       ; |lab2|DCa[11]                                                                                                       ; pin_out          ;
+; |lab2|DCa[10]                                                                                                       ; |lab2|DCa[10]                                                                                                       ; pin_out          ;
+; |lab2|DCa[9]                                                                                                        ; |lab2|DCa[9]                                                                                                        ; pin_out          ;
+; |lab2|DCa[8]                                                                                                        ; |lab2|DCa[8]                                                                                                        ; pin_out          ;
+; |lab2|DCa[7]                                                                                                        ; |lab2|DCa[7]                                                                                                        ; pin_out          ;
+; |lab2|DCa[6]                                                                                                        ; |lab2|DCa[6]                                                                                                        ; pin_out          ;
+; |lab2|DCa[5]                                                                                                        ; |lab2|DCa[5]                                                                                                        ; pin_out          ;
+; |lab2|DCa[4]                                                                                                        ; |lab2|DCa[4]                                                                                                        ; pin_out          ;
+; |lab2|DCa[3]                                                                                                        ; |lab2|DCa[3]                                                                                                        ; pin_out          ;
+; |lab2|DCa[2]                                                                                                        ; |lab2|DCa[2]                                                                                                        ; pin_out          ;
+; |lab2|DCa[1]                                                                                                        ; |lab2|DCa[1]                                                                                                        ; pin_out          ;
+; |lab2|DCa[0]                                                                                                        ; |lab2|DCa[0]                                                                                                        ; pin_out          ;
+; |lab2|Block3:inst4|lpm_counter2:inst|lpm_counter:lpm_counter_component|cntr_h7h:auto_generated|counter_cella0       ; |lab2|Block3:inst4|lpm_counter2:inst|lpm_counter:lpm_counter_component|cntr_h7h:auto_generated|counter_cella0~COUT  ; cout             ;
+; |lab2|Block3:inst4|lpm_counter2:inst|lpm_counter:lpm_counter_component|cntr_h7h:auto_generated|counter_cella1       ; |lab2|Block3:inst4|lpm_counter2:inst|lpm_counter:lpm_counter_component|cntr_h7h:auto_generated|counter_cella1~COUT  ; cout             ;
+; |lab2|Block3:inst4|lpm_counter2:inst|lpm_counter:lpm_counter_component|cntr_h7h:auto_generated|counter_cella2       ; |lab2|Block3:inst4|lpm_counter2:inst|lpm_counter:lpm_counter_component|cntr_h7h:auto_generated|counter_cella2~COUT  ; cout             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode108w[3]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode108w[3]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode108w[2]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode108w[2]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode108w[1]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode108w[1]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode119w[3]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode119w[3]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode119w[2]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode119w[2]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode119w[1]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode119w[1]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode129w[3]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode129w[3]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode129w[2]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode129w[2]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode129w[1]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode129w[1]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode12w[3]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode12w[3]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode12w[2]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode12w[2]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode12w[1]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode12w[1]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode139w[3]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode139w[3]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode139w[2]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode139w[2]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode139w[1]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode139w[1]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode149w[3]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode149w[3]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode149w[2]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode149w[2]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode149w[1]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode149w[1]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode159w[3]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode159w[3]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode159w[2]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode159w[2]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode159w[1]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode159w[1]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode169w[3]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode169w[3]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode169w[2]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode169w[2]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode169w[1]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode169w[1]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode179w[3]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode179w[3]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode179w[2]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode179w[2]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode179w[1]       ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode179w[1]       ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode29w[3]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode29w[3]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode29w[2]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode29w[2]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode29w[1]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode29w[1]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode39w[3]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode39w[3]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode39w[2]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode39w[2]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode39w[1]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode39w[1]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode49w[3]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode49w[3]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode49w[2]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode49w[2]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode49w[1]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode49w[1]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode59w[3]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode59w[3]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode59w[2]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode59w[2]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode59w[1]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode59w[1]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode69w[3]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode69w[3]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode69w[2]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode69w[2]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode69w[1]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode69w[1]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode79w[3]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode79w[3]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode79w[2]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode79w[2]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode79w[1]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode79w[1]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode89w[3]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode89w[3]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode89w[2]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode89w[2]        ; out0             ;
+; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode89w[1]        ; |lab2|Block3:inst4|lpm_decode0:inst1|lpm_decode:lpm_decode_component|decode_cff:auto_generated|w_anode89w[1]        ; out0             ;
+; |lab2|Block2:inst1|inst3                                                                                            ; |lab2|Block2:inst1|inst3                                                                                            ; regout           ;
+; |lab2|Block2:inst1|lpm_counter1:inst2|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|counter_cella0      ; |lab2|Block2:inst1|lpm_counter1:inst2|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|counter_cella0~COUT ; cout             ;
+; |lab2|Block2:inst1|lpm_counter1:inst2|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|counter_cella1      ; |lab2|Block2:inst1|lpm_counter1:inst2|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|counter_cella1~COUT ; cout             ;
+; |lab2|Block2:inst1|lpm_counter1:inst2|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|counter_cella2      ; |lab2|Block2:inst1|lpm_counter1:inst2|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|counter_cella2~COUT ; cout             ;
+; |lab2|Block2:inst1|lpm_compare2:inst|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|aneb_result_wire[0]  ; |lab2|Block2:inst1|lpm_compare2:inst|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|aneb_result_wire[0]  ; out0             ;
+; |lab2|Block2:inst1|lpm_compare2:inst|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|data_wire[1]         ; |lab2|Block2:inst1|lpm_compare2:inst|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|data_wire[1]         ; out0             ;
+; |lab2|Block2:inst1|lpm_compare2:inst|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|data_wire[0]         ; |lab2|Block2:inst1|lpm_compare2:inst|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|data_wire[0]         ; out0             ;
+; |lab2|Block2:inst1|lpm_counter1:inst4|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|counter_cella0      ; |lab2|Block2:inst1|lpm_counter1:inst4|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|counter_cella0~COUT ; cout             ;
+; |lab2|Block2:inst1|lpm_counter1:inst4|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|counter_cella1      ; |lab2|Block2:inst1|lpm_counter1:inst4|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|counter_cella1~COUT ; cout             ;
+; |lab2|Block2:inst1|lpm_counter1:inst4|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|counter_cella2      ; |lab2|Block2:inst1|lpm_counter1:inst4|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|counter_cella2~COUT ; cout             ;
+; |lab2|Block2:inst1|lpm_compare3:inst5|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|aneb_result_wire[0] ; |lab2|Block2:inst1|lpm_compare3:inst5|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|aneb_result_wire[0] ; out0             ;
+; |lab2|Block2:inst1|lpm_compare3:inst5|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|data_wire[1]        ; |lab2|Block2:inst1|lpm_compare3:inst5|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|data_wire[1]        ; out0             ;
+; |lab2|Block2:inst1|lpm_compare3:inst5|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|data_wire[0]        ; |lab2|Block2:inst1|lpm_compare3:inst5|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|data_wire[0]        ; out0             ;
+; |lab2|Block1:inst|inst7                                                                                             ; |lab2|Block1:inst|inst7                                                                                             ; regout           ;
+; |lab2|Block1:inst|lpm_compare1:inst6|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|aneb_result_wire[0]  ; |lab2|Block1:inst|lpm_compare1:inst6|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|aneb_result_wire[0]  ; out0             ;
+; |lab2|Block1:inst|lpm_compare1:inst6|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|data_wire[1]         ; |lab2|Block1:inst|lpm_compare1:inst6|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|data_wire[1]         ; out0             ;
+; |lab2|Block1:inst|lpm_compare1:inst6|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|data_wire[0]         ; |lab2|Block1:inst|lpm_compare1:inst6|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|data_wire[0]         ; out0             ;
+; |lab2|Block1:inst|lpm_counter0:inst|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|counter_cella0        ; |lab2|Block1:inst|lpm_counter0:inst|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|safe_q[0]             ; regout           ;
+; |lab2|Block1:inst|lpm_counter0:inst|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|counter_cella0        ; |lab2|Block1:inst|lpm_counter0:inst|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|counter_cella0~COUT   ; cout             ;
+; |lab2|Block1:inst|lpm_counter0:inst|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|counter_cella1        ; |lab2|Block1:inst|lpm_counter0:inst|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|safe_q[1]             ; regout           ;
+; |lab2|Block1:inst|lpm_counter0:inst|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|counter_cella1        ; |lab2|Block1:inst|lpm_counter0:inst|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|counter_cella1~COUT   ; cout             ;
+; |lab2|Block1:inst|lpm_counter0:inst|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|counter_cella2        ; |lab2|Block1:inst|lpm_counter0:inst|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|safe_q[2]             ; regout           ;
+; |lab2|Block1:inst|lpm_counter0:inst|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|counter_cella2        ; |lab2|Block1:inst|lpm_counter0:inst|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|counter_cella2~COUT   ; cout             ;
+; |lab2|Block1:inst|lpm_counter0:inst|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|counter_cella3        ; |lab2|Block1:inst|lpm_counter0:inst|lpm_counter:lpm_counter_component|cntr_74i:auto_generated|safe_q[3]             ; regout           ;
+; |lab2|Block1:inst|lpm_compare0:inst2|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|aneb_result_wire[0]  ; |lab2|Block1:inst|lpm_compare0:inst2|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|aneb_result_wire[0]  ; out0             ;
+; |lab2|Block1:inst|lpm_compare0:inst2|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|data_wire[1]         ; |lab2|Block1:inst|lpm_compare0:inst2|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|data_wire[1]         ; out0             ;
+; |lab2|Block1:inst|lpm_compare0:inst2|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|data_wire[0]         ; |lab2|Block1:inst|lpm_compare0:inst2|lpm_compare:lpm_compare_component|cmpr_9qi:auto_generated|data_wire[0]         ; out0             ;
++---------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+------------------+
+
+
+The following table displays output ports that do not toggle to 1 during simulation.
++-------------------------------------------------+
+; Missing 1-Value Coverage                        ;
++-----------+------------------+------------------+
+; Node Name ; Output Port Name ; Output Port Type ;
++-----------+------------------+------------------+
+
+
+The following table displays output ports that do not toggle to 0 during simulation.
++-------------------------------------------------+
+; Missing 0-Value Coverage                        ;
++-----------+------------------+------------------+
+; Node Name ; Output Port Name ; Output Port Type ;
++-----------+------------------+------------------+
+
+
++---------------------+
+; Simulator INI Usage ;
++--------+------------+
+; Option ; Usage      ;
++--------+------------+
+
+
++--------------------+
+; Simulator Messages ;
++--------------------+
+Info: *******************************************************************
+Info: Running Quartus II Simulator
+    Info: Version 9.1 Build 222 10/21/2009 SJ Web Edition
+    Info: Processing started: Thu Oct 10 20:32:31 2024
+Info: Command: quartus_sim --read_settings_files=on --write_settings_files=off lab2 -c lab2
+Info: Using vector source file "../lab2/lab2.vwf"
+Info: Option to preserve fewer signal transitions to reduce memory requirements is enabled
+    Info: Simulation has been partitioned into sub-simulations according to the maximum transition count determined by the engine. Transitions from memory will be flushed out to disk at the end of each sub-simulation to reduce memory requirements.
+Info: Simulation partitioned into 1 sub-simulations
+Info: Simulation coverage is     100.00 %
+Info: Number of transitions in simulation is 53768
+Info: Quartus II Simulator was successful. 0 errors, 0 warnings
+    Info: Peak virtual memory: 145 megabytes
+    Info: Processing ended: Thu Oct 10 20:32:32 2024
+    Info: Elapsed time: 00:00:01
+    Info: Total CPU time (on all processors): 00:00:00
+
+

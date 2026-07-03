@@ -1,0 +1,260 @@
+// Подключение необходимых заголовочных файлов Windows API
+#include <windows.h>
+#include <setupapi.h>
+#include <dbt.h>
+#include <cfgmgr32.h>
+#include <usbiodef.h>
+
+// Подключение стандартных библиотек C++
+#include <iostream>
+#include <vector>
+#include <string>
+#include <iomanip>
+#include <conio.h>
+#include <functional>
+
+// Глобальная переменная для хранения ID последнего безопасно извлеченного устройства
+std::wstring lastSafelyRemovedDeviceId;
+
+// Структура для хранения информации об устройстве
+struct Device {
+    std::wstring name;        // Имя устройства
+    std::wstring hardwareId;  // Аппаратный ID устройства
+    bool ejectable;           // Флаг, указывающий, можно ли извлечь устройство
+    DEVINST devInst;          // Дескриптор экземпляра устройства
+
+    // Конструктор по умолчанию
+    Device() : ejectable(false), devInst(0) {}
+
+    // Метод для вывода информации об устройстве
+    void print() const {
+        std::wcout << std::setw(40) << std::left << hardwareId << L" | " << name << std::endl;
+    }
+
+    // Метод для извлечения устройства
+    [[nodiscard]] bool eject() const {
+        if (ejectable) {
+            return CM_Request_Device_EjectW(devInst, nullptr, nullptr, 0, 0) == CR_SUCCESS;
+        }
+        return false;
+    }
+};
+
+// Глобальный вектор для хранения списка устройств
+std::vector<Device> devices;
+
+// Функция для обновления списка устройств
+void updateDeviceList() {
+    // Очистка текущего списка устройств
+    devices.clear();
+    // Получение информации о классе USB-устройств
+    HDEVINFO deviceInfo = SetupDiGetClassDevsW(&GUID_DEVINTERFACE_USB_DEVICE, nullptr, nullptr, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+    if (deviceInfo == INVALID_HANDLE_VALUE) return;
+
+    // Структура для хранения информации об устройстве
+    SP_DEVINFO_DATA devInfoData;
+    devInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
+
+    // Перебор всех устройств
+    for (DWORD i = 0; SetupDiEnumDeviceInfo(deviceInfo, i, &devInfoData); i++) {
+        Device device;
+        device.devInst = devInfoData.DevInst;
+        WCHAR buffer[256];
+
+        // Получение описания устройства
+        if (SetupDiGetDeviceRegistryPropertyW(deviceInfo, &devInfoData, SPDRP_DEVICEDESC, nullptr, reinterpret_cast<PBYTE>(buffer), sizeof(buffer), nullptr)) {
+            device.name = buffer;
+        }
+
+        // Получение аппаратного ID устройства
+        if (SetupDiGetDeviceRegistryPropertyW(deviceInfo, &devInfoData, SPDRP_HARDWAREID, nullptr, reinterpret_cast<PBYTE>(buffer), sizeof(buffer), nullptr)) {
+            device.hardwareId = buffer;
+        }
+
+        // Получение свойств устройства
+        DWORD properties;
+        if (SetupDiGetDeviceRegistryPropertyW(deviceInfo, &devInfoData, SPDRP_CAPABILITIES, nullptr, reinterpret_cast<PBYTE>(&properties), sizeof(DWORD), nullptr)) {
+            device.ejectable = (properties & CM_DEVCAP_REMOVABLE) != 0;
+        }
+
+        // Добавление устройства в список
+        devices.push_back(device);
+    }
+
+    // Освобождение ресурсов
+    SetupDiDestroyDeviceInfoList(deviceInfo);
+}
+
+// Функция для вывода списка устройств
+void printDevices() {
+    // Очистка консоли
+    system("cls");
+    // Вывод заголовка
+    std::wcout << L"Список USB-устройств:\n";
+    // Вывод информации о каждом устройстве
+    for (size_t i = 0; i < devices.size(); i++) {
+        std::wcout << i + 1 << L". ";
+        devices[i].print();
+    }
+    // Вывод инструкции для пользователя
+    std::wcout << L"\nВыберите номер устройства для извлечения или 'q' для выхода.\n";
+}
+
+// Функция обработки сообщений окна
+LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    switch (message) {
+        case WM_DEVICECHANGE:
+            switch (wParam) {
+                case DBT_DEVICEARRIVAL: {
+                    // Обработка подключения устройства
+                    PDEV_BROADCAST_HDR pHdr = (PDEV_BROADCAST_HDR)lParam;
+                    if (pHdr->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE) {
+                        std::wcout << L"Устройство подключено\n";
+                        updateDeviceList();
+                        printDevices();
+                    }
+                    break;
+                }
+                case DBT_DEVICEREMOVECOMPLETE: {
+                    // Обработка отключения устройства
+                    PDEV_BROADCAST_HDR pHdr = (PDEV_BROADCAST_HDR)lParam;
+                    if (pHdr->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE) {
+                        std::wcout << L"Устройство отключено\n";
+                        updateDeviceList();
+                        printDevices();
+                    }
+                    break;
+                }
+                case DBT_DEVICEQUERYREMOVE:
+                    // Обработка запроса на извлечение устройства
+                    std::wcout << L"Попытка безопасного извлечения...\n";
+                    break;
+                case DBT_DEVICEQUERYREMOVEFAILED:
+                    // Обработка ошибки извлечения устройства
+                    std::wcout << L"Ошибка безопасного извлечения\n";
+                    break;
+                case DBT_DEVICEREMOVEPENDING:
+                    // Обработка ожидания извлечения устройства
+                    std::wcout << L"Устройство готово к безопасному извлечению\n";
+                    break;
+            }
+            break;
+        default:
+            // Обработка остальных сообщений по умолчанию
+            return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+    return 0;
+}
+
+// Функция для проверки небезопасного извлечения устройств
+void checkForUnsafeRemoval() {
+    // Статические переменные для хранения предыдущего состояния
+    static std::vector<Device> previousDevices;
+    static std::vector<std::wstring> reportedDevices;
+    // Получение текущего списка устройств
+    std::vector<Device> currentDevices = devices;
+    // Проверка устройств, которые были удалены
+    for (const auto& prevDevice : previousDevices) {
+        // Поиск устройства в текущем списке
+        auto it = std::find_if(currentDevices.begin(), currentDevices.end(),
+                               [&prevDevice](const Device& dev) { return dev.hardwareId == prevDevice.hardwareId; });
+        // Если устройство не найдено и не было ранее сообщено о его небезопасном извлечении
+        if (it == currentDevices.end() &&
+            std::find(reportedDevices.begin(), reportedDevices.end(), prevDevice.hardwareId) == reportedDevices.end() &&
+            prevDevice.hardwareId != lastSafelyRemovedDeviceId) {
+            // Вывод сообщения о небезопасном извлечении
+            std::wcout << L"Внимание: Устройство было извлечено небезопасно: " << prevDevice.name << L"\n";
+            // Добавление устройства в список сообщенных
+            reportedDevices.push_back(prevDevice.hardwareId);
+        }
+    }
+    // Очистка списка сообщенных устройств, которые снова появились
+    reportedDevices.erase(
+            std::remove_if(reportedDevices.begin(), reportedDevices.end(),
+                           [&currentDevices](const std::wstring& reportedId) {
+                               return std::any_of(currentDevices.begin(), currentDevices.end(),
+                                                  [&reportedId](const Device& dev) { return dev.hardwareId == reportedId; });
+                           }),
+            reportedDevices.end()
+    );
+    // Обновление списка предыдущих устройств
+    previousDevices = currentDevices;
+    // Сброс ID последнего безопасно извлеченного устройства
+    lastSafelyRemovedDeviceId.clear();
+}
+
+// Главная функция программы
+int main() {
+    // Установка локали для корректного отображения Unicode
+    setlocale(LC_ALL, "");
+
+    // Регистрация класса окна
+    WNDCLASSEXW wx = {};
+    wx.cbSize = sizeof(WNDCLASSEXW);
+    wx.lpfnWndProc = WndProc;
+    wx.lpszClassName = L"USBMonitorClass";
+    RegisterClassExW(&wx);
+
+    // Создание скрытого окна для обработки сообщений
+    HWND hWnd = CreateWindowExW(0, L"USBMonitorClass", L"USB Monitor", 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, NULL, NULL);
+
+    // Настройка фильтра уведомлений об устройствах
+    DEV_BROADCAST_DEVICEINTERFACE notificationFilter = {};
+    notificationFilter.dbcc_size = sizeof(DEV_BROADCAST_DEVICEINTERFACE);
+    notificationFilter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
+    notificationFilter.dbcc_classguid = GUID_DEVINTERFACE_USB_DEVICE;
+
+    // Регистрация уведомлений об устройствах
+    HDEVNOTIFY hDevNotify = RegisterDeviceNotification(hWnd, &notificationFilter, DEVICE_NOTIFY_WINDOW_HANDLE);
+
+    // Инициализация списка устройств и вывод на экран
+    updateDeviceList();
+    printDevices();
+
+    // Основной цикл программы
+    bool running = true;
+    while (running) {
+        // Обработка сообщений Windows
+        MSG msg;
+        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+
+// Проверка, было ли нажатие клавиши
+if (_kbhit()) {
+    // Получение кода нажатой клавиши
+    int ch = _getch();
+    if (ch == 'q' || ch == 'Q') {
+        // Если нажата 'q' или 'Q', завершаем программу
+        running = false;
+    } else if (ch >= '1' && ch <= '9') {
+        // Если нажата цифра от 1 до 9
+        int index = ch - '1';
+        if (index < devices.size()) {
+            // Если индекс соответствует существующему устройству
+            if (devices[index].eject()) {
+                // Попытка извлечь устройство
+                std::wcout << L"Устройство успешно извлечено\n";
+                // Сохранение ID успешно извлеченного устройства
+                lastSafelyRemovedDeviceId = devices[index].hardwareId;
+            } else {
+                std::wcout << L"Не удалось извлечь устройство\n";
+            }
+            Sleep(2000);  // Пауза в 2 секунды, чтобы пользователь мог прочитать сообщение
+            updateDeviceList();  // Обновляем список устройств после попытки извлечения
+            printDevices();
+        }
+    }
+}
+
+// Проверка на небезопасное извлечение устройств
+checkForUnsafeRemoval();
+Sleep(100);  // Небольшая задержка, чтобы не нагружать процессор
+
+// Конец основного цикла программы
+}
+
+// Отмена регистрации уведомлений об устройствах
+UnregisterDeviceNotification(hDevNotify);
+return 0;

@@ -1,0 +1,94 @@
+
+class Collision:
+    def __init__(self, channel_busy_probability=0.4, collision_probability=0.6):
+        self.channel_busy_probability = channel_busy_probability
+        self.collision_probability = collision_probability
+        self.is_channel_busy = False
+
+        self.last_frame_index = None  # Индекс последней строки с кадром
+
+    def listen_channel(self):
+        self.is_channel_busy = random.random() < self.channel_busy_probability  # Определяем, будет ли канал занят с вероятностью channel_busy_probability
+        return self.is_channel_busy  # Возвращаем, занят ли канал
+
+    def detect_collision(self):
+        collision_happened = random.random() < self.collision_probability  # Проверяем, произошла ли коллизия с вероятностью collision_probability
+        return collision_happened  # Возвращаем, произошла ли коллизия
+
+    def delay(self, collision_number):
+    случайно число от 0 до 2^k, k=min(n,10)
+    r - колво слот таймов
+
+        k = min(collision_number, 10)  # k = min(n, 10), где n — номер попытки
+        r = random.randint(0, 2 ** k)  # Генерация случайного числа в диапазоне [0, 2^k]
+        slot_time = 0.000512  # Время одного слота в секундах (правильно 0.000512)
+        delay_time = r * slot_time  # Общая задержка (количество слот таймов * на задержку)
+
+        time.sleep(delay_time)  # Задержка перед повторной попыткой
+        return delay_time  # Можно вернуть значение для логирования
+        
+def send_data(self, event=None):
+        if self.ser_out and self.ser_out.is_open:
+            data = self.input_text.get("1.0", tk.END).strip()
+            try:
+                if not data:  # Если данные пустые (пользователь просто нажал Enter)
+                    message = b'\n'  # Отправляем символ новой строки
+                else:
+                    message = data.encode('utf-8')
+
+                while message:
+                    portion = message[:21]  # Берем до 21 байта для поля данных
+                    message = message[21:]
+
+                    collision_count = 0  # Счетчик коллизий для текущего кадра
+                    while True:
+                        # Прослушивание канала (CSMA/CD)
+                        while self.collision.listen_channel():
+                            time.sleep(0.1)  # Задержка перед повторной попыткой
+
+                        flag, frame_without_flag = self.create_frame(portion)
+                        stuffed_frame = self.byte_stuffing(frame_without_flag)
+                        full_frame = flag + stuffed_frame
+
+                        # Отправка данных
+                        self.ser_out.write(full_frame)
+
+                        # Окно коллизии
+                        time.sleep(1)
+
+                        # Формируем структуру кадра (по байтам) и логируем сразу
+                        highlighted_frame_hex = ""
+                        for byte in full_frame:
+                            highlighted_frame_hex += f"0x{byte:02X} "
+                        self.log_status(f"Отправлен кадр: {highlighted_frame_hex}")  # Логируем БЕЗ решёток
+
+                        # Проверка на коллизию
+                        while self.collision.detect_collision():
+                            collision_count += 1
+                            if collision_count >= 16:
+                                break
+
+                            # Добавляем решётку за каждую коллизию
+                            self.log_status(" #")
+                            self.root.update_idletasks()  # Принудительно обновляем интерфейс
+
+                            # Розыгрыш случайной задержки
+                            self.collision.delay(collision_count)
+
+                            # Отправка данных
+                            self.ser_out.write(full_frame)
+
+                            # Окно коллизии
+                            time.sleep(1)
+
+                        break  # Выход из цикла, если коллизии нет
+
+                    self.sent_portions += 1
+                    self.log_status(f"Отправлено порций: {self.sent_portions}")
+                    self.input_text.delete("1.0", tk.END)
+
+            except serial.SerialException as e:
+                messagebox.showerror("Ошибка", f"Не удалось отправить данные: {str(e)}")
+        else:
+            messagebox.showerror("Ошибка", "Порт передачи не открыт.")
+        return 'break'

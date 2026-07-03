@@ -1,0 +1,38 @@
+--lpm_clshift CBX_DECLARE_ALL_CONNECTED_PORTS="OFF" LPM_SHIFTTYPE="ROTATE" LPM_WIDTH=8 LPM_WIDTHDIST=3 data direction distance result
+--VERSION_BEGIN 9.1 cbx_lpm_clshift 2009:10:21:21:22:16:SJ cbx_mgl 2009:10:21:21:37:49:SJ  VERSION_END
+
+
+-- Copyright (C) 1991-2009 Altera Corporation
+--  Your use of Altera Corporation's design tools, logic functions 
+--  and other software and tools, and its AMPP partner logic 
+--  functions, and any output files from any of the foregoing 
+--  (including device programming or simulation files), and any 
+--  associated documentation or information are expressly subject 
+--  to the terms and conditions of the Altera Program License 
+--  Subscription Agreement, Altera MegaCore Function License 
+--  Agreement, or other applicable license agreement, including, 
+--  without limitation, that your use is for the sole purpose of 
+--  programming logic devices manufactured by Altera and sold by 
+--  Altera or its authorized distributors.  Please refer to the 
+--  applicable agreement for further details.
+
+
+
+--synthesis_resources = 
+SUBDESIGN lpm_clshift_4gc
+( 
+	data[7..0]	:	input;
+	direction	:	input;
+	distance[2..0]	:	input;
+	result[7..0]	:	output;
+) 
+VARIABLE 
+	direction_w[0..0]	: WIRE;
+	sbit_w[31..0]	: WIRE;
+
+BEGIN 
+	direction_w[] = ( direction);
+	result[7..0] = sbit_w[31..24];
+	sbit_w[] = ( ((((distance[2..2] & (! direction_w[])) & ( sbit_w[19..16], sbit_w[23..20])) # ((distance[2..2] & direction_w[]) & ( sbit_w[19..16], sbit_w[23..20]))) # ((! distance[2..2]) & sbit_w[23..16])), ((((distance[1..1] & (! direction_w[])) & ( sbit_w[13..8], sbit_w[15..14])) # ((distance[1..1] & direction_w[]) & ( sbit_w[9..8], sbit_w[15..10]))) # ((! distance[1..1]) & sbit_w[15..8])), ((((distance[0..0] & (! direction_w[])) & ( sbit_w[6..0], sbit_w[7..7])) # ((distance[0..0] & direction_w[]) & ( sbit_w[0..0], sbit_w[7..1]))) # ((! distance[0..0]) & sbit_w[7..0])), data[]);
+END;
+--VALID FILE

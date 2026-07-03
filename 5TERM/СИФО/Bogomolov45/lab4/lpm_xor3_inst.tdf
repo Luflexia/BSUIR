@@ -1,0 +1,9 @@
+(
+	result_sig[]
+) = lpm_xor3	(
+	.data0x[] = data0x_sig[],
+	.data1x[] = data1x_sig[]
+)
+RETURNS (
+	.result[]
+);
