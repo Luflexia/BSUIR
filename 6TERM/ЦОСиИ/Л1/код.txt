@@ -1,0 +1,80 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.io.wavfile import write
+
+def dft(x):
+    N = len(x)
+    W = np.exp(-2j * np.pi / N)
+    Cx = np.zeros(N, dtype=complex)
+
+    for k in range(N):
+        for m in range(N):
+            Cx[k] += x[m] * W ** (k * m)
+        Cx[k] /= N
+
+    return Cx
+
+def idft(Cx):
+    N = len(Cx)
+    W = np.exp(-2j * np.pi / N)
+    x = np.zeros(N, dtype=complex)
+
+    for m in range(N):
+        for k in range(N):
+            x[m] += Cx[k] * W ** (-k * m)
+
+    return x
+
+duration = 1.0
+sampling_rate = 500
+t = np.linspace(0, 2 * np.pi *duration, int(sampling_rate * duration))
+
+# y = sin(x) + cos(4x)
+signal = np.sin(t) + np.cos(4 * t)
+
+plt.figure(figsize=(10, 4))
+plt.plot(t, signal)
+plt.title('Исходный сигнал: y = sin(x) + cos(4x)')
+plt.xlabel('Время [с]')
+plt.ylabel('Амплитуда')
+plt.grid(True)
+plt.show()
+
+scaled_signal = np.int16(signal / np.max(np.abs(signal)) * 32767)
+write("output_signal.wav", sampling_rate, scaled_signal)
+
+dft_signal = dft(signal)
+
+frequencies = np.fft.fftfreq(len(signal), d=(t[1]-t[0]))#1 / sampling_rate)
+magnitude = np.abs(dft_signal)
+
+positive_frequencies = frequencies[:len(frequencies)//2]
+positive_magnitude = magnitude[:len(magnitude)//2]
+
+plt.figure(figsize=(10, 4))
+plt.stem(positive_frequencies, positive_magnitude)
+plt.title('Амплитудно-Частотная Характеристика (АЧХ)')
+plt.xlabel('Частота [Гц]')
+plt.ylabel('Амплитуда')
+
+plt.xlim(0, 1)
+plt.ylim(0, 1)
+plt.xticks(np.arange(0, 1, 0.1))
+
+plt.grid(True)
+plt.show()
+
+dft_signal_reduced = dft_signal / 2
+
+reconstructed_signal = idft(dft_signal_reduced)
+
+plt.figure(figsize=(10, 4))
+plt.plot(t, np.real(reconstructed_signal))
+plt.title('Восстановленный сигнал после обратного DFT')
+plt.xlabel('Время [с]')
+plt.ylabel('Амплитуда')
+plt.grid(True)
+plt.show()
+
+scaled_reconstructed_signal = np.int16(np.real(reconstructed_signal) / np.max(np.abs(reconstructed_signal)) * 32767)
+write("reconstructed_signal.wav", sampling_rate, scaled_reconstructed_signal)

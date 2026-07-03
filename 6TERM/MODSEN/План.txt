@@ -1,0 +1,122 @@
+План реализации с Git Flow и промптами для LLM
+Этап 1: Инициализация проекта
+Цель: Создать структуру проекта и настроить Git Flow.
+
+Инициализация Git Flow:
+git flow init
+
+Дефолтные настройки: main, develop, префиксы feature/, release/, hotfix/.
+
+Создание структуры:
+Ветка:
+git flow feature start project-setup
+
+Промпт для LLM (Builder Mode для создания файлов):
+Создай структуру Maven-проекта для микросервисной архитектуры на Java 17 с четырьмя сервисами: user-service, hotel-service, booking-service, payment-service. Для каждого сервиса создай папку с pom.xml, включающим зависимости: spring-boot-starter-web, spring-boot-starter-data-jpa, spring-boot-starter-security, springdoc-openapi-starter-webmvc-ui, postgresql, liquibase-core, opencsv. В каждом сервисе создай application.yml с настройками подключения к PostgreSQL (отдельные схемы: users, hotels, bookings, payments) и настройками порта (8081, 8082, 8083, 8084). Создай корневой .gitignore для Java/Maven.
+
+Пуш:
+git add .
+git commit -m "[PROJECT-SETUP] Initialize microservices project structure"
+git push origin feature/project-setup
+
+Завершение:
+Создай PR, после одобрения заверши ветку:
+git flow feature finish project-setup
+git push origin develop
+Project Structure Setup Prompt
+
+Этап 2: User Service
+Цель: Реализовать аутентификацию и управление пользователями.
+
+Создание ветки:
+git flow feature start user-service
+
+Промпт для LLM:
+В user-service создай Spring Boot приложение на Java 17: реализуй сущность User (id, username, password, email, role) с JPA, настрой Liquibase для создания таблицы users в схеме users. Создай REST-контроллеры для эндпоинтов: POST /register (регистрация), POST /login (выдача JWT), GET /users/{id} (доступно администратору), PUT /users/{id} (доступно администратору). Настрой Spring Security с JWT для защиты эндпоинтов, где роли: GUEST, ADMIN, OWNER. Интегрируй springdoc-openapi для Swagger.
+
+Пуш:
+git add .
+git commit -m "[USER-SERVICE] Implement user management and JWT authentication"
+git push origin feature/user-service
+
+Завершение:
+Создай PR, после одобрения:
+git flow feature finish user-service
+git push origin develop
+User Service Implementation Prompt
+
+Этап 3: Hotel Service
+Цель: Реализовать управление отелями, номерами, удобствами, отзывами и импорт из CSV.
+
+Создание ветки:
+git flow feature start hotel-service
+
+Промпт для LLM:
+В hotel-service создай Spring Boot приложение на Java 17: реализуй сущности Hotel (id, name, address, latitude, longitude, starRating, description), Room (id, hotelId, type, pricePerNight, capacity), Amenity (id, name), Review (id, hotelId, userId, rating, comment, createdAt) с JPA, настрой Liquibase для создания таблиц в схеме hotels. Создай REST-контроллеры: CRUD для отелей (POST /hotels, GET /hotels/{id}, etc.), номеров (POST /hotels/{hotelId}/rooms, etc.), удобств, отзывов, а также POST /hotels/import для импорта отелей из CSV с использованием OpenCSV. Реализуй поиск и фильтрацию: GET /hotels?city=...&price=...&rating=...&amenities=... с сортировкой. Настрой Spring Security с JWT (доступ для ADMIN, OWNER). Храни фотографии отелей и номеров как файлы в папке uploads/. Интегрируй springdoc-openapi для Swagger.
+
+Пуш:
+git add .
+git commit -m "[HOTEL-SERVICE] Implement hotel, room, amenity, review management and CSV import"
+git push origin feature/hotel-service
+
+Завершение:
+git flow feature finish hotel-service
+git push origin develop
+Hotel Service Implementation Prompt
+
+Этап 4: Booking Service
+Цель: Реализовать бронирование и проверку доступности.
+
+Создание ветки:
+git flow feature start booking-service
+
+Промпт для LLM:
+В booking-service создай Spring Boot приложение на Java 17: реализуй сущность Booking (id, roomId, userId, checkInDate, checkOutDate, adults, children, totalPrice, status) с JPA, настрой Liquibase для создания таблицы bookings в схеме bookings. Создай REST-контроллеры: POST /bookings (создание брони с проверкой доступности через HTTP-запрос к hotel-service:8082/rooms/{roomId}/availability и проверкой пользователя через user-service:8081/users/{id}), GET /bookings/{id}, PUT /bookings/{id} (изменение брони). Реализуй расчёт стоимости брони с учётом сезонных коэффициентов (например, +20% летом). Генерируй PDF-подтверждение брони с использованием библиотеки iText. Настрой Spring Security с JWT (доступ для GUEST, ADMIN). Интегрируй springdoc-openapi для Swagger.
+
+Пуш:
+git add .
+git commit -m "[BOOKING-SERVICE] Implement booking management with availability check and PDF generation"
+git push origin feature/booking-service
+
+Завершение:
+git flow feature finish booking-service
+git push origin develop
+Booking Service Implementation Prompt
+
+Этап 5: Payment Service
+Цель: Реализовать отмену брони и логирование.
+
+Создание ветки:
+git flow feature start payment-service
+
+Промпт для LLM:
+В payment-service создай Spring Boot приложение на Java 17: реализуй сущность Payment (id, bookingId, userId, amount, status, cancelReason) с JPA, настрой Liquibase для создания таблицы payments в схеме payments. Создай REST-контроллеры: POST /payments/cancel/{bookingId} (отмена брони с HTTP-запросами к booking-service:8083/bookings/{id} и user-service:8081/users/{id} для проверки, логирование причины отмены), GET /payments/{id}. Реализуй заглушку для интеграции с платёжной системой (логирование вместо реального возврата средств). Настрой Spring Security с JWT (доступ для GUEST, ADMIN). Интегрируй springdoc-openapi для Swagger.
+
+Пуш:
+git add .
+git commit -m "[PAYMENT-SERVICE] Implement booking cancellation and payment logging"
+git push origin feature/payment-service
+
+Завершение:
+git flow feature finish payment-service
+git push origin develop
+Payment Service Implementation Prompt
+
+Этап 6: Релиз
+Цель: Подготовить и выпустить версию 1.0.0.
+
+Создание ветки:
+git flow release start 1.0.0
+
+Промпт для LLM:
+Для каждого сервиса (user-service, hotel-service, booking-service, payment-service) обнови application.yml, чтобы установить версию приложения 1.0.0. Проверь, что все зависимости в pom.xml актуальны и согласованы (Java 17, Spring Boot, springdoc-openapi, liquibase, opencsv).
+
+Пуш и завершение:
+git add .
+git commit -m "[RELEASE] Prepare version 1.0.0"
+git flow release finish 1.0.0
+git push origin main
+git push origin develop
+git push origin --tags
+Release Preparation Prompt
+plain

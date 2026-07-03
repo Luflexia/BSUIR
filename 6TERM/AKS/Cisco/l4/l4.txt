@@ -1,0 +1,37 @@
+4 Лаба
+
+DHCP:
+вкл на ноуте DHCP
+
+на роутере у ноута исключить собственный айпи из раздачи
+conf t
+ip dhcp excluded-address 111.111.111.2
+
+создать пул айпи для раздачи
+ip dhcp pool DHCPPOOL
+
+устройствам в какой сети раздавать
+network 111.111.111.0 255.255.255.0
+
+посмотреть пулы dhcp
+show ip dhcp pool
+
+NAT (network address translation)
+
+Ротуер между двумя сетями:
+ПК как inside local, и условную станцию в другой подсети как inside global
+ip nat inside source static 100.100.100.1 201.244.45.70
+
+на этом же роутере к интерфейсам ведущим к inside local 
+int fa 0/0
+ip nat inside
+
+к inside global
+int fa 0/1
+ip nat outside
+
+посмотреть таблицу NAT
+show ip nat translations
+
+Покажите где написано что этот адрес инсайд глобал
+Сделайте чтобы 4 строчки все были заполнены при таком инсайд глобал

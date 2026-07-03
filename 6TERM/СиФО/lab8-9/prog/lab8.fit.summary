@@ -1,0 +1,15 @@
+Fitter Status : Failed - Thu Mar 20 07:02:46 2025
+Quartus II Version : 9.1 Build 222 10/21/2009 SJ Web Edition
+Revision Name : lab8
+Top-level Entity Name : lab8
+Family : Stratix II
+Logic utilization : N/A
+    Combinational ALUTs : 1,109
+    Dedicated logic registers : 2,173
+Total registers : 2173
+Total pins : 843
+Total virtual pins : 0
+Total block memory bits : 8,192
+DSP block 9-bit elements : 0
+Total PLLs : 0
+Total DLLs : 0
