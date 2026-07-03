@@ -1,0 +1,219 @@
+import socket  # Импорт модуля socket: предоставляет низкоуровневый доступ к сетевым функциям, таким как создание сокетов, отправка/прием данных. Зачем: для работы с сырыми сокетами (raw sockets) и преобразования IP-адресов (inet_aton, inet_ntoa).
+import struct  # Импорт struct: используется для упаковки/распаковки бинарных данных в/из структур (например, заголовки IP/ICMP как байты). Зачем: пакеты – это бинарные данные, struct.pack/unpack позволяют собирать их по формату (e.g., '!BBHHH' – big-endian, байты, шорты и т.д.).
+import threading  # Импорт threading: для создания и управления потоками (threads). Зачем: позволяет трассировать несколько хостов параллельно, не блокируя основной поток.
+import signal  # Импорт signal: для обработки сигналов ОС (e.g., SIGINT от Ctrl+C). Зачем: graceful shutdown – чтобы остановить все потоки без ошибок.
+import time  # Импорт time: для работы со временем (time.time() для timestamps, sleep для задержек). Зачем: расчет RTT (задержки), таймауты.
+import sys  # Импорт sys: доступ к аргументам командной строки (sys.argv), выходу (sys.exit). Зачем: чтение хостов из аргументов, обработка ошибок.
+import random  # Импорт random: для генерации случайных чисел. Зачем: уникальный ID для ICMP пакетов в каждом потоке, чтобы отличать свои пакеты от чужих.
+from threading import Event, Lock  # Импорт конкретных классов из threading: Event (для сигнализации между потоками, как флаг остановки), Lock (для mutex – блокировки доступа к ресурсам). Зачем: thread-safety – предотвратить race conditions при отправке/печати.
+
+# Global event for graceful shutdown
+stop_event = Event()  # Создание глобального Event-объекта stop_event. Зачем: это флаг, который потоки проверяют; set() устанавливает его в True, чтобы все остановились. Параметры: нет, Event() по умолчанию False. Нюанс: thread-safe, не требует lock.
+
+# Lock for thread-safe socket sending and printing
+send_lock = Lock()  # Создание Lock для отправки через сокет. Зачем: несколько потоков используют один сокет; lock предотвращает одновременную отправку, что могло бы повредить пакеты. with send_lock: – контекстный менеджер, автоматически acquire/release.
+print_lock = Lock()  # Аналогичный Lock для print. Зачем: print не thread-safe в Python; без lock вывод может перемешаться (e.g., строки от разных потоков в одной линии).
+
+def signal_handler(sig, frame):  # Определение функции-обработчика сигналов. Параметры: sig – номер сигнала (e.g., SIGINT=2), frame – текущий стек вызовов (не используется). Зачем: вызывается при Ctrl+C.
+    """Handle Ctrl+C to stop all threads gracefully."""  # Docstring: краткое описание функции.
+    print('\nStopping all threads...')  # Печать сообщения о остановке. Зачем: информирует пользователя.
+    stop_event.set()  # Установка флага stop_event в True. Зачем: все потоки, проверяющие is_set(), остановятся.
+
+signal.signal(signal.SIGINT, signal_handler)  # Регистрация обработчика: при SIGINT (Ctrl+C) вызывать signal_handler. Зачем: вместо default (terminate), graceful shutdown. Нюанс: работает только в main thread.
+
+def checksum(data):  # Функция для расчета checksum (контрольной суммы) для заголовков. Параметры: data – байты (bytes) заголовка. Возвращает: 16-бит checksum.
+    """Calculate the checksum for ICMP or IP headers."""  # Docstring.
+    if len(data) % 2 == 1:  # Проверка, если длина data нечетная. Зачем: checksum рассчитывается по 16-бит словам, так что добавляем нулевой байт для выравнивания.
+        data += b'\x00'  # Добавление b'\x00' (байтовый литерал). Нюанс: b'' – bytes, не str.
+    s = 0  # Инициализация суммы s=0.
+    for i in range(0, len(data), 2):  # Цикл по data шагом 2 (каждые 2 байта как слово).
+        s += (data[i] << 8) + data[i + 1]  # Сдвиг левого байта на 8 бит (big-endian) и сложение с правым; добавление к s. Зачем: суммирование 16-бит слов.
+    s = (s >> 16) + (s & 0xffff)  # Обработка переполнения: старшие 16 бит + младшие. Зачем: стандартный алгоритм checksum (RFC 1071).
+    s += (s >> 16)  # Еще раз для полного сворачивания.
+    return ~s & 0xffff  # Инверсия (~) и маска на 16 бит. Зачем: checksum – one's complement sum.
+
+def create_ip_header(source, dest, ttl, total_len, ident=12345):  # Функция создания IP-заголовка. Параметры: source/dest – str IP, ttl – int (Time To Live), total_len – длина пакета, ident – ID пакета (default 12345). Возвращает: bytes заголовка.
+    """Create an IP header with the specified parameters."""  # Docstring.
+    ip_header = struct.pack('!BBHHHBBH4s4s',  # Упаковка в bytes по формату '!BBHHHBBH4s4s' (big-endian: байт версия+IHL, байт TOS, шорт len, шорт ID, шорт flags, байт TTL, байт proto, шорт chksum, 4б src IP, 4б dest IP).
+                            69,  # Version 4 (4<<4=64, но +IHL=5 -> 69=0x45). Зачем: фиксированная версия IPv4, IHL=5 (20 байт без опций).
+                            0,   # Type of Service (TOS): 0 – normal.
+                            total_len,  # Total length: IP + ICMP.
+                            ident,      # Identification: уникальный ID для фрагментации (здесь не используется).
+                            0x4000,     # Flags: 0x4000 = Don't Fragment bit (1<<14).
+                            ttl,        # Time to Live: уменьшается на каждом hop.
+                            1,          # Protocol: 1=ICMP.
+                            0,          # Checksum placeholder: сначала 0, потом рассчитаем.
+                            socket.inet_aton(source),  # Преобразование str IP в 4 байта (packed).
+                            socket.inet_aton(dest))  # Аналог для dest.
+    chksum = checksum(ip_header)  # Расчет checksum над placeholder-версией.
+    ip_header = struct.pack('!BBHHHBBH4s4s',  # Переупаковка с реальным checksum.
+                            69, 0, total_len, ident, 0x4000, ttl, 1, chksum,
+                            socket.inet_aton(source),
+                            socket.inet_aton(dest))
+    return ip_header  # Возврат готового заголовка.
+
+def create_icmp_echo(id, seq, timestamp):  # Функция создания ICMP Echo Request. Параметры: id/seq – 16-бит int (ID и sequence), timestamp – float (time.time()).
+    """Create an ICMP Echo Request packet with timestamp in payload."""  # Docstring.
+    data = struct.pack('!d', timestamp)  # Упаковка timestamp в 8 байт double (big-endian). Зачем: для точного RTT, хранится в payload.
+    # Pad data to a reasonable size (e.g., 56 bytes total packet - 8 bytes header)
+    data += b'\x00' * (48 - len(data))  # Добавление нулевых байт до 48 (общий ICMP=56 байт: 8 header + 48 data, как в стандартном ping). Нюанс: 48-8=40? Нет, len(data)=8, так 48-8=40 нулей, но комментарий говорит 56-8=48 data total.
+    icmp_header = struct.pack('!BBHHH', 8, 0, 0, id, seq) + data  # Упаковка header: тип=8 (Echo Req), code=0, chksum=0, id, seq + data.
+    chksum = checksum(icmp_header)  # Расчет checksum.
+    icmp_header = struct.pack('!BBHHH', 8, 0, chksum, id, seq) + data  # Переупаковка с chksum.
+    return icmp_header  # Возврат полного ICMP пакета.
+
+def parse_ip_packet(packet):  # Функция парсинга IP-пакета. Параметры: packet – bytes полученного пакета. Возвращает: src IP (str), protocol (int), icmp_data (bytes).
+    """Parse IP packet to extract source IP, protocol, and ICMP data."""  # Docstring.
+    if len(packet) < 20:  # Проверка минимальной длины IP-header (20 байт). Зачем: избежать ошибок на мусоре.
+        return None, None, None
+    ihl = packet[0] & 0x0F  # Извлечение IHL (Internet Header Length) из первого байта (нижние 4 бита).
+    if ihl < 5:  # Минимальный IHL=5 (20 байт). Зачем: invalid packet.
+        return None, None, None
+    ip_header_len = ihl * 4  # Длина header в байтах (IHL*4, т.к. в словах по 4 байта).
+    src = socket.inet_ntoa(packet[12:16])  # Извлечение src IP (байты 12-15) и преобразование в str (e.g., '192.168.1.1').
+    protocol = packet[9]  # Protocol поле (байт 9).
+    icmp_data = packet[ip_header_len:]  # Всё после IP-header – ICMP.
+    return src, protocol, icmp_data
+
+def parse_icmp_response(icmp_data, dest_ip, my_id, seq, sent_time):  # Функция парсинга ICMP-ответа. Параметры: icmp_data (bytes), dest_ip (str), my_id/seq (int), sent_time (float). Возвращает: tuple (type_str, msg, rtt) или None.
+    """Parse ICMP response and verify it matches the request."""  # Docstring.
+    if len(icmp_data) < 8:  # Минимальный ICMP header=8 байт.
+        return None
+    icmp_type, code = struct.unpack('!BB', icmp_data[0:2])  # Распаковка type и code (байты 0-1).
+    if icmp_type == 0 and code == 0:  # Echo Reply (тип 0, code 0).
+        pid, pseq = struct.unpack('!HH', icmp_data[4:8])  # ID и seq из байт 4-7.
+        if pid == my_id and pseq == seq:  # Проверка, что это наш пакет (ID и seq совпадают).
+            recv_time = time.time()  # Текущее время приема.
+            if len(icmp_data) >= 16:  # Проверка на наличие timestamp (8 header + 8 timestamp).
+                timestamp = struct.unpack('!d', icmp_data[8:16])[0]  # Распаковка timestamp.
+                rtt = recv_time - timestamp  # RTT = прием - отправка (из payload, точнее чем sent_time).
+                return ('reply', 'Echo Reply', rtt)  # Возврат tuple для Echo Reply.
+    elif icmp_type == 11 and code == 0:  # Time Exceeded (TTL=0).
+        if len(icmp_data) < 8 + 20 + 8:  # Минимально: ICMP header + quoted IP header (20) + quoted ICMP header (8).
+            return None
+        q_ip_start = 8  # Quoted IP начинается после ICMP header (8 байт).
+        q_ihl = icmp_data[q_ip_start] & 0x0F  # IHL quoted IP.
+        q_ip_len = q_ihl * 4  # Длина quoted IP.
+        q_dest_start = q_ip_start + 16  # Dest IP в quoted IP (offset 16 от начала IP).
+        q_dest = socket.inet_ntoa(icmp_data[q_dest_start:q_dest_start + 4])  # Quoted dest IP.
+        q_icmp_start = q_ip_start + q_ip_len  # Quoted ICMP после IP.
+        q_type = icmp_data[q_icmp_start]  # Type quoted ICMP.
+        if q_type == 8:  # Должен быть Echo Request (8).
+            q_id, q_seq = struct.unpack('!HH', icmp_data[q_icmp_start + 4:q_icmp_start + 8])  # ID и seq quoted.
+            if q_dest == dest_ip and q_id == my_id and q_seq == seq:  # Проверка, что quoted – наш оригинальный пакет.
+                rtt = time.time() - sent_time  # RTT от sent_time (timestamp не в quoted для Time Exceeded? Здесь использует sent_time, не payload).
+                return ('ttl_exceeded', 'Time Exceeded', rtt)
+    elif icmp_type == 3:  # Destination Unreachable.
+        unreachable_types = {0: 'Network Unreachable', 1: 'Host Unreachable', 3: 'Port Unreachable', 4: 'Fragmentation Needed'}  # Словарь сообщений по code.
+        msg = unreachable_types.get(code, f'Unreachable Code {code}')  # Получение msg или default.
+        if len(icmp_data) < 8 + 20 + 8:  # Аналогично Time Exceeded.
+            return None
+        q_ip_start = 8  # То же.
+        q_ihl = icmp_data[q_ip_start] & 0x0F
+        q_ip_len = q_ihl * 4
+        q_dest_start = q_ip_start + 16
+        q_dest = socket.inet_ntoa(icmp_data[q_dest_start:q_dest_start + 4])
+        q_icmp_start = q_ip_start + q_ip_len
+        q_type = icmp_data[q_icmp_start]
+        if q_type == 8:
+            q_id, q_seq = struct.unpack('!HH', icmp_data[q_icmp_start + 4:q_icmp_start + 8])
+            if q_dest == dest_ip and q_id == my_id and q_seq == seq:
+                rtt = time.time() - sent_time
+                return ('unreachable', msg, rtt)
+    return None  # Если не matched – None.
+
+def traceroute_host(host, shared_sock, max_hops=30, timeout=3.0):  # Основная функция трассировки для одного хоста. Параметры: host (str), shared_sock (socket), max_hops (int=30), timeout (float=3.0 сек).
+    """Perform traceroute to the specified host using a shared socket."""  # Docstring.
+    my_id = random.randint(1, 65535)  # Генерация уникального ID для этого потока (1-65535, 16-бит).
+    try:  # Try-block для ловли ошибок.
+        dest_ip = socket.gethostbyname(host)  # Разрешение host в IP (DNS lookup). Зачем: пакеты отправляются по IP.
+        # Get source IP
+        tmp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Создание временного UDP сокета.
+        tmp_sock.connect((dest_ip, 33434))  # Connect к dest_ip на порт 33434 (стандарт для traceroute, обычно закрыт, но connect дает local IP).
+        source_ip = tmp_sock.getsockname()[0]  # Получение local IP из сокета.
+        tmp_sock.close()  # Закрытие tmp_sock.
+        with print_lock:  # Lock для print.
+            print(f"\nTraceroute to {host} ({dest_ip}) [Thread ID: {my_id}]")  # Печать старта.
+        hop = 1  # Начальный hop=1 (TTL).
+        while hop <= max_hops and not stop_event.is_set():  # Цикл по hops, пока не max или не stop.
+            sent_time = time.time()  # Время отправки (fallback для RTT).
+            icmp_packet = create_icmp_echo(my_id, hop, sent_time)  # Создание ICMP (seq=hop).
+            total_len = 20 + len(icmp_packet)  # Total IP len.
+            ip_header = create_ip_header(source_ip, dest_ip, hop, total_len)  # IP с TTL=hop.
+            packet = ip_header + icmp_packet  # Полный пакет.
+            with send_lock:  # Lock для отправки.
+                shared_sock.sendto(packet, (dest_ip, 0))  # Отправка на dest_ip, порт=0 (ICMP не порты).
+            probe_start = time.time()  # Старт таймаута.
+            response_received = False  # Флаг получения ответа.
+            while time.time() - probe_start < timeout and not response_received and not stop_event.is_set():  # Цикл ожидания (до timeout или ответа/stop).
+                try:
+                    # Use MSG_PEEK to inspect packet without consuming it
+                    peeked, addr = shared_sock.recvfrom(4096, socket.MSG_PEEK)  # Peek: чтение без удаления (4096 байт буфер). addr – sender.
+                    src, proto, icmp = parse_ip_packet(peeked)  # Парсинг peeked.
+                    if proto == 1:  # Если ICMP.
+                        result = parse_icmp_response(icmp, dest_ip, my_id, hop, sent_time)  # Парсинг ICMP.
+                        if result:  # Если matched.
+                            # Consume the packet since it matches
+                            shared_sock.recvfrom(4096)  # Теперь реальное чтение (удаление из очереди).
+                            typ, msg, rtt = result  # Распаковка.
+                            with print_lock:  # Lock для print.
+                                if typ == 'reply':  # Для Echo Reply.
+                                    print(f"{hop:2}  {src:15}  {rtt*1000:6.1f} ms ({msg})")  # Форматированный вывод: hop, src, RTT в ms, msg.
+                                    response_received = True
+                                    break  # Выход из while.
+                                elif typ == 'ttl_exceeded':
+                                    print(f"{hop:2}  {src:15}  {rtt*1000:6.1f} ms ({msg})")
+                                    response_received = True
+                                    break
+                                elif typ == 'unreachable':
+                                    print(f"{hop:2}  {src:15}  {msg} ({rtt*1000:6.1f} ms)")
+                                    return  # Полный return из функции (unreachable – конец).
+                except socket.timeout:  # Ловля timeout (сокет в non-blocking? Нет, timeout=0.1 в main).
+                    pass  # Игнор, continue цикл.
+                except socket.error as e:  # Другие ошибки сокета.
+                    if e.errno not in (socket.EWOULDBLOCK, socket.EAGAIN, socket.EINTR):  # Если не non-blocking ошибки (EWOULDBLOCK=would block), raise.
+                        raise
+                time.sleep(0.001)  # Задержка 1мс. Зачем: предотвратить 100% CPU в busy loop.
+            if not response_received:  # Если таймаут.
+                with print_lock:
+                    print(f"{hop:2}  {'*':15}  {'Timeout':6}")  # Вывод "* Timeout".
+            if typ == 'reply':  # Если был reply – break из outer while.
+                break
+            hop += 1  # Следующий hop.
+        with print_lock:
+            print(f"Traceroute to {host} completed.")  # Завершение.
+    except Exception as e:  # Ловля всех ошибок.
+        with print_lock:
+            print(f"Error during traceroute to {host}: {e}")  # Печать ошибки.
+
+def main():  # Главная функция.
+    if len(sys.argv) < 2:  # Проверка аргументов: минимум 1 хост.
+        print("Usage: sudo python main.py <host1> [host2 host3 ...]")  # Note: файл trace.py, но usage говорит main.py – возможно опечатка.
+        print("Note: Requires root privileges for raw sockets.")
+        sys.exit(1)  # Выход с кодом 1 (error).
+    hosts = sys.argv[1:]  # Хосты из аргументов.
+    try:
+        # Create a single shared raw socket
+        shared_sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)  # Создание raw сокета: AF_INET=IPv4, SOCK_RAW=сырой, proto=ICMP.
+        shared_sock.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)  # Опция IP_HDRINCL=1: включаем ручной IP-заголовок в send.
+        shared_sock.settimeout(0.1)  # Timeout сокета 0.1 сек: делает recv non-blocking-ish (raise timeout если ничего).
+        threads = []  # Список потоков.
+        for host in hosts:  # Для каждого хоста.
+            thread = threading.Thread(target=traceroute_host, args=(host, shared_sock))  # Создание Thread: target=функция, args=аргументы.
+            thread.daemon = True  # Daemon=True: поток умирает с main (не ждет).
+            thread.start()  # Запуск.
+            threads.append(thread)  # Добавление в список.
+        # Keep main thread alive until all threads complete or interrupted
+        for thread in threads:  # Join всех: ждать завершения.
+            thread.join()
+    except PermissionError:  # Специально для root.
+        print("Error: This program requires root privileges to create raw sockets.")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Socket creation error: {e}")
+    finally:  # Всегда.
+        if 'shared_sock' in locals():  # Если сокет создан.
+            shared_sock.close()  # Закрытие.
+
+if __name__ == "__main__":  # Стандартный guard: запуск main только если файл запущен напрямую (не import).
+    main()
